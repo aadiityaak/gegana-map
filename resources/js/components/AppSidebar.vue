@@ -105,6 +105,14 @@ const mainNavItems = computed<NavItem[]>(() => [
                         href: ipoleksosbudkamUrl('ekonomi/ekonomi-harga-sembako'),
                     },
                     {
+                        title: 'Kurs Mata Uang',
+                        href: ipoleksosbudkamUrl('ekonomi/ekonomi-kurs-mata-uang'),
+                    },
+                    {
+                        title: 'Pasar Saham',
+                        href: ipoleksosbudkamUrl('ekonomi/ekonomi-pasar-saham'),
+                    },
+                    {
                         title: 'Index Pendapatan masyarakat',
                         href: ipoleksosbudkamUrl('ekonomi/ekonomi-index-pendapatan-masyarakat'),
                     },

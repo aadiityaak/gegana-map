@@ -268,6 +268,10 @@ Route::prefix('{current_team}')
             ],
         ])->name('ipoleksosbudkam.harga-sembako');
 
+        Route::inertia('ipoleksosbudkam/detail/{id}', 'ipoleksosbudkam/Index', [
+            'detailId' => fn(Request $request) => (int) $request->route('id'),
+        ])->whereNumber('id')->name('ipoleksosbudkam.detail');
+
         Route::inertia('ipoleksosbudkam', 'ipoleksosbudkam/Index')->name('ipoleksosbudkam.index');
         Route::inertia('ipoleksosbudkam/{category}', 'ipoleksosbudkam/Index', [
             'category' => fn(Request $request) => $request->route('category'),
