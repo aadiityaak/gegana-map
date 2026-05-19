@@ -20,6 +20,14 @@ const sidebarNavItems: NavItem[] = [
         href: editSecurity(),
     },
     {
+        title: 'Branding',
+        href: '/settings/branding',
+    },
+    {
+        title: 'About',
+        href: '/settings/about',
+    },
+    {
         title: 'Appearance',
         href: editAppearance(),
     },

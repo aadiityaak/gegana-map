@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
-    BookOpen,
     Brain,
     DollarSign,
-    FolderGit2,
+    Info,
     Landmark,
     LayoutGrid,
     ListTree,
+    Settings,
     Shield,
     Users,
 } from 'lucide-vue-next';
@@ -187,14 +187,9 @@ const mainNavItems = computed<NavItem[]>(() => [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Pengaturan',
+        href: '/settings/branding',
+        icon: Settings,
     },
 ];
 </script>
