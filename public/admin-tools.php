@@ -224,6 +224,8 @@ function executeArtisanCommand(string $artisanArgs, string $laravelRoot): string
         return 'Error: Missing artisan command';
     }
 
+    $purgeResult = purgeRouteCacheFiles($laravelRoot);
+
     $artisanPath = rtrim($laravelRoot, '/\\') . DIRECTORY_SEPARATOR . 'artisan';
     $autoloadPath = rtrim($laravelRoot, '/\\') . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
     $bootstrapPath = rtrim($laravelRoot, '/\\') . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'app.php';
@@ -252,7 +254,10 @@ function executeArtisanCommand(string $artisanArgs, string $laravelRoot): string
         if ($output === '') {
             $output = 'Command executed (no output)';
         }
-        return "Exit code: {$code}\n" . $output;
+        $purgeNote = $purgeResult['deleted'] > 0
+            ? "Note: route cache file(s) removed: {$purgeResult['deleted']}\n"
+            : '';
+        return $purgeNote . "Exit code: {$code}\n" . $output;
     } catch (\Throwable $e) {
         return 'Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString();
     } finally {
@@ -288,6 +293,44 @@ function parseArtisanArgs(string $args): array
     }
 
     return [$name, $params];
+}
+
+function purgeRouteCacheFiles(string $laravelRoot): array
+{
+    $bootstrapCache = rtrim($laravelRoot, '/\\') . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'cache';
+    if (! is_dir($bootstrapCache)) {
+        return ['deleted' => 0, 'errors' => 0];
+    }
+
+    $patterns = [
+        $bootstrapCache . DIRECTORY_SEPARATOR . 'routes-*.php',
+        $bootstrapCache . DIRECTORY_SEPARATOR . 'routes.php',
+    ];
+
+    $files = [];
+    foreach ($patterns as $pattern) {
+        $matches = glob($pattern) ?: [];
+        foreach ($matches as $f) {
+            if (is_string($f) && $f !== '') {
+                $files[$f] = true;
+            }
+        }
+    }
+
+    $deleted = 0;
+    $errors = 0;
+    foreach (array_keys($files) as $file) {
+        if (! file_exists($file)) {
+            continue;
+        }
+        if (@unlink($file)) {
+            $deleted++;
+        } else {
+            $errors++;
+        }
+    }
+
+    return ['deleted' => $deleted, 'errors' => $errors];
 }
 
 // Format bytes to human readable
@@ -360,6 +403,12 @@ $toolGroups = [
                 'description' => 'Clear all optimized files',
                 'variant' => 'secondary',
                 'commands' => ['php artisan optimize:clear'],
+            ],
+            'fix_route_cache_files' => [
+                'label' => 'Fix Route Cache',
+                'description' => 'Delete cached route files (routes-*.php) that can break this app',
+                'variant' => 'warning',
+                'custom' => 'handleFixRouteCache',
             ],
         ],
     ],
@@ -621,6 +670,23 @@ function handleStorageLink()
             $output .= "❌ Target directory does not exist\n";
         }
     }
+
+    return $output;
+}
+
+function handleFixRouteCache()
+{
+    $laravelRoot = getLaravelRoot();
+    $result = purgeRouteCacheFiles($laravelRoot);
+
+    $output = "Route Cache Fix:\n";
+    $output .= "Laravel Root: {$laravelRoot}\n";
+    $output .= "Deleted route cache files: {$result['deleted']}\n";
+    if (($result['errors'] ?? 0) > 0) {
+        $output .= "Errors while deleting: {$result['errors']}\n";
+    }
+    $output .= "\nNext step:\n";
+    $output .= "- Run: Optimize App (safe)\n";
 
     return $output;
 }

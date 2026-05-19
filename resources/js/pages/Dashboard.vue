@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +35,23 @@ type ModuleSummary = {
     countsByType: Record<string, number>;
     topProvinces: TopProvince[];
     lastCreatedAt: string | null;
+};
+
+type MonitoringItem = {
+    id: number | string;
+    title: string;
+    incident_date: string | null;
+    severity_level: 'low' | 'medium' | 'high' | 'critical' | string;
+    status: 'active' | 'monitoring' | 'resolved' | string;
+    provinsi?: { id: number; nama: string } | null;
+    kabupaten_kota?: { id: number; nama: string } | null;
+    kecamatan?: { id: number; nama: string } | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+};
+
+type MonitoringResponse = {
+    data: MonitoringItem[];
 };
 
 const props = defineProps<{
@@ -156,6 +173,229 @@ const hoverX = computed(() => {
     if (hoverIndex.value === null) return null;
     return padLeft + hoverIndex.value * stepX.value;
 });
+
+const mapContainer = ref<HTMLDivElement | null>(null);
+let map: any | null = null;
+let markerLayer: any | null = null;
+let mapReady = false;
+
+const mapLoading = ref(false);
+const mapError = ref<string | null>(null);
+const mapItems = ref<MonitoringItem[]>([]);
+
+const formatDateTime = (value: string | null) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID');
+};
+
+const locationLabel = (item: MonitoringItem) => {
+    const parts = [
+        item.kecamatan?.nama,
+        item.kabupaten_kota?.nama,
+        item.provinsi?.nama,
+    ].filter(Boolean) as string[];
+    return parts.length ? parts.join(', ') : '-';
+};
+
+const getLeaflet = async () => {
+    const mod = await import('leaflet');
+    return (mod as any).default ?? mod;
+};
+
+const markerColor = (severity: string) => {
+    const map: Record<string, string> = {
+        low: '#34d399',
+        medium: '#fbbf24',
+        high: '#fb7185',
+        critical: '#f87171',
+    };
+    return map[severity] ?? '#22c55e';
+};
+
+const parseCoordNumber = (value: number | string | null | undefined): number | null => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+    if (typeof value !== 'string') return null;
+    const normalized = value.trim().replace(',', '.');
+    const n = Number.parseFloat(normalized);
+    return Number.isFinite(n) ? n : null;
+};
+
+const normalizeIndonesiaCoords = (lat: number, lng: number): [number, number] => {
+    const indonesiaLatOk = lat >= -11.5 && lat <= 6.5;
+    const indonesiaLngOk = lng >= 95 && lng <= 141.5;
+    if (indonesiaLatOk && indonesiaLngOk) return [lat, lng];
+
+    const swappedIndonesiaLatOk = lng >= -11.5 && lng <= 6.5;
+    const swappedIndonesiaLngOk = lat >= 95 && lat <= 141.5;
+    if (swappedIndonesiaLatOk && swappedIndonesiaLngOk) return [lng, lat];
+
+    return [lat, lng];
+};
+
+const normalizeId = (value: number | string): number | null => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+    const n = Number.parseInt(value, 10);
+    return Number.isFinite(n) ? n : null;
+};
+
+const goToDetail = (id: number | string) => {
+    const normalizedId = normalizeId(id);
+    if (normalizedId === null) return;
+    router.visit(`/ipoleksosbudkam/detail/${normalizedId}`);
+};
+
+const ensureMap = async () => {
+    if (typeof window === 'undefined') return;
+    await nextTick();
+    if (!mapContainer.value) return;
+    if (map) {
+        setTimeout(() => {
+            map?.invalidateSize?.();
+        }, 0);
+        return;
+    }
+
+    const L = await getLeaflet();
+
+    map = L.map(mapContainer.value, {
+        zoomControl: true,
+    }).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    markerLayer = L.featureGroup().addTo(map);
+    mapReady = true;
+
+    setTimeout(() => {
+        map?.invalidateSize?.();
+    }, 0);
+};
+
+const updateMapMarkers = async () => {
+    if (!mapReady || !map || !markerLayer) return;
+    const L = await getLeaflet();
+
+    markerLayer.clearLayers();
+    const points: any[] = [];
+
+    for (const item of mapItems.value) {
+        const latRaw = parseCoordNumber(item.latitude);
+        const lngRaw = parseCoordNumber(item.longitude);
+        if (latRaw == null || lngRaw == null) continue;
+        const [lat, lng] = normalizeIndonesiaCoords(latRaw, lngRaw);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        points.push([lat, lng]);
+
+        const marker = L.circleMarker([lat, lng], {
+            radius: 7,
+            color: markerColor(item.severity_level),
+            fillColor: markerColor(item.severity_level),
+            fillOpacity: 0.65,
+            weight: 2,
+        });
+
+        const popupEl = document.createElement('div');
+        popupEl.style.cssText =
+            "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(226,255,232,0.92);";
+
+        const titleEl = document.createElement('div');
+        titleEl.textContent = item.title;
+        titleEl.style.cssText = 'font-weight: 700; margin-bottom: 6px;';
+        popupEl.appendChild(titleEl);
+
+        const metaEl = document.createElement('div');
+        metaEl.textContent = `${formatDateTime(item.incident_date)} · ${locationLabel(item)}`;
+        metaEl.style.cssText = 'font-size: 12px; opacity: 0.75; margin-bottom: 10px;';
+        popupEl.appendChild(metaEl);
+
+        const buttonEl = document.createElement('button');
+        buttonEl.type = 'button';
+        buttonEl.textContent = '> OPEN DETAIL';
+        buttonEl.style.cssText =
+            'display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(34,197,94,0.25); padding: 4px 10px; border-radius: 999px; background: rgba(34,197,94,0.10); color: rgba(226,255,232,0.92); font-size: 12px; cursor: pointer; margin-bottom: 10px;';
+        buttonEl.addEventListener('click', (ev) => {
+            L.DomEvent.stopPropagation(ev);
+            goToDetail(item.id);
+        });
+        popupEl.appendChild(buttonEl);
+
+        L.DomEvent.disableClickPropagation(popupEl);
+        marker.bindPopup(popupEl, { closeButton: false });
+        marker.on('click', () => {
+            goToDetail(item.id);
+        });
+
+        markerLayer.addLayer(marker);
+    }
+
+    if (points.length) {
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 10 });
+    }
+};
+
+const loadMapData = async () => {
+    mapLoading.value = true;
+    mapError.value = null;
+
+    try {
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('per_page', '200');
+        params.set('sort_by', 'incident_date');
+        params.set('sort_dir', 'desc');
+
+        const res = await fetch(`/api/ipoleksosbudkam/monitoring-data?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+        });
+        const json = (await res.json().catch(() => null)) as MonitoringResponse | { message?: string } | null;
+        if (!res.ok) {
+            mapError.value = (json as any)?.message ?? 'Gagal memuat data peta.';
+            mapItems.value = [];
+            return;
+        }
+
+        mapItems.value = (json as MonitoringResponse).data ?? [];
+    } catch {
+        mapError.value = 'Gagal memuat data peta.';
+        mapItems.value = [];
+    } finally {
+        mapLoading.value = false;
+    }
+};
+
+onMounted(async () => {
+    if (typeof window === 'undefined') return;
+    await loadMapData();
+    await ensureMap();
+    await updateMapMarkers();
+});
+
+onBeforeUnmount(() => {
+    if (map) {
+        map.remove();
+        map = null;
+        markerLayer = null;
+        mapReady = false;
+    }
+});
+
+watch(
+    () => mapItems.value,
+    () => {
+        if (!mapReady) return;
+        void updateMapMarkers();
+    },
+    { deep: true },
+);
 </script>
 
 <template>
@@ -444,6 +684,26 @@ const hoverX = computed(() => {
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="mt-6 rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+                <div>> MAP: IPOLEKSOSBUDKAM (LAST 200)</div>
+                <div class="flex items-center gap-3">
+                    <span v-if="mapLoading">> loading_map...</span>
+                    <span v-else>> loaded: {{ mapItems.length }}</span>
+                </div>
+            </div>
+
+            <div v-if="mapError" class="rounded border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                > {{ mapError }}
+            </div>
+
+            <div
+                v-else
+                ref="mapContainer"
+                class="relative z-0 h-[420px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+            />
         </div>
 
         <div class="mt-6 grid gap-4 xl:grid-cols-3">
