@@ -2,6 +2,10 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import TiptapLink from '@tiptap/extension-link';
+import Underline from '@tiptap/extension-underline';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,22 +91,34 @@ const loadingVillages = ref(false);
 
 const isOnlineSource = computed(() => form.news_source === 'online');
 
-const editorEl = ref<HTMLDivElement | null>(null);
+const editor = useEditor({
+    extensions: [
+        StarterKit,
+        Underline,
+        TiptapLink.configure({
+            openOnClick: false,
+            autolink: true,
+            linkOnPaste: true,
+        }),
+    ],
+    content: String(form.description ?? ''),
+    editorProps: {
+        attributes: {
+            class: 'min-h-[140px] px-3 py-2 text-sm text-green-200/85 outline-none',
+        },
+    },
+    onUpdate: ({ editor }) => {
+        form.description = editor.getHTML();
+    },
+});
 
-const syncDescriptionFromEditor = () => {
-    form.description = editorEl.value?.innerHTML ?? '';
-};
+const getEditor = () => ((editor as any)?.value ?? editor) as any;
 
-const exec = (command: string, value?: string) => {
-    editorEl.value?.focus();
-    document.execCommand(command, false, value);
-    syncDescriptionFromEditor();
-};
-
-const addLink = () => {
+const setLink = () => {
     const url = window.prompt('URL');
     if (!url) return;
-    exec('createLink', url);
+    const e = getEditor();
+    e?.chain?.().focus().extendMarkRange('link').setLink({ href: url }).run();
 };
 
 const photoInputEl = ref<HTMLInputElement | null>(null);
@@ -186,6 +202,7 @@ onBeforeUnmount(() => {
     for (const p of newPhotoPreviews.value) {
         URL.revokeObjectURL(p.url);
     }
+    getEditor()?.destroy?.();
     map?.remove();
     map = null;
     coordMarker = null;
@@ -369,14 +386,11 @@ onMounted(async () => {
     if (form.province_id) await loadRegencies(form.province_id);
     if (form.regency_id) await loadDistricts(form.regency_id);
     if (form.district_id) await loadVillages(form.district_id);
-    if (editorEl.value) {
-        editorEl.value.innerHTML = String(form.description ?? '');
-    }
+    getEditor()?.commands?.setContent(String(form.description ?? ''), false);
     await ensureMap();
 });
 
 const submit = () => {
-    syncDescriptionFromEditor();
     if (props.mode === 'edit' && props.item) {
         form.put(`/wan-teror/${props.item.id}`, { forceFormData: true });
         return;
@@ -446,7 +460,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('bold')"
+                            @click="getEditor()?.chain?.().focus().toggleBold().run()"
                         >
                             Bold
                         </Button>
@@ -454,7 +468,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('italic')"
+                            @click="getEditor()?.chain?.().focus().toggleItalic().run()"
                         >
                             Italic
                         </Button>
@@ -462,7 +476,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('underline')"
+                            @click="getEditor()?.chain?.().focus().toggleUnderline().run()"
                         >
                             Underline
                         </Button>
@@ -470,7 +484,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('insertUnorderedList')"
+                            @click="getEditor()?.chain?.().focus().toggleBulletList().run()"
                         >
                             UL
                         </Button>
@@ -478,7 +492,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('insertOrderedList')"
+                            @click="getEditor()?.chain?.().focus().toggleOrderedList().run()"
                         >
                             OL
                         </Button>
@@ -486,7 +500,7 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="addLink"
+                            @click="setLink"
                         >
                             Link
                         </Button>
@@ -494,18 +508,12 @@ const title = computed(() =>
                             type="button"
                             size="sm"
                             variant="secondary"
-                            @click="exec('removeFormat')"
+                            @click="getEditor()?.chain?.().focus().unsetAllMarks().clearNodes().run()"
                         >
                             Clear
                         </Button>
                     </div>
-                    <div
-                        ref="editorEl"
-                        class="min-h-[140px] px-3 py-2 text-sm text-green-200/85 outline-none"
-                        contenteditable
-                        @input="syncDescriptionFromEditor"
-                        @blur="syncDescriptionFromEditor"
-                    />
+                    <EditorContent :editor="editor" />
                 </div>
                 <InputError :message="form.errors.description" />
             </div>
