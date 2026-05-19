@@ -15,7 +15,9 @@ const projectRoot = resolve(process.cwd());
 const args = process.argv.slice(2);
 const noVendor = args.includes('--no-vendor');
 const publicDirName = 'public_html';
-const buildDirName = noVendor ? 'build-deployment-novendor' : 'build-deployment';
+const buildDirName = noVendor
+    ? 'build-deployment-novendor'
+    : 'build-deployment';
 const zipBaseName = noVendor
     ? 'gegana-map-deployment-novendor.zip'
     : 'gegana-map-deployment.zip';
@@ -130,12 +132,36 @@ if (!existsSync(envProdPath)) {
     const example = existsSync(join(projectRoot, '.env.production'))
         ? readFileSync(join(projectRoot, '.env.production'), 'utf8')
         : existsSync(join(projectRoot, '.env.example'))
-            ? readFileSync(join(projectRoot, '.env.example'), 'utf8')
-            : '';
+          ? readFileSync(join(projectRoot, '.env.example'), 'utf8')
+          : '';
     if (example.trim() !== '') {
         writeFileSync(envProdPath, example);
     }
 }
+
+const touchFile = (path, content = '') => {
+    if (existsSync(path)) return;
+    ensureDir(dirname(path));
+    writeFileSync(path, content);
+};
+
+const ensureStorageScaffold = () => {
+    const dirs = [
+        join(laravelAppDir, 'storage', 'app', 'public'),
+        join(laravelAppDir, 'storage', 'framework', 'cache', 'data'),
+        join(laravelAppDir, 'storage', 'framework', 'sessions'),
+        join(laravelAppDir, 'storage', 'framework', 'views'),
+        join(laravelAppDir, 'storage', 'logs'),
+        join(laravelAppDir, 'bootstrap', 'cache'),
+    ];
+
+    for (const dir of dirs) {
+        ensureDir(dir);
+        touchFile(join(dir, '.gitignore'), '*\n!.gitignore\n');
+    }
+};
+
+ensureStorageScaffold();
 
 const addDirectoryToZip = (zip, dirPath, zipFolder = '') => {
     const items = readdirSync(dirPath, { withFileTypes: true });

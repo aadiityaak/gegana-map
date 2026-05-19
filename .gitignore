@@ -28,4 +28,6 @@ yarn-error.log
 /.vscode
 /.zed
 /build-deployment/
+/build-deployment-novendor/
 gegana-map-deployment.zip
+gegana-map-deployment-novendor.zip
