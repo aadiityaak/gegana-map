@@ -265,7 +265,7 @@ const title = computed(() =>
 <template>
     <Head :title="title" />
 
-    <div class="p-6 font-mono">
+    <div class="p-4 font-mono sm:p-6">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
@@ -558,4 +558,3 @@ const title = computed(() =>
         </div>
     </div>
 </template>
-

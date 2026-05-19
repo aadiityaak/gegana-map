@@ -324,7 +324,7 @@ onMounted(async () => {
 <template>
     <Head title="WAN TEROR" />
 
-    <div class="p-6 font-mono">
+    <div class="p-4 font-mono sm:p-6">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
@@ -428,67 +428,69 @@ onMounted(async () => {
             </div>
         </div>
 
-        <div class="rounded-xl border border-green-500/15 bg-black/20">
-            <div class="grid grid-cols-12 gap-2 border-b border-green-500/15 p-3 text-xs text-green-300/70">
-                <div class="col-span-1">ID</div>
-                <div class="col-span-4">Kategori</div>
-                <div class="col-span-5">Wilayah</div>
-                <div class="col-span-2 text-right">Aksi</div>
-            </div>
-            <div
-                v-if="props.items.data.length === 0"
-                class="p-4 text-xs text-green-300/60"
-            >
-                > belum ada data.
-            </div>
-            <div
-                v-for="row in props.items.data"
-                :key="row.id"
-                class="grid grid-cols-12 gap-2 border-b border-green-500/10 p-3 text-xs text-green-200/85 last:border-b-0"
-            >
-                <div class="col-span-1">{{ row.id }}</div>
-                <div class="col-span-4">
-                    {{ typeLabel(row.incident_type) }}
-                    <div
-                        v-if="row.finding_type"
-                        class="mt-1 text-[11px] text-green-300/60"
-                    >
-                        > {{ row.finding_type }}
-                    </div>
+        <div class="overflow-x-auto rounded-xl border border-green-500/15 bg-black/20">
+            <div class="min-w-[860px]">
+                <div class="grid grid-cols-12 gap-2 border-b border-green-500/15 p-3 text-xs text-green-300/70">
+                    <div class="col-span-1">ID</div>
+                    <div class="col-span-4">Kategori</div>
+                    <div class="col-span-5">Wilayah</div>
+                    <div class="col-span-2 text-right">Aksi</div>
                 </div>
-                <div class="col-span-5">
-                    {{
-                        [row.village_name, row.district_name, row.regency_name, row.province_name]
-                            .filter(Boolean)
-                            .join(', ') ||
-                            `${row.village_id}, ${row.district_id}, ${row.regency_id}, ${row.province_id}`
-                    }}
-                    <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
-                        <span
-                            v-if="photosCount(row.photos) > 0"
-                            class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5"
-                        >
-                            > foto: {{ photosCount(row.photos) }}
-                        </span>
-                        <span
-                            v-if="descriptionPreview(row.description)"
-                            class="max-w-full truncate"
-                        >
-                            > {{ descriptionPreview(row.description) }}
-                        </span>
-                    </div>
+                <div
+                    v-if="props.items.data.length === 0"
+                    class="p-4 text-xs text-green-300/60"
+                >
+                    > belum ada data.
                 </div>
-                <div class="col-span-2 flex justify-end gap-2">
-                    <Button size="sm" variant="secondary" as-child>
-                        <Link :href="`/wan-teror/${row.id}/edit`">Edit</Link>
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="destructive"
-                        @click="deleteItem(row.id)"
-                    >
-                        Hapus
-                    </Button>
+                <div
+                    v-for="row in props.items.data"
+                    :key="row.id"
+                    class="grid grid-cols-12 gap-2 border-b border-green-500/10 p-3 text-xs text-green-200/85 last:border-b-0"
+                >
+                    <div class="col-span-1">{{ row.id }}</div>
+                    <div class="col-span-4">
+                        {{ typeLabel(row.incident_type) }}
+                        <div
+                            v-if="row.finding_type"
+                            class="mt-1 text-[11px] text-green-300/60"
+                        >
+                            > {{ row.finding_type }}
+                        </div>
+                    </div>
+                    <div class="col-span-5">
+                        {{
+                            [row.village_name, row.district_name, row.regency_name, row.province_name]
+                                .filter(Boolean)
+                                .join(', ') ||
+                                `${row.village_id}, ${row.district_id}, ${row.regency_id}, ${row.province_id}`
+                        }}
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
+                            <span
+                                v-if="photosCount(row.photos) > 0"
+                                class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5"
+                            >
+                                > foto: {{ photosCount(row.photos) }}
+                            </span>
+                            <span
+                                v-if="descriptionPreview(row.description)"
+                                class="max-w-full truncate"
+                            >
+                                > {{ descriptionPreview(row.description) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-span-2 flex justify-end gap-2">
+                        <Button size="sm" variant="secondary" as-child>
+                            <Link :href="`/wan-teror/${row.id}/edit`">Edit</Link>
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="destructive"
+                            @click="deleteItem(row.id)"
+                        >
+                            Hapus
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1068,7 +1068,7 @@ watchEffect(() => {
 <template>
     <Head :title="title" />
 
-    <div class="p-6 font-mono">
+    <div class="p-4 font-mono sm:p-6">
         <div v-if="isDetailPage" class="space-y-4">
             <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
@@ -1282,7 +1282,7 @@ watchEffect(() => {
                             </div>
                             <div
                                 ref="mapContainer"
-                                class="relative z-0 h-[420px] w-full overflow-hidden rounded-lg border border-green-500/15"
+                                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 sm:h-[420px]"
                             />
                         </div>
 

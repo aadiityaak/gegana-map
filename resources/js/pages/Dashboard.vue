@@ -636,7 +636,7 @@ watch(
 <template>
     <Head title="Dashboard" />
 
-    <div class="relative p-6 font-mono dashboard-fx">
+    <div class="relative p-4 font-mono dashboard-fx sm:p-6">
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
             <div class="fx-grid absolute inset-0" />
             <div class="fx-scan absolute inset-0" />
@@ -937,7 +937,7 @@ watch(
             <div
                 v-else
                 ref="mapContainer"
-                class="relative z-0 h-[420px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 sm:h-[420px]"
             />
         </div>
 
@@ -992,7 +992,7 @@ watch(
                 </div>
                 <div
                     ref="svgTabRoot"
-                    class="mx-auto h-[420px] w-full max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-full [&_svg]:w-full [&_svg]:rounded-lg"
+                    class="mx-auto h-[320px] w-full max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-full [&_svg]:w-full [&_svg]:rounded-lg sm:h-[420px]"
                     v-html="activeSvg"
                 />
             </div>
