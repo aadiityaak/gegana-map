@@ -283,7 +283,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('api/jibom/indonesia-map-svg', function () {
-        $path = env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaLow.svg');
+        $path = env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaMap.svg');
         if (! is_string($path) || trim($path) === '' || ! file_exists($path)) {
             return response()->json(['message' => 'Map file not found.'], 404);
         }
@@ -298,7 +298,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('api.jibom.indonesia-map-svg');
 
     Route::get('api/kwrn/indonesia-map-svg', function () {
-        $path = env('KWRN_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaLow.svg'));
+        $path = env('KWRN_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaMap.svg'));
         if (! is_string($path) || trim($path) === '' || ! file_exists($path)) {
             return response()->json(['message' => 'Map file not found.'], 404);
         }
@@ -313,7 +313,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('api.kwrn.indonesia-map-svg');
 
     Route::get('api/wan-teror/indonesia-map-svg', function () {
-        $path = env('WAN_TEROR_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaLow.svg'));
+        $path = env('WAN_TEROR_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaMap.svg'));
         if (! is_string($path) || trim($path) === '' || ! file_exists($path)) {
             return response()->json(['message' => 'Map file not found.'], 404);
         }

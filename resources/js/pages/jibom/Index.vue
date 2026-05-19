@@ -399,7 +399,7 @@ onMounted(async () => {
                 </div>
                 <div
                     ref="mapRoot"
-                    class="mx-auto max-w-[1210px] [&_svg]:h-auto [&_svg]:w-full"
+                    class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
                     v-html="mapSvg"
                 />
             </div>
