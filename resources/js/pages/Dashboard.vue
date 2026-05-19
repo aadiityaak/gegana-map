@@ -208,28 +208,58 @@ const colorForCount = (count: number, max: number) => {
     return '#22c55e';
 };
 
+type SvgTab = 'jibom' | 'kwrn' | 'wan-teror';
+
+const svgTab = ref<SvgTab>('jibom');
+const svgTabRoot = ref<HTMLDivElement | null>(null);
+const svgHovered = ref<{ name: string; count: number } | null>(null);
+
 const jibomMapSvg = ref<string>('');
 const jibomMapError = ref<string | null>(null);
-const jibomMapRoot = ref<HTMLDivElement | null>(null);
 const jibomCounts = ref<ProvinceCount[]>([]);
-const jibomHovered = ref<{ name: string; count: number } | null>(null);
 
 const kwrnMapSvg = ref<string>('');
 const kwrnMapError = ref<string | null>(null);
-const kwrnMapRoot = ref<HTMLDivElement | null>(null);
 const kwrnCounts = ref<ProvinceCount[]>([]);
-const kwrnHovered = ref<{ name: string; count: number } | null>(null);
 
 const wanTerorMapSvg = ref<string>('');
 const wanTerorMapError = ref<string | null>(null);
-const wanTerorMapRoot = ref<HTMLDivElement | null>(null);
 const wanTerorCounts = ref<ProvinceCount[]>([]);
-const wanTerorHovered = ref<{ name: string; count: number } | null>(null);
+
+const activeSvg = computed(() => {
+    if (svgTab.value === 'jibom') return jibomMapSvg.value;
+    if (svgTab.value === 'kwrn') return kwrnMapSvg.value;
+    return wanTerorMapSvg.value;
+});
+
+const activeError = computed(() => {
+    if (svgTab.value === 'jibom') return jibomMapError.value;
+    if (svgTab.value === 'kwrn') return kwrnMapError.value;
+    return wanTerorMapError.value;
+});
+
+const activeCounts = computed(() => {
+    if (svgTab.value === 'jibom') return jibomCounts.value;
+    if (svgTab.value === 'kwrn') return kwrnCounts.value;
+    return wanTerorCounts.value;
+});
+
+const activeListBaseHref = computed(() => {
+    if (svgTab.value === 'jibom') return '/jibom';
+    if (svgTab.value === 'kwrn') return '/kwrn';
+    return '/wan-teror';
+});
+
+const activeTabLabel = computed(() => {
+    if (svgTab.value === 'jibom') return 'JIBOM';
+    if (svgTab.value === 'kwrn') return 'KWRN';
+    return 'WAN TEROR';
+});
 
 const applyCountsToSvg = async (options: {
     root: HTMLDivElement | null;
     counts: ProvinceCount[];
-    hovered: typeof jibomHovered;
+    hovered: typeof svgHovered;
     labelsId: string;
     listBaseHref: string;
 }) => {
@@ -581,42 +611,22 @@ watch(
 );
 
 watch(
-    [jibomMapSvg, jibomCounts, jibomMapRoot],
+    () => svgTab.value,
     () => {
-        void applyCountsToSvg({
-            root: jibomMapRoot.value,
-            counts: jibomCounts.value,
-            hovered: jibomHovered,
-            labelsId: 'jibom',
-            listBaseHref: '/jibom',
-        });
+        svgHovered.value = null;
     },
-    { deep: true, flush: 'post', immediate: true },
 );
 
 watch(
-    [kwrnMapSvg, kwrnCounts, kwrnMapRoot],
+    [activeSvg, activeCounts, svgTabRoot, svgTab],
     () => {
+        if (!activeSvg.value) return;
         void applyCountsToSvg({
-            root: kwrnMapRoot.value,
-            counts: kwrnCounts.value,
-            hovered: kwrnHovered,
-            labelsId: 'kwrn',
-            listBaseHref: '/kwrn',
-        });
-    },
-    { deep: true, flush: 'post', immediate: true },
-);
-
-watch(
-    [wanTerorMapSvg, wanTerorCounts, wanTerorMapRoot],
-    () => {
-        void applyCountsToSvg({
-            root: wanTerorMapRoot.value,
-            counts: wanTerorCounts.value,
-            hovered: wanTerorHovered,
-            labelsId: 'wan-teror',
-            listBaseHref: '/wan-teror',
+            root: svgTabRoot.value,
+            counts: activeCounts.value,
+            hovered: svgHovered,
+            labelsId: svgTab.value,
+            listBaseHref: activeListBaseHref.value,
         });
     },
     { deep: true, flush: 'post', immediate: true },
@@ -931,95 +941,63 @@ watch(
             />
         </div>
 
-        <div class="mt-6 grid gap-4 lg:grid-cols-3">
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
-                    <span>> MAP JIBOM</span>
-                    <span class="text-[11px]">> by_province</span>
-                </div>
-                <div v-if="jibomMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
-                    > {{ jibomMapError }}
-                </div>
-                <div
-                    v-else-if="jibomMapSvg"
-                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-                >
-                    <div
-                        v-if="jibomHovered"
-                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+        <div class="mt-6 rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+                <div>> MAP PROVINSI: {{ activeTabLabel }}</div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        :class="svgTab === 'jibom' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="svgTab = 'jibom'"
                     >
-                        <span>> {{ jibomHovered.name }}</span>
-                        <span class="text-[11px]">> kejadian: {{ fmt(jibomHovered.count) }}</span>
-                    </div>
-                    <div
-                        ref="jibomMapRoot"
-                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
-                        v-html="jibomMapSvg"
-                    />
-                </div>
-                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
-                    loading_map...
+                        JIBOM
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        :class="svgTab === 'kwrn' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="svgTab = 'kwrn'"
+                    >
+                        KWRN
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        :class="svgTab === 'wan-teror' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="svgTab = 'wan-teror'"
+                    >
+                        WAN TEROR
+                    </Button>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
-                    <span>> MAP KWRN</span>
-                    <span class="text-[11px]">> by_province</span>
-                </div>
-                <div v-if="kwrnMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
-                    > {{ kwrnMapError }}
-                </div>
-                <div
-                    v-else-if="kwrnMapSvg"
-                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-                >
-                    <div
-                        v-if="kwrnHovered"
-                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
-                    >
-                        <span>> {{ kwrnHovered.name }}</span>
-                        <span class="text-[11px]">> kejadian: {{ fmt(kwrnHovered.count) }}</span>
-                    </div>
-                    <div
-                        ref="kwrnMapRoot"
-                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
-                        v-html="kwrnMapSvg"
-                    />
-                </div>
-                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
-                    loading_map...
-                </div>
+            <div v-if="activeError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                > {{ activeError }}
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
-                    <span>> MAP WAN TEROR</span>
-                    <span class="text-[11px]">> by_province</span>
-                </div>
-                <div v-if="wanTerorMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
-                    > {{ wanTerorMapError }}
+            <div
+                v-else-if="activeSvg"
+                class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+            >
+                <div
+                    v-if="svgHovered"
+                    class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+                >
+                    <span>> {{ svgHovered.name }}</span>
+                    <span class="text-[11px]">> kejadian: {{ fmt(svgHovered.count) }}</span>
                 </div>
                 <div
-                    v-else-if="wanTerorMapSvg"
-                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-                >
-                    <div
-                        v-if="wanTerorHovered"
-                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
-                    >
-                        <span>> {{ wanTerorHovered.name }}</span>
-                        <span class="text-[11px]">> kejadian: {{ fmt(wanTerorHovered.count) }}</span>
-                    </div>
-                    <div
-                        ref="wanTerorMapRoot"
-                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
-                        v-html="wanTerorMapSvg"
-                    />
-                </div>
-                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
-                    loading_map...
-                </div>
+                    ref="svgTabRoot"
+                    class="mx-auto h-[420px] w-full max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-full [&_svg]:w-full [&_svg]:rounded-lg"
+                    v-html="activeSvg"
+                />
+            </div>
+            <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
+                loading_map...
             </div>
         </div>
 
