@@ -21,25 +21,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-Route::prefix('{current_team}')
-    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
-    ->group(function () {
-        Route::inertia('dashboard', 'Dashboard')->name('dashboard');
-
-        Route::inertia('ipoleksosbudkam', 'ipoleksosbudkam/Index')->name('ipoleksosbudkam.index');
-        Route::inertia('ipoleksosbudkam/{category}', 'ipoleksosbudkam/Index', [
-            'category' => fn(Request $request) => $request->route('category'),
-        ])->name('ipoleksosbudkam.category');
-        Route::inertia('ipoleksosbudkam/{category}/{subcategory}', 'ipoleksosbudkam/Index', [
-            'category' => fn(Request $request) => $request->route('category'),
-            'subcategory' => fn(Request $request) => $request->route('subcategory'),
-        ])->name('ipoleksosbudkam.subcategory');
-    });
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
-});
-
 Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-data', function (Request $request) {
     $endpoint = config('services.crime_map.data_endpoint');
     $token = config('services.crime_map.data_token');
@@ -86,5 +67,24 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
     return response($upstream->body(), $status)
         ->header('Content-Type', $upstream->header('Content-Type', 'application/json'));
 })->name('api.ipoleksosbudkam.monitoring-data');
+
+Route::prefix('{current_team}')
+    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
+    ->group(function () {
+        Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+
+        Route::inertia('ipoleksosbudkam', 'ipoleksosbudkam/Index')->name('ipoleksosbudkam.index');
+        Route::inertia('ipoleksosbudkam/{category}', 'ipoleksosbudkam/Index', [
+            'category' => fn(Request $request) => $request->route('category'),
+        ])->name('ipoleksosbudkam.category');
+        Route::inertia('ipoleksosbudkam/{category}/{subcategory}', 'ipoleksosbudkam/Index', [
+            'category' => fn(Request $request) => $request->route('category'),
+            'subcategory' => fn(Request $request) => $request->route('subcategory'),
+        ])->name('ipoleksosbudkam.subcategory');
+    });
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
+});
 
 require __DIR__ . '/settings.php';

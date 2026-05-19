@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -16,6 +16,8 @@ type MonitoringItem = {
     kecamatan?: { id: number; nama: string } | null;
     category?: { id: number; name: string; slug: string } | null;
     sub_category?: { id: number; name: string; slug: string } | null;
+    latitude?: number | null;
+    longitude?: number | null;
     jumlah_terdampak?: number | null;
     source?: string | null;
 };
@@ -41,6 +43,11 @@ const items = ref<MonitoringItem[]>([]);
 const meta = ref<MonitoringResponse['meta'] | null>(null);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+
+const mapContainer = ref<HTMLDivElement | null>(null);
+let map: any | null = null;
+let markerLayer: any | null = null;
+let mapReady = false;
 
 const title = computed(() => {
     const parts = ['IPOLEKSOSBUDKAM'];
@@ -121,6 +128,72 @@ const locationLabel = (item: MonitoringItem) => {
     return parts.length ? parts.join(', ') : '-';
 };
 
+const getLeaflet = async () => {
+    const mod = await import('leaflet');
+    return (mod as any).default ?? mod;
+};
+
+const markerColor = (severity: string) => {
+    const map: Record<string, string> = {
+        low: '#34d399',
+        medium: '#fbbf24',
+        high: '#fb7185',
+        critical: '#f87171',
+    };
+    return map[severity] ?? '#22c55e';
+};
+
+const updateMapMarkers = async () => {
+    if (!map || !markerLayer) return;
+
+    markerLayer.clearLayers();
+
+    const L = await getLeaflet();
+    const points: Array<[number, number]> = [];
+
+    for (const item of items.value) {
+        const lat = typeof item.latitude === 'number' ? item.latitude : null;
+        const lng = typeof item.longitude === 'number' ? item.longitude : null;
+        if (lat === null || lng === null) continue;
+
+        points.push([lat, lng]);
+
+        const color = markerColor(item.severity_level);
+        const marker = L.circleMarker([lat, lng], {
+            radius: 7,
+            color: color,
+            weight: 1,
+            fillColor: color,
+            fillOpacity: 0.65,
+        });
+
+        marker.bindPopup(
+            `
+                <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(226,255,232,0.92);">
+                    <div style="font-weight: 700; margin-bottom: 6px;">${String(item.title).replaceAll('<', '&lt;')}</div>
+                    <div style="font-size: 12px; opacity: 0.75; margin-bottom: 8px;">
+                        ${formatDateTime(item.incident_date)} · ${locationLabel(item)}
+                    </div>
+                    <div style="display:flex; gap:8px; font-size: 12px;">
+                        <span style="border: 1px solid rgba(34,197,94,0.25); padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.35);">${severityLabel(item.severity_level)}</span>
+                        <span style="border: 1px solid rgba(34,197,94,0.25); padding: 2px 8px; border-radius: 999px; background: rgba(34,197,94,0.10);">${statusLabel(item.status)}</span>
+                    </div>
+                </div>
+            `,
+            {
+                closeButton: false,
+            },
+        );
+
+        markerLayer.addLayer(marker);
+    }
+
+    if (points.length) {
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 10 });
+    }
+};
+
 const load = async () => {
     loading.value = true;
     errorMessage.value = null;
@@ -162,6 +235,50 @@ const load = async () => {
 watchEffect(() => {
     void load();
 });
+
+onMounted(async () => {
+    if (typeof window === 'undefined') return;
+
+    await nextTick();
+    if (!mapContainer.value || map) return;
+
+    const L = await getLeaflet();
+
+    map = L.map(mapContainer.value, {
+        zoomControl: true,
+    }).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    markerLayer = L.featureGroup().addTo(map);
+    mapReady = true;
+
+    void updateMapMarkers();
+
+    setTimeout(() => {
+        map?.invalidateSize?.();
+    }, 0);
+});
+
+onBeforeUnmount(() => {
+    if (map) {
+        map.remove();
+        map = null;
+        markerLayer = null;
+        mapReady = false;
+    }
+});
+
+watch(
+    () => items.value,
+    () => {
+        if (!mapReady) return;
+        void updateMapMarkers();
+    },
+    { deep: true },
+);
 </script>
 
 <template>
@@ -196,12 +313,18 @@ watchEffect(() => {
             > {{ errorMessage }}
         </div>
 
-        <div v-else-if="loading" class="flex items-center gap-2 text-green-300/70">
-            <Spinner />
-            <span>> loading_feed...</span>
-        </div>
-
         <div v-else class="space-y-3">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
+                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                    <span>> leaflet_map: incidents</span>
+                    <span v-if="loading" class="flex items-center gap-2">
+                        <Spinner />
+                        loading_feed...
+                    </span>
+                </div>
+                <div ref="mapContainer" class="relative z-0 h-[380px] w-full overflow-hidden rounded-lg border border-green-500/15" />
+            </div>
+
             <div
                 v-for="item in items"
                 :key="item.id"
@@ -254,4 +377,3 @@ watchEffect(() => {
         </div>
     </div>
 </template>
-
