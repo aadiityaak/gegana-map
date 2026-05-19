@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -42,6 +42,14 @@ const props = defineProps<{
         totals: { jibom: number; kwrn: number; wanTeror: number; all: number };
         modules: ModuleSummary[];
         topProvincesAll: TopProvince[];
+        monthly: {
+            months: string[];
+            series: {
+                jibom: number[];
+                kwrn: number[];
+                wanTeror: number[];
+            };
+        };
         generatedAt: string;
     };
 }>();
@@ -56,13 +64,98 @@ const generatedLabel = computed(() => {
     }
 });
 
-const quickLinks = computed(() => [
-    { label: 'JIBOM', href: '/jibom' },
-    { label: 'KWRN', href: '/kwrn' },
-    { label: 'WAN TEROR', href: '/wan-teror' },
-    { label: 'BRANDING', href: '/settings/branding' },
-    { label: 'ABOUT', href: '/settings/about' },
+const months = computed(() => props.dashboard.monthly?.months ?? []);
+const monthLabels = computed(() =>
+    months.value.map((key) => {
+        try {
+            const d = new Date(`${key}-01T00:00:00`);
+            return d.toLocaleString('id-ID', { month: 'short' });
+        } catch {
+            return key;
+        }
+    }),
+);
+
+const series = computed(() => props.dashboard.monthly?.series ?? { jibom: [], kwrn: [], wanTeror: [] });
+const chartWidth = 720;
+const chartHeight = 240;
+const padLeft = 44;
+const padRight = 16;
+const padTop = 16;
+const padBottom = 34;
+
+const plotW = computed(() => chartWidth - padLeft - padRight);
+const plotH = computed(() => chartHeight - padTop - padBottom);
+
+const allValues = computed(() => [
+    ...(series.value.jibom ?? []),
+    ...(series.value.kwrn ?? []),
+    ...(series.value.wanTeror ?? []),
 ]);
+const maxValue = computed(() => Math.max(1, ...allValues.value.map((n) => (Number.isFinite(n) ? n : 0))));
+const stepX = computed(() => {
+    const n = months.value.length;
+    if (n <= 1) return plotW.value;
+    return plotW.value / (n - 1);
+});
+
+const pointXY = (idx: number, value: number) => {
+    const x = padLeft + idx * stepX.value;
+    const v = Number.isFinite(value) ? value : 0;
+    const y = padTop + plotH.value * (1 - v / maxValue.value);
+    return { x, y };
+};
+
+const pathFor = (values: number[]) => {
+    if (!values || values.length === 0) return '';
+    const pts = values.map((v, i) => pointXY(i, v));
+    return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+};
+
+const pathJibom = computed(() => pathFor(series.value.jibom ?? []));
+const pathKwrn = computed(() => pathFor(series.value.kwrn ?? []));
+const pathWanTeror = computed(() => pathFor(series.value.wanTeror ?? []));
+
+const hoverIndex = ref<number | null>(null);
+const chartEl = ref<SVGSVGElement | null>(null);
+
+const onChartMove = (e: MouseEvent) => {
+    const el = chartEl.value;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const n = months.value.length;
+    if (n <= 0) return;
+    const raw = (x - padLeft) / stepX.value;
+    const idx = Math.min(n - 1, Math.max(0, Math.round(raw)));
+    hoverIndex.value = idx;
+};
+const onChartLeave = () => {
+    hoverIndex.value = null;
+};
+
+const hoverLabel = computed(() => {
+    if (hoverIndex.value === null) return null;
+    return months.value[hoverIndex.value] ?? null;
+});
+const hoverMonthShort = computed(() => {
+    if (hoverIndex.value === null) return null;
+    return monthLabels.value[hoverIndex.value] ?? null;
+});
+const hoverValues = computed(() => {
+    if (hoverIndex.value === null) return null;
+    const i = hoverIndex.value;
+    return {
+        jibom: series.value.jibom?.[i] ?? 0,
+        kwrn: series.value.kwrn?.[i] ?? 0,
+        wanTeror: series.value.wanTeror?.[i] ?? 0,
+    };
+});
+
+const hoverX = computed(() => {
+    if (hoverIndex.value === null) return null;
+    return padLeft + hoverIndex.value * stepX.value;
+});
 </script>
 
 <template>
@@ -118,20 +211,203 @@ const quickLinks = computed(() => [
 
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
             <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 lg:col-span-2">
-                <div class="mb-3 flex items-center justify-between">
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs font-semibold tracking-widest text-green-300/60">
-                        > QUICK ACCESS
+                        > GRAFIK 12 BULAN (JIBOM / KWRN / WAN TEROR)
+                    </div>
+                    <div class="flex items-center gap-3 text-[11px] text-green-200/80">
+                        <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-green-400"></span>
+                            <span>> JIBOM</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-sky-400"></span>
+                            <span>> KWRN</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                            <span>> WAN TEROR</span>
+                        </div>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
+
+                <div class="relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-3">
+                    <div v-if="months.length === 0" class="text-xs text-green-300/60">
+                        > belum ada data grafik.
+                    </div>
+                    <svg
+                        v-else
+                        ref="chartEl"
+                        :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+                        class="h-[260px] w-full"
+                        @mousemove="onChartMove"
+                        @mouseleave="onChartLeave"
+                    >
+                        <g>
+                            <line
+                                v-for="i in 4"
+                                :key="i"
+                                :x1="padLeft"
+                                :x2="chartWidth - padRight"
+                                :y1="padTop + (plotH * i) / 4"
+                                :y2="padTop + (plotH * i) / 4"
+                                stroke="rgba(34,197,94,0.12)"
+                                stroke-width="1"
+                            />
+                            <line
+                                :x1="padLeft"
+                                :x2="chartWidth - padRight"
+                                :y1="padTop + plotH"
+                                :y2="padTop + plotH"
+                                stroke="rgba(34,197,94,0.18)"
+                                stroke-width="1"
+                            />
+                            <line
+                                :x1="padLeft"
+                                :x2="padLeft"
+                                :y1="padTop"
+                                :y2="padTop + plotH"
+                                stroke="rgba(34,197,94,0.18)"
+                                stroke-width="1"
+                            />
+                        </g>
+
+                        <path
+                            v-if="pathJibom"
+                            :d="pathJibom"
+                            fill="none"
+                            stroke="#22c55e"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            v-if="pathKwrn"
+                            :d="pathKwrn"
+                            fill="none"
+                            stroke="#38bdf8"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            v-if="pathWanTeror"
+                            :d="pathWanTeror"
+                            fill="none"
+                            stroke="#fbbf24"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                        <g v-if="hoverIndex !== null && hoverX !== null">
+                            <line
+                                :x1="hoverX"
+                                :x2="hoverX"
+                                :y1="padTop"
+                                :y2="padTop + plotH"
+                                stroke="rgba(34,197,94,0.25)"
+                                stroke-width="1"
+                            />
+                            <circle
+                                v-if="series.jibom?.length"
+                                :cx="hoverX"
+                                :cy="pointXY(hoverIndex, series.jibom[hoverIndex] ?? 0).y"
+                                r="3.2"
+                                fill="#22c55e"
+                                stroke="rgba(0,0,0,0.7)"
+                                stroke-width="1"
+                            />
+                            <circle
+                                v-if="series.kwrn?.length"
+                                :cx="hoverX"
+                                :cy="pointXY(hoverIndex, series.kwrn[hoverIndex] ?? 0).y"
+                                r="3.2"
+                                fill="#38bdf8"
+                                stroke="rgba(0,0,0,0.7)"
+                                stroke-width="1"
+                            />
+                            <circle
+                                v-if="series.wanTeror?.length"
+                                :cx="hoverX"
+                                :cy="pointXY(hoverIndex, series.wanTeror[hoverIndex] ?? 0).y"
+                                r="3.2"
+                                fill="#fbbf24"
+                                stroke="rgba(0,0,0,0.7)"
+                                stroke-width="1"
+                            />
+                        </g>
+
+                        <g>
+                            <text
+                                v-for="(lbl, i) in monthLabels"
+                                :key="`${lbl}-${i}`"
+                                :x="padLeft + i * stepX"
+                                :y="chartHeight - 12"
+                                text-anchor="middle"
+                                font-size="10"
+                                fill="rgba(134,239,172,0.65)"
+                            >
+                                {{ lbl }}
+                            </text>
+                        </g>
+
+                        <g>
+                            <text
+                                :x="padLeft - 10"
+                                :y="padTop + 10"
+                                text-anchor="end"
+                                font-size="10"
+                                fill="rgba(134,239,172,0.65)"
+                            >
+                                {{ fmt(maxValue) }}
+                            </text>
+                            <text
+                                :x="padLeft - 10"
+                                :y="padTop + plotH"
+                                text-anchor="end"
+                                font-size="10"
+                                fill="rgba(134,239,172,0.65)"
+                            >
+                                0
+                            </text>
+                        </g>
+                    </svg>
+
+                    <div
+                        v-if="hoverLabel && hoverValues"
+                        class="pointer-events-none absolute right-3 top-3 rounded-lg border border-green-500/15 bg-black/60 px-3 py-2 text-[11px] text-green-200/90 backdrop-blur"
+                    >
+                        <div>> {{ hoverLabel }} ({{ hoverMonthShort }})</div>
+                        <div class="mt-1 grid gap-0.5 text-green-200/85">
+                            <div>> JIBOM: {{ fmt(hoverValues.jibom) }}</div>
+                            <div>> KWRN: {{ fmt(hoverValues.kwrn) }}</div>
+                            <div>> WAN TEROR: {{ fmt(hoverValues.wanTeror) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2">
                     <Button
-                        v-for="item in quickLinks"
-                        :key="item.href"
                         variant="secondary"
                         as-child
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
                     >
-                        <Link :href="item.href">> {{ item.label }}</Link>
+                        <Link href="/jibom">> JIBOM</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        as-child
+                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                    >
+                        <Link href="/kwrn">> KWRN</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        as-child
+                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                    >
+                        <Link href="/wan-teror">> WAN TEROR</Link>
                     </Button>
                 </div>
             </div>
