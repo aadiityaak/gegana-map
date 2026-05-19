@@ -230,7 +230,236 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/indonesia-pr
 })->name('api.ketahanan-pangan.indonesia-provinces-ts');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::inertia('dashboard', 'Dashboard', [
+        'dashboard' => function () {
+            $schema = DB::getSchemaBuilder();
+
+            $tables = [
+                'jibom' => 'jibom_incidents',
+                'kwrn' => 'kwrn_incidents',
+                'wan_teror' => 'wan_teror_incidents',
+            ];
+
+            $hasTable = fn(string $name) => $schema->hasTable($name);
+
+            $safeCount = function (string $table) use ($hasTable): int {
+                if (! $hasTable($table)) return 0;
+                return (int) DB::table($table)->count();
+            };
+
+            $safeMaxCreatedAt = function (string $table) use ($hasTable): ?string {
+                if (! $hasTable($table)) return null;
+                $value = DB::table($table)->max('created_at');
+                if ($value instanceof \DateTimeInterface) {
+                    return $value->format('c');
+                }
+                if (is_string($value) && trim($value) !== '') {
+                    try {
+                        return (new \DateTimeImmutable($value))->format('c');
+                    } catch (\Throwable $e) {
+                        return null;
+                    }
+                }
+                return null;
+            };
+
+            $safeCountsByType = function (string $table, array $types) use ($hasTable): array {
+                $out = [];
+                foreach ($types as $t) {
+                    $out[$t] = 0;
+                }
+                if (! $hasTable($table)) return $out;
+
+                $rows = DB::table($table)
+                    ->select(['incident_type', DB::raw('count(*) as count')])
+                    ->whereIn('incident_type', $types)
+                    ->groupBy('incident_type')
+                    ->get();
+
+                foreach ($rows as $row) {
+                    $k = is_string($row->incident_type ?? null) ? $row->incident_type : null;
+                    if (! $k || ! array_key_exists($k, $out)) continue;
+                    $out[$k] = (int) ($row->count ?? 0);
+                }
+
+                return $out;
+            };
+
+            $safeTopProvinces = function (string $table, ?array $types, int $limit = 8) use ($hasTable): array {
+                if (! $hasTable($table)) return [];
+
+                $q = DB::table($table . ' as t')
+                    ->join('reg_provinces as p', 'p.id', '=', 't.province_id')
+                    ->select([
+                        'p.id',
+                        'p.name',
+                        DB::raw('count(*) as count'),
+                    ])
+                    ->groupBy('p.id', 'p.name')
+                    ->orderByDesc('count')
+                    ->limit($limit);
+
+                if (is_array($types) && count($types) > 0) {
+                    $q->whereIn('t.incident_type', $types);
+                }
+
+                $rows = $q->get();
+
+                return $rows
+                    ->map(fn($r) => [
+                        'id' => (string) ($r->id ?? ''),
+                        'name' => (string) ($r->name ?? ''),
+                        'count' => (int) ($r->count ?? 0),
+                    ])
+                    ->values()
+                    ->all();
+            };
+
+            $jibomTypes = ['ancaman', 'temuan', 'ledakan'];
+            $kwrnTypes = ['ancaman', 'temuan', 'ledakan'];
+            $wanTerorTypes = [
+                'napiter',
+                'ex-napiter',
+                'jaringan-terorisme',
+                'bullying-perundungan',
+                'aksi-teror',
+            ];
+
+            $totals = [
+                'jibom' => $safeCount($tables['jibom']),
+                'kwrn' => $safeCount($tables['kwrn']),
+                'wanTeror' => $safeCount($tables['wan_teror']),
+            ];
+            $totals['all'] = array_sum($totals);
+
+            $modules = [
+                [
+                    'key' => 'jibom',
+                    'title' => 'JIBOM',
+                    'total' => $totals['jibom'],
+                    'types' => [
+                        ['value' => 'ancaman', 'label' => 'Ancaman Pengeboman'],
+                        ['value' => 'temuan', 'label' => 'Temuan Bom'],
+                        ['value' => 'ledakan', 'label' => 'Ledakan Bom'],
+                    ],
+                    'countsByType' => $safeCountsByType($tables['jibom'], $jibomTypes),
+                    'topProvinces' => $safeTopProvinces($tables['jibom'], $jibomTypes),
+                    'lastCreatedAt' => $safeMaxCreatedAt($tables['jibom']),
+                    'href' => '/jibom',
+                ],
+                [
+                    'key' => 'kwrn',
+                    'title' => 'KWRN',
+                    'total' => $totals['kwrn'],
+                    'types' => [
+                        ['value' => 'ancaman', 'label' => 'Ancaman KWRN'],
+                        ['value' => 'temuan', 'label' => 'Temuan KWRN'],
+                        ['value' => 'ledakan', 'label' => 'Ledakan KWRN'],
+                    ],
+                    'countsByType' => $safeCountsByType($tables['kwrn'], $kwrnTypes),
+                    'topProvinces' => $safeTopProvinces($tables['kwrn'], $kwrnTypes),
+                    'lastCreatedAt' => $safeMaxCreatedAt($tables['kwrn']),
+                    'href' => '/kwrn',
+                ],
+                [
+                    'key' => 'wanTeror',
+                    'title' => 'WAN TEROR',
+                    'total' => $totals['wanTeror'],
+                    'types' => [
+                        ['value' => 'napiter', 'label' => 'Data Napiter'],
+                        ['value' => 'ex-napiter', 'label' => 'Data EX Napiter'],
+                        ['value' => 'jaringan-terorisme', 'label' => 'Jaringan Terorisme'],
+                        ['value' => 'bullying-perundungan', 'label' => 'Bullying/Perundungan'],
+                        ['value' => 'aksi-teror', 'label' => 'Aksi Teror'],
+                    ],
+                    'countsByType' => $safeCountsByType($tables['wan_teror'], $wanTerorTypes),
+                    'topProvinces' => $safeTopProvinces($tables['wan_teror'], $wanTerorTypes),
+                    'lastCreatedAt' => $safeMaxCreatedAt($tables['wan_teror']),
+                    'href' => '/wan-teror',
+                ],
+            ];
+
+            $topAll = [];
+            foreach ($tables as $table) {
+                if (! $hasTable($table)) continue;
+                $rows = DB::table($table . ' as t')
+                    ->join('reg_provinces as p', 'p.id', '=', 't.province_id')
+                    ->select(['p.id', 'p.name', DB::raw('count(*) as count')])
+                    ->groupBy('p.id', 'p.name')
+                    ->get();
+                foreach ($rows as $r) {
+                    $id = (string) ($r->id ?? '');
+                    if ($id === '') continue;
+                    if (! isset($topAll[$id])) {
+                        $topAll[$id] = [
+                            'id' => $id,
+                            'name' => (string) ($r->name ?? ''),
+                            'count' => 0,
+                        ];
+                    }
+                    $topAll[$id]['count'] += (int) ($r->count ?? 0);
+                }
+            }
+            $topProvincesAll = array_values($topAll);
+            usort($topProvincesAll, fn($a, $b) => ($b['count'] ?? 0) <=> ($a['count'] ?? 0));
+            $topProvincesAll = array_slice($topProvincesAll, 0, 10);
+
+            $driver = DB::connection()->getDriverName();
+            $monthExpr = match ($driver) {
+                'sqlite' => "strftime('%Y-%m', created_at)",
+                'pgsql' => "to_char(created_at, 'YYYY-MM')",
+                default => "DATE_FORMAT(created_at, '%Y-%m')",
+            };
+
+            $startMonth = now()->startOfMonth()->subMonths(11);
+            $endMonth = now()->startOfMonth()->addMonth();
+            $monthKeys = [];
+            for ($i = 0; $i < 12; $i++) {
+                $monthKeys[] = $startMonth->copy()->addMonths($i)->format('Y-m');
+            }
+
+            $safeMonthlyCounts = function (string $table) use ($hasTable, $monthExpr, $startMonth, $endMonth): array {
+                if (! $hasTable($table)) return [];
+
+                $rows = DB::table($table)
+                    ->select([DB::raw($monthExpr . ' as ym'), DB::raw('count(*) as count')])
+                    ->where('created_at', '>=', $startMonth)
+                    ->where('created_at', '<', $endMonth)
+                    ->groupBy('ym')
+                    ->get();
+
+                $map = [];
+                foreach ($rows as $row) {
+                    $k = is_string($row->ym ?? null) ? $row->ym : null;
+                    if (! $k || trim($k) === '') continue;
+                    $map[$k] = (int) ($row->count ?? 0);
+                }
+
+                return $map;
+            };
+
+            $mJibom = $safeMonthlyCounts($tables['jibom']);
+            $mKwrn = $safeMonthlyCounts($tables['kwrn']);
+            $mWanTeror = $safeMonthlyCounts($tables['wan_teror']);
+
+            $monthly = [
+                'months' => $monthKeys,
+                'series' => [
+                    'jibom' => array_map(fn($k) => (int) ($mJibom[$k] ?? 0), $monthKeys),
+                    'kwrn' => array_map(fn($k) => (int) ($mKwrn[$k] ?? 0), $monthKeys),
+                    'wanTeror' => array_map(fn($k) => (int) ($mWanTeror[$k] ?? 0), $monthKeys),
+                ],
+            ];
+
+            return [
+                'totals' => $totals,
+                'modules' => $modules,
+                'topProvincesAll' => $topProvincesAll,
+                'monthly' => $monthly,
+                'generatedAt' => now()->toIso8601String(),
+            ];
+        },
+    ])->name('dashboard');
 
     Route::inertia('ipoleksosbudkam/ekonomi/ekonomi-harga-sembako', 'KetahanPangan/Index', [
         'komoditas' => fn() => [
