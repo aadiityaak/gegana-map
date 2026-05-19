@@ -16,8 +16,8 @@ type MonitoringItem = {
     kecamatan?: { id: number; nama: string } | null;
     category?: { id: number; name: string; slug: string } | null;
     sub_category?: { id: number; name: string; slug: string } | null;
-    latitude?: number | null;
-    longitude?: number | null;
+    latitude?: number | string | null;
+    longitude?: number | string | null;
     jumlah_terdampak?: number | null;
     source?: string | null;
 };
@@ -152,11 +152,27 @@ const updateMapMarkers = async () => {
     const points: Array<[number, number]> = [];
 
     for (const item of items.value) {
-        const lat = typeof item.latitude === 'number' ? item.latitude : null;
-        const lng = typeof item.longitude === 'number' ? item.longitude : null;
+        const lat =
+            typeof item.latitude === 'number'
+                ? item.latitude
+                : typeof item.latitude === 'string'
+                  ? Number.parseFloat(item.latitude)
+                  : null;
+        const lng =
+            typeof item.longitude === 'number'
+                ? item.longitude
+                : typeof item.longitude === 'string'
+                  ? Number.parseFloat(item.longitude)
+                  : null;
+        const hasValidCoords =
+            typeof lat === 'number' &&
+            typeof lng === 'number' &&
+            Number.isFinite(lat) &&
+            Number.isFinite(lng);
         if (lat === null || lng === null) continue;
-
+        if (!hasValidCoords) continue;
         points.push([lat, lng]);
+
 
         const color = markerColor(item.severity_level);
         const marker = L.circleMarker([lat, lng], {
