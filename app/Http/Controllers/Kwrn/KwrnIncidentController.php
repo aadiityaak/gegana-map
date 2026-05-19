@@ -91,6 +91,10 @@ class KwrnIncidentController extends Controller
         $data = Arr::only($validated, [
             'incident_type',
             'finding_type',
+            'latitude',
+            'longitude',
+            'news_source',
+            'news_url',
             'province_id',
             'regency_id',
             'district_id',
@@ -121,6 +125,10 @@ class KwrnIncidentController extends Controller
         $data = Arr::only($validated, [
             'incident_type',
             'finding_type',
+            'latitude',
+            'longitude',
+            'news_source',
+            'news_url',
             'province_id',
             'regency_id',
             'district_id',
@@ -165,6 +173,16 @@ class KwrnIncidentController extends Controller
                 Rule::in($findingTypes),
             ],
             'description' => ['nullable', 'string', 'max:50000'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            'news_source' => ['required', 'string', Rule::in(['offline', 'online'])],
+            'news_url' => [
+                'nullable',
+                'string',
+                'max:2048',
+                Rule::requiredIf(fn () => $request->input('news_source') === 'online'),
+                'url',
+            ],
             'existing_photos' => ['nullable', 'array', 'max:20'],
             'existing_photos.*' => ['string', 'max:255'],
             'photos' => ['nullable', 'array', 'max:20'],
@@ -259,4 +277,3 @@ class KwrnIncidentController extends Controller
         return $out === '' ? null : $out;
     }
 }
-

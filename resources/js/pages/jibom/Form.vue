@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,10 @@ const props = defineProps<{
         finding_type: string | null;
         description?: string | null;
         photos?: string[] | null;
+        latitude?: number | null;
+        longitude?: number | null;
+        news_source?: string | null;
+        news_url?: string | null;
         province_id: string;
         regency_id: string;
         district_id: string;
@@ -60,6 +65,10 @@ const form = useForm({
     description: props.item?.description ?? '',
     existing_photos: props.item?.photos ?? [],
     photos: [] as File[],
+    latitude: props.item?.latitude ?? null,
+    longitude: props.item?.longitude ?? null,
+    news_source: props.item?.news_source ?? 'offline',
+    news_url: props.item?.news_url ?? '',
     province_id: props.item?.province_id ?? '',
     regency_id: props.item?.regency_id ?? '',
     district_id: props.item?.district_id ?? '',
@@ -76,6 +85,7 @@ const loadingDistricts = ref(false);
 const loadingVillages = ref(false);
 
 const isTemuan = computed(() => form.incident_type === 'temuan');
+const isOnlineSource = computed(() => form.news_source === 'online');
 
 const editorEl = ref<HTMLDivElement | null>(null);
 
@@ -153,10 +163,109 @@ const photoUrl = (path: string) => `/storage/${path}`;
 
 const photosError = computed(() => form.errors.photos || form.errors['photos.0'] || '');
 
+const getLeaflet = async () => {
+    const mod = await import('leaflet');
+    return mod.default;
+};
+
+const mapContainer = ref<HTMLDivElement | null>(null);
+let map: LeafletMap | null = null;
+let coordMarker: CircleMarker | null = null;
+
+const parseCoordNumber = (value: unknown): number | null => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : null;
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') return null;
+        const n = Number.parseFloat(trimmed);
+        return Number.isFinite(n) ? n : null;
+    }
+    return null;
+};
+
+const updateCoordMarker = async () => {
+    if (!map) return;
+    const lat = parseCoordNumber(form.latitude);
+    const lng = parseCoordNumber(form.longitude);
+    if (lat == null || lng == null) {
+        if (coordMarker) {
+            coordMarker.remove();
+            coordMarker = null;
+        }
+        return;
+    }
+
+    const L = await getLeaflet();
+    if (!coordMarker) {
+        coordMarker = L.circleMarker([lat, lng], {
+            radius: 8,
+            color: '#22c55e',
+            fillColor: '#22c55e',
+            fillOpacity: 0.55,
+            weight: 2,
+        }).addTo(map);
+    } else {
+        coordMarker.setLatLng([lat, lng]);
+    }
+};
+
+const setCoords = async (lat: number, lng: number) => {
+    form.latitude = Number(lat.toFixed(6));
+    form.longitude = Number(lng.toFixed(6));
+    await updateCoordMarker();
+};
+
+const ensureMap = async () => {
+    if (typeof window === 'undefined') return;
+    await nextTick();
+    if (!mapContainer.value) return;
+
+    if (map) {
+        setTimeout(() => {
+            map?.invalidateSize?.();
+        }, 0);
+        return;
+    }
+
+    const L = await getLeaflet();
+    const lat = parseCoordNumber(form.latitude);
+    const lng = parseCoordNumber(form.longitude);
+    const initialCenter: [number, number] =
+        lat != null && lng != null ? [lat, lng] : [-2.5489, 118.0149];
+    const initialZoom = lat != null && lng != null ? 12 : 5;
+
+    map = L.map(mapContainer.value, { zoomControl: true }).setView(
+        initialCenter,
+        initialZoom,
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    map.on('click', async (e: any) => {
+        const clickedLat = Number(e?.latlng?.lat);
+        const clickedLng = Number(e?.latlng?.lng);
+        if (!Number.isFinite(clickedLat) || !Number.isFinite(clickedLng)) return;
+        await setCoords(clickedLat, clickedLng);
+    });
+
+    await updateCoordMarker();
+
+    setTimeout(() => {
+        map?.invalidateSize?.();
+    }, 0);
+};
+
 onBeforeUnmount(() => {
     for (const p of newPhotoPreviews.value) {
         URL.revokeObjectURL(p.url);
     }
+    map?.remove();
+    map = null;
+    coordMarker = null;
 });
 
 const fetchJson = async (url: string) => {
@@ -199,6 +308,22 @@ watch(
         if (!isTemuan.value) {
             form.finding_type = '';
         }
+    },
+);
+
+watch(
+    () => form.news_source,
+    (value) => {
+        if (value !== 'online') {
+            form.news_url = '';
+        }
+    },
+);
+
+watch(
+    () => [form.latitude, form.longitude] as const,
+    async () => {
+        await updateCoordMarker();
     },
 );
 
@@ -246,6 +371,7 @@ onMounted(async () => {
     if (editorEl.value) {
         editorEl.value.innerHTML = String(form.description ?? '');
     }
+    await ensureMap();
 });
 
 const submit = () => {
@@ -498,6 +624,62 @@ const title = computed(() => (props.mode === 'edit' ? 'Edit JIBOM' : 'Tambah JIB
                         </SelectContent>
                     </Select>
                     <InputError :message="form.errors.village_id" />
+                </div>
+            </div>
+
+            <div class="grid gap-2">
+                <Label>Koordinat</Label>
+                <div ref="mapContainer" class="h-[260px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30" />
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="grid gap-2">
+                        <Label>Latitude</Label>
+                        <input
+                            v-model.number="form.latitude"
+                            type="number"
+                            step="0.000001"
+                            class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                            placeholder="-6.200000"
+                        />
+                        <InputError :message="form.errors.latitude" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label>Longitude</Label>
+                        <input
+                            v-model.number="form.longitude"
+                            type="number"
+                            step="0.000001"
+                            class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                            placeholder="106.816666"
+                        />
+                        <InputError :message="form.errors.longitude" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div class="grid gap-2">
+                    <Label>Sumber Berita</Label>
+                    <Select v-model="form.news_source">
+                        <SelectTrigger class="w-full">
+                            <SelectValue placeholder="Pilih sumber" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="offline">Offline</SelectItem>
+                            <SelectItem value="online">Online</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.news_source" />
+                </div>
+
+                <div v-if="isOnlineSource" class="grid gap-2">
+                    <Label>URL Sumber</Label>
+                    <input
+                        v-model="form.news_url"
+                        type="url"
+                        class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                        placeholder="https://..."
+                    />
+                    <InputError :message="form.errors.news_url" />
                 </div>
             </div>
 

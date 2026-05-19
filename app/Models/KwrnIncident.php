@@ -11,6 +11,10 @@ class KwrnIncident extends Model
         'finding_type',
         'description',
         'photos',
+        'latitude',
+        'longitude',
+        'news_source',
+        'news_url',
         'province_id',
         'regency_id',
         'district_id',
@@ -19,6 +23,7 @@ class KwrnIncident extends Model
 
     protected $casts = [
         'photos' => 'array',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 }
-
