@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import {
     Card,
     CardContent,
@@ -14,6 +14,27 @@ defineProps<{
     title?: string;
     description?: string;
 }>();
+
+const defaultLogoUrl = '/branding/gegana-fav.png';
+const customLogoDataUrl = ref<string | null>(null);
+
+const loadBranding = () => {
+    if (typeof window === 'undefined') return;
+    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
+};
+
+const brandingLogo = computed(() =>
+    customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : defaultLogoUrl,
+);
+
+onMounted(() => {
+    loadBranding();
+    window.addEventListener('branding:update', loadBranding as EventListener);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('branding:update', loadBranding as EventListener);
+});
 </script>
 
 <template>
@@ -26,8 +47,10 @@ defineProps<{
                 class="flex items-center gap-2 self-center font-medium"
             >
                 <div class="flex h-9 w-9 items-center justify-center">
-                    <AppLogoIcon
-                        class="size-9 fill-current text-black dark:text-white"
+                    <img
+                        :src="brandingLogo"
+                        alt="Logo"
+                        class="size-9 object-contain"
                     />
                 </div>
             </Link>
