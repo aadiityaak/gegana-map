@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
+    Bomb,
     Brain,
     DollarSign,
     Info,
@@ -30,6 +31,7 @@ import type { NavItem } from '@/types';
 const dashboardUrl = computed(() => '/dashboard');
 const ipoleksosbudkamBaseUrl = computed(() => '/ipoleksosbudkam');
 const ipoleksosbudkamUrl = (path: string) => `/ipoleksosbudkam/${path}`;
+const jibomUrl = (path?: string) => (path ? `/jibom${path}` : '/jibom');
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -180,6 +182,25 @@ const mainNavItems = computed<NavItem[]>(() => [
                         href: ipoleksosbudkamUrl('keamanan/keamanan-isu-menonjol'),
                     },
                 ],
+            },
+        ],
+    },
+    {
+        title: 'JIBOM',
+        href: jibomUrl(),
+        icon: Bomb,
+        children: [
+            {
+                title: 'Ancaman Pengeboman',
+                href: jibomUrl('?type=ancaman'),
+            },
+            {
+                title: 'Temuan Bom',
+                href: jibomUrl('?type=temuan'),
+            },
+            {
+                title: 'Ledakan Bom',
+                href: jibomUrl('?type=ledakan'),
             },
         ],
     },

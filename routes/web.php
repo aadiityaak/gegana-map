@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Jibom\JibomIncidentController;
+use App\Http\Controllers\WilayahController;
 
 function crimeMapBaseUrl(string $endpoint): ?string
 {
@@ -269,6 +271,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'category' => fn(Request $request) => $request->route('category'),
         'subcategory' => fn(Request $request) => $request->route('subcategory'),
     ])->name('ipoleksosbudkam.subcategory');
+
+    Route::prefix('api/wilayah')->group(function () {
+        Route::get('provinces', [WilayahController::class, 'provinces'])->name('api.wilayah.provinces');
+        Route::get('regencies', [WilayahController::class, 'regencies'])->name('api.wilayah.regencies');
+        Route::get('districts', [WilayahController::class, 'districts'])->name('api.wilayah.districts');
+        Route::get('villages', [WilayahController::class, 'villages'])->name('api.wilayah.villages');
+    });
+
+    Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
+        Route::get('jibom', [JibomIncidentController::class, 'index'])->name('jibom.index');
+        Route::get('jibom/create', [JibomIncidentController::class, 'create'])->name('jibom.create');
+        Route::post('jibom', [JibomIncidentController::class, 'store'])->name('jibom.store');
+        Route::get('jibom/{incident}/edit', [JibomIncidentController::class, 'edit'])->name('jibom.edit');
+        Route::put('jibom/{incident}', [JibomIncidentController::class, 'update'])->name('jibom.update');
+        Route::delete('jibom/{incident}', [JibomIncidentController::class, 'destroy'])->name('jibom.destroy');
+    });
 });
 
 require __DIR__ . '/settings.php';
