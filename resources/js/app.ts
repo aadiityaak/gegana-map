@@ -33,14 +33,32 @@ initializeTheme();
 
 function applyBrandingFavicon(): void {
     if (typeof window === 'undefined') return;
-    const faviconDataUrl = localStorage.getItem('branding.faviconDataUrl');
-    if (!faviconDataUrl) return;
+    const defaultFaviconUrl = '/branding/gegana-fav.png';
+    const storedFavicon = localStorage.getItem('branding.faviconDataUrl');
+    const resolvedFaviconUrl =
+        storedFavicon && storedFavicon.trim()
+            ? storedFavicon
+            : defaultFaviconUrl;
 
     const links = Array.from(
         document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'),
     );
+    if (links.length === 0) {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = resolvedFaviconUrl;
+        document.head.appendChild(link);
+    }
     for (const link of links) {
-        link.href = faviconDataUrl;
+        link.href = resolvedFaviconUrl;
+    }
+
+    const appleTouchIcon = document.querySelector<HTMLLinkElement>(
+        'link[rel="apple-touch-icon"]',
+    );
+    if (appleTouchIcon) {
+        appleTouchIcon.href = resolvedFaviconUrl;
     }
 }
 

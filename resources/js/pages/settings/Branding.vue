@@ -20,9 +20,18 @@ defineOptions({
 
 const page = usePage();
 const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
+const defaultLogoUrl = '/branding/gegana-fav.png';
+const defaultFaviconUrl = '/branding/gegana-fav.png';
 const name = ref('');
 const logoDataUrl = ref<string>('');
 const faviconDataUrl = ref<string>('');
+
+const resolvedLogoSrc = computed(() =>
+    logoDataUrl.value?.trim() ? logoDataUrl.value : defaultLogoUrl,
+);
+const resolvedFaviconSrc = computed(() =>
+    faviconDataUrl.value?.trim() ? faviconDataUrl.value : defaultFaviconUrl,
+);
 
 const load = () => {
     if (typeof window === 'undefined') return;
@@ -126,16 +135,15 @@ onMounted(load);
                     @change="onLogoChange"
                 />
                 <div
-                    v-if="logoDataUrl"
                     class="flex items-center gap-3 rounded-lg border border-sidebar-border/70 bg-background p-3"
                 >
                     <img
-                        :src="logoDataUrl"
+                        :src="resolvedLogoSrc"
                         alt="Logo preview"
                         class="h-10 w-10 rounded-md object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
-                        Preview logo (tersimpan lokal)
+                        {{ logoDataUrl ? 'Custom logo (tersimpan lokal)' : 'Default logo' }}
                     </div>
                 </div>
             </div>
@@ -149,16 +157,19 @@ onMounted(load);
                     @change="onFaviconChange"
                 />
                 <div
-                    v-if="faviconDataUrl"
                     class="flex items-center gap-3 rounded-lg border border-sidebar-border/70 bg-background p-3"
                 >
                     <img
-                        :src="faviconDataUrl"
+                        :src="resolvedFaviconSrc"
                         alt="Favicon preview"
                         class="h-8 w-8 rounded object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
-                        Preview favicon (tersimpan lokal)
+                        {{
+                            faviconDataUrl
+                                ? 'Custom favicon (tersimpan lokal)'
+                                : 'Default favicon'
+                        }}
                     </div>
                 </div>
             </div>
