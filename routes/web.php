@@ -6,6 +6,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
+function crimeMapBaseUrl(string $endpoint): ?string
+{
+    $trimmed = rtrim($endpoint, '/');
+    $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
+    if (is_string($base) && $base !== '') {
+        if ($base !== $trimmed) {
+            return $base;
+        }
+    }
+
+    $parts = parse_url($endpoint);
+    $scheme = $parts['scheme'] ?? null;
+    $host = $parts['host'] ?? null;
+    if (!is_string($scheme) || !is_string($host)) {
+        return null;
+    }
+    $port = isset($parts['port']) ? (':' . $parts['port']) : '';
+
+    return $scheme . '://' . $host . $port;
+}
+
 Route::get('/', function () {
     if (auth()->check()) {
         $user = auth()->user();
@@ -29,6 +50,11 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
         return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
     }
 
+    $base = crimeMapBaseUrl($endpoint);
+    if (!is_string($base) || trim($base) === '') {
+        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
+    }
+
     $allowedQueryKeys = [
         'page',
         'per_page',
@@ -48,11 +74,13 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
         fn($value) => $value !== null && $value !== '',
     );
 
+    $upstreamUrl = rtrim($base, '/') . '/api/monitoring-data';
+
     try {
         $upstream = Http::acceptJson()
             ->withToken($token)
             ->timeout(15)
-            ->get($endpoint, $query);
+            ->get($upstreamUrl, $query);
     } catch (\Throwable $e) {
         return response()->json([
             'message' => 'Gagal menghubungi service crime-map. Pastikan crime-map (port 8000) sedang berjalan dan DATA_ENDPOINT benar.',
@@ -76,11 +104,16 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
         return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
     }
 
+    $base = crimeMapBaseUrl($endpoint);
+    if (!is_string($base) || trim($base) === '') {
+        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
+    }
+
     if (!ctype_digit($id)) {
         return response()->json(['message' => 'Invalid id.'], 422);
     }
 
-    $showEndpoint = rtrim($endpoint, '/') . '/' . $id;
+    $showEndpoint = rtrim($base, '/') . '/api/monitoring-data/' . $id;
 
     try {
         $upstream = Http::acceptJson()
@@ -110,17 +143,9 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/harga-peta',
         return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
     }
 
-    $trimmed = rtrim($endpoint, '/');
-    $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
-    if ($base === $trimmed) {
-        $parts = parse_url($endpoint);
-        $scheme = $parts['scheme'] ?? null;
-        $host = $parts['host'] ?? null;
-        if (!is_string($scheme) || !is_string($host)) {
-            return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
-        }
-        $port = isset($parts['port']) ? (':' . $parts['port']) : '';
-        $base = $scheme . '://' . $host . $port;
+    $base = crimeMapBaseUrl($endpoint);
+    if (!is_string($base) || trim($base) === '') {
+        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
     }
 
     $upstreamUrl = rtrim($base, '/') . '/api/ketahanan-pangan/harga-peta-token';
@@ -151,17 +176,9 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/harga-inform
         return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
     }
 
-    $trimmed = rtrim($endpoint, '/');
-    $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
-    if ($base === $trimmed) {
-        $parts = parse_url($endpoint);
-        $scheme = $parts['scheme'] ?? null;
-        $host = $parts['host'] ?? null;
-        if (!is_string($scheme) || !is_string($host)) {
-            return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
-        }
-        $port = isset($parts['port']) ? (':' . $parts['port']) : '';
-        $base = $scheme . '://' . $host . $port;
+    $base = crimeMapBaseUrl($endpoint);
+    if (!is_string($base) || trim($base) === '') {
+        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
     }
 
     $upstreamUrl = rtrim($base, '/') . '/api/ketahanan-pangan/harga-informasi-token';
@@ -192,17 +209,9 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/indonesia-pr
         return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
     }
 
-    $trimmed = rtrim($endpoint, '/');
-    $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
-    if ($base === $trimmed) {
-        $parts = parse_url($endpoint);
-        $scheme = $parts['scheme'] ?? null;
-        $host = $parts['host'] ?? null;
-        if (!is_string($scheme) || !is_string($host)) {
-            return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
-        }
-        $port = isset($parts['port']) ? (':' . $parts['port']) : '';
-        $base = $scheme . '://' . $host . $port;
+    $base = crimeMapBaseUrl($endpoint);
+    if (!is_string($base) || trim($base) === '') {
+        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
     }
 
     $upstreamUrl = rtrim($base, '/') . '/api/ketahanan-pangan/indonesia-provinces-ts';

@@ -1,28 +1,25 @@
 <template>
     <Head title="Ketahanan Pangan" />
 
-    <AppLayout>
-        <div class="flex flex-col">
-            <div
-                class="border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-            >
-                <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        🗺️ Peta Ketahanan Pangan Indonesia
+
+        <div class="flex flex-col font-mono">
+            <div class="border-b border-border bg-card/70">
+                <div class="border-b border-border px-6 py-4">
+                    <h3 class="text-lg font-semibold tracking-widest text-foreground">
+                        > PETA KETAHANAN PANGAN INDONESIA
                     </h3>
                 </div>
                 <div class="px-6 py-4">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                             <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
                             >
-                                Pilih Komoditas
+                                PILIH KOMODITAS
                             </label>
                             <select
                                 v-model="selectedKomoditas"
-                                @change="fetchPriceData"
-                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
                             >
                                 <option value="" disabled>Pilih Komoditas</option>
                                 <option
@@ -37,14 +34,13 @@
 
                         <div>
                             <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
                             >
-                                Level Harga
+                                LEVEL HARGA
                             </label>
                             <select
                                 v-model="selectedLevelHarga"
-                                @change="fetchPriceData"
-                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
                             >
                                 <option value="1">Harga Produsen</option>
                                 <option value="2">Harga Grosir</option>
@@ -56,29 +52,27 @@
                     <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
                             <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
                             >
-                                Tanggal Mulai
+                                TANGGAL MULAI
                             </label>
                             <input
                                 v-model="startDate"
                                 type="date"
-                                @change="fetchPriceData"
-                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
                             />
                         </div>
 
                         <div>
                             <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
                             >
-                                Tanggal Akhir
+                                TANGGAL AKHIR
                             </label>
                             <input
                                 v-model="endDate"
                                 type="date"
-                                @change="fetchPriceData"
-                                class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
                             />
                         </div>
 
@@ -86,14 +80,14 @@
                             <button
                                 @click="fetchPriceData"
                                 :disabled="loading || !selectedKomoditas"
-                                class="inline-flex w-full items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                class="inline-flex w-full items-center justify-center rounded-md border border-border bg-primary px-4 py-2 text-sm font-semibold tracking-widest text-primary-foreground transition hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <RefreshCw
                                     v-if="loading"
                                     class="mr-2 h-4 w-4 animate-spin"
                                 />
                                 <Search v-else class="mr-2 h-4 w-4" />
-                                {{ loading ? 'Memuat...' : 'Perbarui Data' }}
+                                {{ loading ? 'LOADING...' : '> EXECUTE' }}
                             </button>
                         </div>
                     </div>
@@ -103,33 +97,33 @@
             <div class="relative h-[75vh] overflow-hidden">
                 <div
                     v-if="loading"
-                    class="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-900"
+                    class="absolute inset-0 z-10 flex items-center justify-center bg-background/70"
                 >
                     <div class="flex flex-col items-center">
-                        <RefreshCw class="mb-4 h-8 w-8 animate-spin text-blue-600" />
-                        <p class="text-gray-600 dark:text-gray-400">Memuat data peta...</p>
+                        <RefreshCw class="mb-4 h-8 w-8 animate-spin text-primary" />
+                        <p class="text-xs tracking-widest text-muted-foreground">LOADING_MAP_DATA...</p>
                     </div>
                 </div>
 
                 <div
                     v-else-if="error"
-                    class="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-900"
+                    class="absolute inset-0 z-10 flex items-center justify-center bg-background/70"
                 >
                     <div class="text-center">
-                        <AlertCircle class="mx-auto mb-4 h-8 w-8 text-red-600" />
-                        <p class="text-red-600 dark:text-red-400">{{ error }}</p>
+                        <AlertCircle class="mx-auto mb-4 h-8 w-8 text-destructive" />
+                        <p class="text-sm text-destructive">{{ error }}</p>
                         <button
                             @click="fetchPriceData"
-                            class="mt-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                            class="mt-3 text-xs tracking-widest text-primary underline-offset-4 hover:underline"
                         >
-                            Coba lagi
+                            > RETRY
                         </button>
                     </div>
                 </div>
 
                 <div
                     v-else
-                    class="relative h-full bg-gradient-to-b from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900"
+                    class="relative h-full bg-background"
                 >
                     <svg
                         viewBox="0 0 792.54596 316.66394"
@@ -142,10 +136,10 @@
                             :key="provinceCode.id"
                             :d="provinceCode.path"
                             :fill="getProvinceMapColor(provinceCode.name)"
-                            stroke="#ffffff"
+                            stroke="rgba(34, 197, 94, 0.22)"
                             stroke-width="1"
                             stroke-linejoin="round"
-                            class="cursor-pointer transition-all hover:stroke-gray-800"
+                            class="cursor-pointer transition-all hover:stroke-[rgba(34,197,94,0.75)]"
                             @click="showProvinceByName(provinceCode.name)"
                         >
                             <title>{{ provinceCode.name }}</title>
@@ -154,28 +148,28 @@
 
                     <div
                         v-if="lastUpdated && !selectedProvince"
-                        class="rounded-lg bg-white/90 px-3 py-2 shadow-lg dark:bg-gray-800/90"
+                        class="rounded-lg border border-border bg-card/80 px-3 py-2 shadow-lg backdrop-blur"
                     >
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            Terakhir diperbarui: {{ formatDateTime(lastUpdated) }}
+                        <div class="text-[11px] tracking-widest text-muted-foreground">
+                            > LAST_UPDATED: {{ formatDateTime(lastUpdated) }}
                         </div>
                     </div>
 
                     <div
                         v-if="selectedProvince"
-                        class="absolute right-4 top-4 z-30 w-72 rounded-lg bg-white p-4 shadow-lg dark:bg-gray-800"
+                        class="absolute right-4 top-4 z-30 w-72 rounded-lg border border-border bg-card/90 p-4 shadow-lg backdrop-blur"
                     >
-                        <h4 class="font-semibold text-gray-900 dark:text-white">
+                        <h4 class="text-sm font-semibold tracking-widest text-foreground">
                             {{ selectedProvince.province_name }}
                         </h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Harga:
-                            <span class="font-medium text-green-600">
+                        <p class="mt-2 text-xs text-muted-foreground">
+                            > HARGA:
+                            <span class="font-semibold text-foreground">
                                 {{ formatPrice(selectedProvince.price) }}
                             </span>
                         </p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Status:
+                        <p class="mt-1 text-xs text-muted-foreground">
+                            > STATUS:
                             <span
                                 :class="getPriceStatusClass(selectedProvince.status)"
                                 class="rounded px-2 py-1 text-xs"
@@ -185,35 +179,35 @@
                         </p>
                         <button
                             @click="selectedProvince = null"
-                            class="mt-2 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                            class="mt-3 text-xs tracking-widest text-primary underline-offset-4 hover:underline"
                         >
-                            Tutup
+                            > CLOSE
                         </button>
                     </div>
 
                     <div
-                        class="absolute bottom-4 left-4 z-30 rounded-lg bg-white/90 p-4 shadow-lg dark:bg-gray-800/90"
+                        class="absolute bottom-4 left-4 z-30 rounded-lg border border-border bg-card/80 p-4 shadow-lg backdrop-blur"
                         style="position: absolute"
                     >
-                        <h4 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-                            Legend Status Harga
+                        <h4 class="mb-2 text-xs font-semibold tracking-widest text-foreground">
+                            > LEGEND STATUS HARGA
                         </h4>
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <div class="flex items-center">
                                 <div class="mr-2 h-3 w-3 rounded-full bg-green-500"></div>
-                                <span class="text-gray-700 dark:text-gray-300">Aman</span>
+                                <span class="text-muted-foreground">Aman</span>
                             </div>
                             <div class="flex items-center">
                                 <div class="mr-2 h-3 w-3 rounded-full bg-yellow-500"></div>
-                                <span class="text-gray-700 dark:text-gray-300">Waspada</span>
+                                <span class="text-muted-foreground">Waspada</span>
                             </div>
                             <div class="flex items-center">
                                 <div class="mr-2 h-3 w-3 rounded-full bg-red-500"></div>
-                                <span class="text-gray-700 dark:text-gray-300">Intervensi</span>
+                                <span class="text-muted-foreground">Intervensi</span>
                             </div>
                             <div class="flex items-center">
                                 <div class="mr-2 h-3 w-3 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-                                <span class="text-gray-700 dark:text-gray-300">N/A</span>
+                                <span class="text-muted-foreground">N/A</span>
                             </div>
                         </div>
                     </div>
@@ -222,20 +216,20 @@
 
             <div
                 v-if="priceData && priceData.length > 0"
-                class="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                class="border-t border-border bg-card/70"
             >
-                <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                <div class="border-b border-border px-6 py-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            📊 Data Harga
+                        <h3 class="text-lg font-semibold tracking-widest text-foreground">
+                            > DATA HARGA
                             {{
                                 komoditasList.find((k) => k.value === selectedKomoditas)?.label ||
                                 'Komoditas'
                             }}
                         </h3>
                         <div class="flex items-center space-x-4">
-                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                <span class="font-medium">{{ priceData.length }}</span> Provinsi
+                            <div class="text-xs tracking-widest text-muted-foreground">
+                                > {{ priceData.length }} PROVINSI
                             </div>
                         </div>
                     </div>
@@ -243,19 +237,19 @@
 
                 <div class="px-6 py-4">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                        <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                        Rata-rata Harga
+                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                        RATA-RATA
                                     </p>
-                                    <p class="text-lg font-bold text-blue-900 dark:text-blue-100">
+                                    <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
                                         {{ formatPrice(getAveragePrice()) }}
                                     </p>
                                 </div>
-                                <div class="rounded-full bg-blue-100 p-2 dark:bg-blue-800">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
                                     <svg
-                                        class="h-6 w-6 text-blue-600 dark:text-blue-400"
+                                        class="h-6 w-6 text-primary"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -271,22 +265,22 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm font-medium text-red-600 dark:text-red-400">
-                                        Harga Tertinggi
+                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                        TERTINGGI
                                     </p>
-                                    <p class="text-lg font-bold text-red-900 dark:text-red-100">
+                                    <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
                                         {{ formatPrice(getHighestPrice().price) }}
                                     </p>
-                                    <p class="text-xs text-red-600 dark:text-red-400">
+                                    <p class="text-[11px] tracking-widest text-muted-foreground">
                                         {{ getHighestPrice().province }}
                                     </p>
                                 </div>
-                                <div class="rounded-full bg-red-100 p-2 dark:bg-red-800">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
                                     <svg
-                                        class="h-6 w-6 text-red-600 dark:text-red-400"
+                                        class="h-6 w-6 text-primary"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -302,22 +296,22 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm font-medium text-green-600 dark:text-green-400">
-                                        Harga Terendah
+                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                        TERENDAH
                                     </p>
-                                    <p class="text-lg font-bold text-green-900 dark:text-green-100">
+                                    <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
                                         {{ formatPrice(getLowestPrice().price) }}
                                     </p>
-                                    <p class="text-xs text-green-600 dark:text-green-400">
+                                    <p class="text-[11px] tracking-widest text-muted-foreground">
                                         {{ getLowestPrice().province }}
                                     </p>
                                 </div>
-                                <div class="rounded-full bg-green-100 p-2 dark:bg-green-800">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
                                     <svg
-                                        class="h-6 w-6 text-green-600 dark:text-green-400"
+                                        class="h-6 w-6 text-primary"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -333,17 +327,17 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Status Dominan
+                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                        STATUS DOMINAN
                                     </p>
-                                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                    <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
                                         {{ getDominantStatus().status }}
                                     </p>
-                                    <p class="text-xs text-gray-600 dark:text-gray-400">
-                                        {{ getDominantStatus().count }} Provinsi
+                                    <p class="text-[11px] tracking-widest text-muted-foreground">
+                                        {{ getDominantStatus().count }} PROVINSI
                                     </p>
                                 </div>
                                 <div class="rounded-full p-2" :class="getDominantStatus().bgClass">
@@ -357,43 +351,43 @@
                     </div>
                 </div>
 
-                <div class="border-t border-gray-200 dark:border-gray-700">
+                <div class="border-t border-border">
                     <div class="overflow-y-auto">
                         <table class="min-w-full">
-                            <thead class="sticky top-0 bg-gray-50 dark:bg-gray-700">
+                            <thead class="sticky top-0 bg-background/70 backdrop-blur">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                                        class="px-6 py-3 text-left text-[11px] font-semibold tracking-widest text-muted-foreground"
                                     >
                                         Provinsi
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                                        class="px-6 py-3 text-left text-[11px] font-semibold tracking-widest text-muted-foreground"
                                     >
                                         Harga
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                                        class="px-6 py-3 text-left text-[11px] font-semibold tracking-widest text-muted-foreground"
                                     >
                                         Status
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                                        class="px-6 py-3 text-left text-[11px] font-semibold tracking-widest text-muted-foreground"
                                     >
                                         Trend
                                     </th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                                        class="px-6 py-3 text-left text-[11px] font-semibold tracking-widest text-muted-foreground"
                                     >
                                         vs HPP/HAP
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody class="divide-y divide-border">
                                 <tr
                                     v-for="item in priceData"
                                     :key="item.id"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    class="hover:bg-accent/30"
                                 >
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <div class="flex items-center">
@@ -404,7 +398,7 @@
                                                 }"
                                             ></div>
                                             <span
-                                                class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                class="text-sm font-semibold text-foreground"
                                             >
                                                 {{ item.province_name }}
                                             </span>
@@ -412,7 +406,7 @@
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <span
-                                            class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                                            class="text-sm font-semibold text-foreground"
                                         >
                                             {{ formatPrice(item.price) }}
                                         </span>
@@ -429,7 +423,7 @@
                                         <div class="flex items-center">
                                             <svg
                                                 v-if="getTrendDirection(item) === 'up'"
-                                                class="h-4 w-4 text-red-500"
+                                                class="h-4 w-4 text-destructive"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -443,7 +437,7 @@
                                             </svg>
                                             <svg
                                                 v-else-if="getTrendDirection(item) === 'down'"
-                                                class="h-4 w-4 text-green-500"
+                                                class="h-4 w-4 text-primary"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
@@ -472,9 +466,9 @@
                                             <span
                                                 class="ml-1 text-xs"
                                                 :class="{
-                                                    'text-red-600': getTrendDirection(item) === 'up',
-                                                    'text-green-600': getTrendDirection(item) === 'down',
-                                                    'text-gray-500': getTrendDirection(item) === 'stable',
+                                                    'text-destructive': getTrendDirection(item) === 'up',
+                                                    'text-primary': getTrendDirection(item) === 'down',
+                                                    'text-muted-foreground': getTrendDirection(item) === 'stable',
                                                 }"
                                             >
                                                 {{ getTrendText(item) }}
@@ -486,9 +480,9 @@
                                             <span
                                                 class="text-xs font-medium"
                                                 :class="{
-                                                    'text-red-600': getHppHapPercentage(item) > 0,
-                                                    'text-green-600': getHppHapPercentage(item) < 0,
-                                                    'text-gray-500': getHppHapPercentage(item) === 0,
+                                                    'text-destructive': getHppHapPercentage(item) > 0,
+                                                    'text-primary': getHppHapPercentage(item) < 0,
+                                                    'text-muted-foreground': getHppHapPercentage(item) === 0,
                                                 }"
                                             >
                                                 {{
@@ -504,14 +498,13 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>
 
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { AlertCircle, RefreshCw, Search } from 'lucide-vue-next';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 interface Komoditas {
     value: string;
@@ -948,19 +941,6 @@ onMounted(async () => {
     await loadProvincePaths();
     if (selectedKomoditas.value) {
         await fetchPriceData();
-    }
-});
-
-let debounceTimer: number | null = null;
-
-watch([selectedKomoditas, selectedLevelHarga, startDate, endDate], () => {
-    if (selectedKomoditas.value) {
-        if (debounceTimer) {
-            window.clearTimeout(debounceTimer);
-        }
-        debounceTimer = window.setTimeout(() => {
-            void fetchPriceData();
-        }, 300);
     }
 });
 </script>
