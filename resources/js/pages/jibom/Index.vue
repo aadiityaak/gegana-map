@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -66,6 +66,151 @@ const createHref = computed(() => {
 const deleteItem = (id: number) => {
     router.delete(`/jibom/${id}`);
 };
+
+type ProvinceCount = {
+    id: string;
+    name: string;
+    count: number;
+};
+
+const mapSvg = ref<string>('');
+const mapError = ref<string | null>(null);
+const mapRoot = ref<HTMLDivElement | null>(null);
+const counts = ref<ProvinceCount[]>([]);
+const hovered = ref<{ name: string; count: number } | null>(null);
+
+const normalizeName = (value: string) =>
+    value
+        .toUpperCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const titleAliases: Record<string, string> = {
+    'JAKARTA RAYA': 'DKI JAKARTA',
+    YOGYAKARTA: 'DAERAH ISTIMEWA YOGYAKARTA',
+};
+
+const countsByProvinceName = computed(() => {
+    const map: Record<string, number> = {};
+    for (const row of counts.value) {
+        map[normalizeName(row.name)] = Number(row.count) || 0;
+    }
+    return map;
+});
+
+const colorForCount = (count: number, max: number) => {
+    if (count <= 0) return '#0b0f0b';
+    if (max <= 0) return '#14532d';
+    const ratio = count / max;
+    if (ratio <= 0.25) return '#14532d';
+    if (ratio <= 0.5) return '#166534';
+    if (ratio <= 0.75) return '#16a34a';
+    return '#22c55e';
+};
+
+const applyCountsToSvg = async () => {
+    await nextTick();
+    const root = mapRoot.value;
+    if (!root) return;
+    const svg = root.querySelector('svg') as SVGSVGElement | null;
+    if (!svg) return;
+
+    const max = Math.max(
+        0,
+        ...Object.values(countsByProvinceName.value).map((v) =>
+            Number.isFinite(v) ? v : 0,
+        ),
+    );
+
+    const polygons = svg.querySelector('#polygons') as SVGGElement | null;
+    if (!polygons) return;
+
+    const oldLabels = svg.querySelector('#jibom-count-labels');
+    oldLabels?.remove();
+
+    const labelsGroup = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'g',
+    );
+    labelsGroup.setAttribute('id', 'jibom-count-labels');
+    polygons.appendChild(labelsGroup);
+
+    const paths = svg.querySelectorAll<SVGPathElement>('#polygons .land');
+    for (const el of Array.from(paths)) {
+        const rawTitle = (el.getAttribute('title') ?? '').trim();
+        if (!rawTitle) continue;
+        const normalizedTitle = normalizeName(rawTitle);
+        const mappedTitle = titleAliases[normalizedTitle] ?? normalizedTitle;
+        const count = countsByProvinceName.value[mappedTitle] ?? 0;
+
+        el.style.fill = colorForCount(count, max);
+        el.style.stroke = 'rgba(34,197,94,0.25)';
+        el.style.strokeWidth = '0.7';
+        el.style.cursor = 'pointer';
+        el.setAttribute('data-count', String(count));
+        el.setAttribute('title', `${rawTitle} (${count})`);
+
+        el.onmouseenter = () => {
+            hovered.value = { name: rawTitle, count };
+        };
+        el.onmouseleave = () => {
+            hovered.value = null;
+        };
+
+        if (count > 0) {
+            try {
+                const bbox = el.getBBox();
+                const text = document.createElementNS(
+                    'http://www.w3.org/2000/svg',
+                    'text',
+                );
+                text.textContent = String(count);
+                text.setAttribute('x', String(bbox.x + bbox.width / 2));
+                text.setAttribute('y', String(bbox.y + bbox.height / 2));
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute(
+                    'style',
+                    'font-size: 10px; font-weight: 700; fill: rgba(236, 253, 245, 0.95); paint-order: stroke; stroke: rgba(0,0,0,0.65); stroke-width: 2px; pointer-events: none;',
+                );
+                labelsGroup.appendChild(text);
+            } catch {
+                //
+            }
+        }
+    }
+};
+
+const loadCounts = async () => {
+    const type = currentType.value;
+    const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+    const res = await fetch(`/api/jibom/counts-by-province${qs}`, {
+        headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+        return;
+    }
+    const json = (await res.json()) as { data?: ProvinceCount[] };
+    counts.value = Array.isArray(json.data) ? json.data : [];
+};
+
+
+onMounted(async () => {
+    try {
+        const res = await fetch('/api/jibom/indonesia-map-svg', {
+            headers: { Accept: 'image/svg+xml' },
+        });
+        if (!res.ok) {
+            mapError.value = `Gagal memuat map (${res.status})`;
+            return;
+        }
+        await loadCounts();
+        mapSvg.value = await res.text();
+        await applyCountsToSvg();
+    } catch {
+        mapError.value = 'Gagal memuat map';
+    }
+});
 </script>
 
 <template>
@@ -117,6 +262,29 @@ const deleteItem = (id: number) => {
             >
                 <Link href="/jibom?type=ledakan">Ledakan</Link>
             </Button>
+        </div>
+
+        <div class="mb-4 rounded-xl border border-green-500/15 bg-black/20 p-3">
+            <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                <span>> MAP INDONESIA</span>
+                <span class="text-[11px]">> indonesiaLow.svg</span>
+            </div>
+            <div v-if="hovered" class="mb-2 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/30 px-3 py-2 text-xs text-green-200/85">
+                <span>> {{ hovered.name }}</span>
+                <span class="text-[11px]">> kejadian: {{ hovered.count }}</span>
+            </div>
+            <div v-if="mapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                > {{ mapError }}
+            </div>
+            <div
+                v-else-if="mapSvg"
+                class="w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+            >
+                <div ref="mapRoot" class="mx-auto max-w-[980px] [&_svg]:h-auto [&_svg]:w-full" v-html="mapSvg" />
+            </div>
+            <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
+                loading_map...
+            </div>
         </div>
 
         <div class="rounded-xl border border-green-500/15 bg-black/20">

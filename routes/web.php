@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Jibom\JibomIncidentController;
@@ -279,7 +280,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('villages', [WilayahController::class, 'villages'])->name('api.wilayah.villages');
     });
 
+    Route::get('api/jibom/indonesia-map-svg', function () {
+        $path = env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaLow.svg');
+        if (! is_string($path) || trim($path) === '' || ! file_exists($path)) {
+            return response()->json(['message' => 'Map file not found.'], 404);
+        }
+
+        $svg = file_get_contents($path);
+        if (! is_string($svg) || $svg === '') {
+            return response()->json(['message' => 'Map file unreadable.'], 500);
+        }
+
+        return response($svg, 200)
+            ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
+    })->name('api.jibom.indonesia-map-svg');
+
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
+        Route::get('api/jibom/counts-by-province', function (Request $request) {
+            $type = $request->query('type');
+            $allowedTypes = ['ancaman', 'temuan', 'ledakan'];
+            if (is_string($type) && $type !== '' && ! in_array($type, $allowedTypes, true)) {
+                return response()->json(['message' => 'Invalid type.'], 422);
+            }
+
+            $query = DB::table('jibom_incidents as ji')
+                ->join('reg_provinces as p', 'p.id', '=', 'ji.province_id')
+                ->select([
+                    'p.id',
+                    'p.name',
+                    DB::raw('count(*) as count'),
+                ])
+                ->groupBy('p.id', 'p.name');
+
+            if (is_string($type) && $type !== '') {
+                $query->where('ji.incident_type', $type);
+            }
+
+            $rows = $query->orderByDesc('count')->get();
+
+            return response()->json(['data' => $rows]);
+        })->name('api.jibom.counts-by-province');
+
         Route::get('jibom', [JibomIncidentController::class, 'index'])->name('jibom.index');
         Route::get('jibom/create', [JibomIncidentController::class, 'create'])->name('jibom.create');
         Route::post('jibom', [JibomIncidentController::class, 'store'])->name('jibom.store');

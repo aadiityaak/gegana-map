@@ -13,25 +13,38 @@ class WilayahIndonesiaSeeder extends Seeder
             return;
         }
 
-        if (DB::table('reg_provinces')->count() > 0) {
-            return;
-        }
-
         $path = env('WILAYAH_SQL_PATH', 'C:\Users\ASUS\Downloads\wilayah_indonesia (1).sql');
         if (! is_string($path) || $path === '' || ! file_exists($path)) {
             return;
         }
 
-        $sql = file_get_contents($path);
-        if (! is_string($sql) || $sql === '') {
-            return;
-        }
+        $sql = null;
+        $seedSmallTables = function () use (&$sql, $path) {
+            if ($sql === null) {
+                $read = file_get_contents($path);
+                $sql = is_string($read) ? $read : '';
+            }
+            if (! is_string($sql) || $sql === '') {
+                return;
+            }
 
-        DB::transaction(function () use ($sql) {
-            $this->seedTable($sql, 'reg_provinces', ['id', 'name'], 2);
-            $this->seedTable($sql, 'reg_regencies', ['id', 'province_id', 'name'], 3);
-            $this->seedTable($sql, 'reg_districts', ['id', 'regency_id', 'name'], 3);
-            $this->seedTable($sql, 'reg_villages', ['id', 'district_id', 'name'], 3);
+            if (DB::table('reg_provinces')->count() === 0) {
+                $this->seedTable($sql, 'reg_provinces', ['id', 'name'], 2);
+            }
+            if (DB::table('reg_regencies')->count() === 0) {
+                $this->seedTable($sql, 'reg_regencies', ['id', 'province_id', 'name'], 3);
+            }
+            if (DB::table('reg_districts')->count() === 0) {
+                $this->seedTable($sql, 'reg_districts', ['id', 'regency_id', 'name'], 3);
+            }
+        };
+
+        DB::transaction(function () use ($seedSmallTables, $path) {
+            $seedSmallTables();
+
+            if (DB::table('reg_villages')->count() === 0) {
+                $this->seedVillagesFromFile($path);
+            }
         });
     }
 
@@ -75,6 +88,131 @@ class WilayahIndonesiaSeeder extends Seeder
         if (count($batch) > 0) {
             DB::table($table)->insert($batch);
         }
+    }
+
+    private function seedVillagesFromFile(string $path): void
+    {
+        $handle = fopen($path, 'rb');
+        if ($handle === false) {
+            return;
+        }
+
+        $needle = 'INSERT INTO `reg_villages` VALUES';
+        $found = false;
+
+        $state = 'search';
+        $valueCount = 3;
+        $values = [];
+        $buf = '';
+        $inQuote = false;
+        $escape = false;
+
+        $batch = [];
+
+        $flushBatch = function () use (&$batch) {
+            if (count($batch) === 0) {
+                return;
+            }
+            DB::table('reg_villages')->insert($batch);
+            $batch = [];
+        };
+
+        $appendRow = function (array $tuple) use (&$batch, $flushBatch) {
+            $batch[] = [
+                'id' => $tuple[0],
+                'district_id' => $tuple[1],
+                'name' => $tuple[2],
+            ];
+
+            if (count($batch) >= 500) {
+                $flushBatch();
+            }
+        };
+
+        while (($line = fgets($handle)) !== false) {
+            if (! $found) {
+                if (strpos($line, $needle) === false) {
+                    continue;
+                }
+                $found = true;
+
+                $pos = strpos($line, 'VALUES');
+                $line = $pos === false ? '' : substr($line, $pos + 5);
+            }
+
+            $len = strlen($line);
+            for ($i = 0; $i < $len; $i++) {
+                $ch = $line[$i];
+
+                if ($state === 'search') {
+                    if ($ch === '(') {
+                        $values = [];
+                        $state = 'expect_quote';
+                    } elseif ($ch === ';') {
+                        fclose($handle);
+                        $flushBatch();
+                        return;
+                    }
+                    continue;
+                }
+
+                if ($state === 'expect_quote') {
+                    if ($ch === "'") {
+                        $buf = '';
+                        $inQuote = true;
+                        $escape = false;
+                        $state = 'in_value';
+                    } elseif ($ch === ')') {
+                        $state = 'search';
+                    }
+                    continue;
+                }
+
+                if ($state === 'in_value') {
+                    if ($escape) {
+                        $buf .= $ch;
+                        $escape = false;
+                        continue;
+                    }
+                    if ($ch === "\\") {
+                        $escape = true;
+                        continue;
+                    }
+                    if ($ch === "'") {
+                        $inQuote = false;
+                        $values[] = $buf;
+                        $state = 'after_value';
+                        continue;
+                    }
+                    $buf .= $ch;
+                    continue;
+                }
+
+                if ($state === 'after_value') {
+                    if ($ch === ',') {
+                        if (count($values) < $valueCount) {
+                            $state = 'expect_quote';
+                        }
+                        continue;
+                    }
+                    if ($ch === ')') {
+                        if (count($values) === $valueCount) {
+                            $appendRow($values);
+                        }
+                        $state = 'search';
+                        continue;
+                    }
+                    if ($ch === ';') {
+                        fclose($handle);
+                        $flushBatch();
+                        return;
+                    }
+                }
+            }
+        }
+
+        fclose($handle);
+        $flushBatch();
     }
 
     private function parseTuples(string $input, int $valueCount): array
@@ -151,4 +289,3 @@ class WilayahIndonesiaSeeder extends Seeder
         return $results;
     }
 }
-
