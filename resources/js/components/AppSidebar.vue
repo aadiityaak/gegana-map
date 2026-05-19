@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
+    AlertTriangle,
     Bomb,
     Brain,
     DollarSign,
@@ -33,6 +34,8 @@ const ipoleksosbudkamBaseUrl = computed(() => '/ipoleksosbudkam');
 const ipoleksosbudkamUrl = (path: string) => `/ipoleksosbudkam/${path}`;
 const jibomUrl = (path?: string) => (path ? `/jibom${path}` : '/jibom');
 const kwrnUrl = (path?: string) => (path ? `/kwrn${path}` : '/kwrn');
+const wanTerorUrl = (path?: string) =>
+    path ? `/wan-teror${path}` : '/wan-teror';
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -221,6 +224,33 @@ const mainNavItems = computed<NavItem[]>(() => [
             {
                 title: 'Ledakan KWRN',
                 href: kwrnUrl('?type=ledakan'),
+            },
+        ],
+    },
+    {
+        title: 'WAN TEROR',
+        href: wanTerorUrl(),
+        icon: AlertTriangle,
+        children: [
+            {
+                title: 'Data Napiter',
+                href: wanTerorUrl('?type=napiter'),
+            },
+            {
+                title: 'Data EX Napiter',
+                href: wanTerorUrl('?type=ex-napiter'),
+            },
+            {
+                title: 'Jaringan Terorisme',
+                href: wanTerorUrl('?type=jaringan-terorisme'),
+            },
+            {
+                title: 'Bullying/Perundungan',
+                href: wanTerorUrl('?type=bullying-perundungan'),
+            },
+            {
+                title: 'Aksi Teror',
+                href: wanTerorUrl('?type=aksi-teror'),
             },
         ],
     },
