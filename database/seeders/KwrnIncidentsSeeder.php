@@ -5,11 +5,11 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class JibomIncidentsSeeder extends Seeder
+class KwrnIncidentsSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! DB::getSchemaBuilder()->hasTable('jibom_incidents')) {
+        if (! DB::getSchemaBuilder()->hasTable('kwrn_incidents')) {
             return;
         }
 
@@ -18,29 +18,29 @@ class JibomIncidentsSeeder extends Seeder
         }
 
         $desiredTotal = 180;
-        $findingTypes = ['bom-militer', 'bom-rakitan', 'bom-ikan', 'petasan', 'lainnya'];
+        $findingTypes = ['kimia', 'biologi', 'radioaktif', 'nuklir', 'lainnya'];
         $types = ['ancaman', 'temuan', 'ledakan'];
         $descriptionsByType = [
             'ancaman' => [
-                '<p>Laporan ancaman diterima dari masyarakat.</p><ul><li>Koordinasi awal</li><li>Pengamanan area</li></ul>',
-                '<p>Informasi ancaman masuk melalui kanal pengaduan.</p><p>Tindakan: verifikasi dan penilaian risiko.</p>',
+                '<p>Laporan ancaman KWRN diterima.</p><ul><li>Verifikasi awal</li><li>Koordinasi pengamanan</li></ul>',
+                '<p>Informasi ancaman KWRN masuk dari masyarakat.</p><p>Tindakan: penilaian risiko dan pengamanan area.</p>',
             ],
             'temuan' => [
-                '<p>Objek mencurigakan ditemukan di lokasi.</p><p>Tindakan: pemeriksaan dan sterilisasi.</p>',
-                '<p>Temuan benda diduga bom.</p><ul><li>Isolasi lokasi</li><li>Koordinasi EOD</li></ul>',
+                '<p>Temuan material diduga berbahaya.</p><p>Tindakan: isolasi lokasi dan pemeriksaan awal.</p>',
+                '<p>Temuan KWRN di lokasi publik.</p><ul><li>Sterilisasi area</li><li>Koordinasi tim terkait</li></ul>',
             ],
             'ledakan' => [
-                '<p>Terjadi ledakan, tidak ada korban jiwa.</p><p>Perlu pendalaman sumber pemicu.</p>',
-                '<p>Ledakan dilaporkan warga sekitar.</p><p>Tindakan: penyisiran dan pengamanan TKP.</p>',
+                '<p>Ledakan dilaporkan di sekitar lokasi.</p><p>Tindakan: penyisiran dan pengamanan TKP.</p>',
+                '<p>Insiden ledakan terkait bahan berbahaya.</p><p>Perlu pendalaman sumber pemicu.</p>',
             ],
         ];
 
         $schema = DB::getSchemaBuilder();
         $now = now();
-        $existingCount = DB::table('jibom_incidents')->count();
+        $existingCount = DB::table('kwrn_incidents')->count();
 
-        if ($schema->hasColumn('jibom_incidents', 'description')) {
-            DB::table('jibom_incidents')
+        if ($schema->hasColumn('kwrn_incidents', 'description')) {
+            DB::table('kwrn_incidents')
                 ->whereNull('description')
                 ->update([
                     'description' => $descriptionsByType['ancaman'][0],
@@ -48,8 +48,8 @@ class JibomIncidentsSeeder extends Seeder
                 ]);
         }
 
-        if ($schema->hasColumn('jibom_incidents', 'photos')) {
-            DB::table('jibom_incidents')
+        if ($schema->hasColumn('kwrn_incidents', 'photos')) {
+            DB::table('kwrn_incidents')
                 ->whereNull('photos')
                 ->update(['photos' => json_encode([]), 'updated_at' => $now]);
         }
@@ -60,12 +60,14 @@ class JibomIncidentsSeeder extends Seeder
         }
 
         $allProvinceIds = DB::table('reg_provinces')->pluck('id')->all();
-        if (count($allProvinceIds) === 0) return;
+        if (count($allProvinceIds) === 0) {
+            return;
+        }
 
         $rows = [];
         $faker = fake();
 
-        $existingProvinces = DB::table('jibom_incidents')
+        $existingProvinces = DB::table('kwrn_incidents')
             ->distinct()
             ->pluck('province_id')
             ->all();
@@ -76,7 +78,9 @@ class JibomIncidentsSeeder extends Seeder
         ));
 
         foreach ($missingProvinceIds as $provinceId) {
-            if (count($rows) >= $need) break;
+            if (count($rows) >= $need) {
+                break;
+            }
             $row = $this->makeIncidentRow(
                 provinceId: (string) $provinceId,
                 types: $types,
@@ -101,7 +105,7 @@ class JibomIncidentsSeeder extends Seeder
             }
         }
 
-        DB::table('jibom_incidents')->insert($rows);
+        DB::table('kwrn_incidents')->insert($rows);
     }
 
     private function wilayahReady(): bool
@@ -169,19 +173,25 @@ class JibomIncidentsSeeder extends Seeder
             ->where('province_id', $provinceId)
             ->inRandomOrder()
             ->value('id');
-        if (! $regencyId) return null;
+        if (! $regencyId) {
+            return null;
+        }
 
         $districtId = DB::table('reg_districts')
             ->where('regency_id', $regencyId)
             ->inRandomOrder()
             ->value('id');
-        if (! $districtId) return null;
+        if (! $districtId) {
+            return null;
+        }
 
         $villageId = DB::table('reg_villages')
             ->where('district_id', $districtId)
             ->inRandomOrder()
             ->value('id');
-        if (! $villageId) return null;
+        if (! $villageId) {
+            return null;
+        }
 
         return (object) [
             'village_id' => (string) $villageId,
@@ -191,3 +201,4 @@ class JibomIncidentsSeeder extends Seeder
         ];
     }
 }
+

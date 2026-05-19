@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Jibom\JibomIncidentController;
+use App\Http\Controllers\Kwrn\KwrnIncidentController;
 use App\Http\Controllers\WilayahController;
 
 function crimeMapBaseUrl(string $endpoint): ?string
@@ -295,6 +296,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
     })->name('api.jibom.indonesia-map-svg');
 
+    Route::get('api/kwrn/indonesia-map-svg', function () {
+        $path = env('KWRN_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH', 'C:\Users\ASUS\Downloads\indonesiaLow.svg'));
+        if (! is_string($path) || trim($path) === '' || ! file_exists($path)) {
+            return response()->json(['message' => 'Map file not found.'], 404);
+        }
+
+        $svg = file_get_contents($path);
+        if (! is_string($svg) || $svg === '') {
+            return response()->json(['message' => 'Map file unreadable.'], 500);
+        }
+
+        return response($svg, 200)
+            ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
+    })->name('api.kwrn.indonesia-map-svg');
+
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
         Route::get('api/jibom/counts-by-province', function (Request $request) {
             $type = $request->query('type');
@@ -327,6 +343,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('jibom/{incident}/edit', [JibomIncidentController::class, 'edit'])->name('jibom.edit');
         Route::put('jibom/{incident}', [JibomIncidentController::class, 'update'])->name('jibom.update');
         Route::delete('jibom/{incident}', [JibomIncidentController::class, 'destroy'])->name('jibom.destroy');
+
+        Route::get('api/kwrn/counts-by-province', function (Request $request) {
+            $type = $request->query('type');
+            $allowedTypes = ['ancaman', 'temuan', 'ledakan'];
+            if (is_string($type) && $type !== '' && ! in_array($type, $allowedTypes, true)) {
+                return response()->json(['message' => 'Invalid type.'], 422);
+            }
+
+            $query = DB::table('kwrn_incidents as ki')
+                ->join('reg_provinces as p', 'p.id', '=', 'ki.province_id')
+                ->select([
+                    'p.id',
+                    'p.name',
+                    DB::raw('count(*) as count'),
+                ])
+                ->groupBy('p.id', 'p.name');
+
+            if (is_string($type) && $type !== '') {
+                $query->where('ki.incident_type', $type);
+            }
+
+            $rows = $query->orderByDesc('count')->get();
+
+            return response()->json(['data' => $rows]);
+        })->name('api.kwrn.counts-by-province');
+
+        Route::get('kwrn', [KwrnIncidentController::class, 'index'])->name('kwrn.index');
+        Route::get('kwrn/create', [KwrnIncidentController::class, 'create'])->name('kwrn.create');
+        Route::post('kwrn', [KwrnIncidentController::class, 'store'])->name('kwrn.store');
+        Route::get('kwrn/{incident}/edit', [KwrnIncidentController::class, 'edit'])->name('kwrn.edit');
+        Route::put('kwrn/{incident}', [KwrnIncidentController::class, 'update'])->name('kwrn.update');
+        Route::delete('kwrn/{incident}', [KwrnIncidentController::class, 'destroy'])->name('kwrn.destroy');
     });
 });
 

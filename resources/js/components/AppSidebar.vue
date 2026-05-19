@@ -32,6 +32,7 @@ const dashboardUrl = computed(() => '/dashboard');
 const ipoleksosbudkamBaseUrl = computed(() => '/ipoleksosbudkam');
 const ipoleksosbudkamUrl = (path: string) => `/ipoleksosbudkam/${path}`;
 const jibomUrl = (path?: string) => (path ? `/jibom${path}` : '/jibom');
+const kwrnUrl = (path?: string) => (path ? `/kwrn${path}` : '/kwrn');
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -201,6 +202,25 @@ const mainNavItems = computed<NavItem[]>(() => [
             {
                 title: 'Ledakan Bom',
                 href: jibomUrl('?type=ledakan'),
+            },
+        ],
+    },
+    {
+        title: 'KWRN',
+        href: kwrnUrl(),
+        icon: Shield,
+        children: [
+            {
+                title: 'Ancaman KWRN',
+                href: kwrnUrl('?type=ancaman'),
+            },
+            {
+                title: 'Temuan KWRN',
+                href: kwrnUrl('?type=temuan'),
+            },
+            {
+                title: 'Ledakan KWRN',
+                href: kwrnUrl('?type=ledakan'),
             },
         ],
     },
