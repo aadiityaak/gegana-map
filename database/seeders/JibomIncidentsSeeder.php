@@ -13,16 +13,36 @@ class JibomIncidentsSeeder extends Seeder
             return;
         }
 
-        if (DB::table('jibom_incidents')->count() > 0) {
-            return;
-        }
-
         if (! $this->wilayahReady()) {
             return;
         }
 
         $findingTypes = ['bom-militer', 'bom-rakitan', 'bom-ikan', 'petasan', 'lainnya'];
         $types = ['ancaman', 'temuan', 'ledakan'];
+        $descriptions = [
+            '<p>Laporan awal diterima dari masyarakat.</p><ul><li>Koordinasi dengan tim lapangan</li><li>Pengamanan area</li></ul>',
+            '<p>Objek mencurigakan ditemukan di lokasi.</p><p>Tindakan: pemeriksaan dan sterilisasi.</p>',
+            '<p>Terjadi ledakan kecil, tidak ada korban jiwa.</p><p>Perlu pendalaman sumber pemicu.</p>',
+        ];
+
+        if (DB::table('jibom_incidents')->count() > 0) {
+            $schema = DB::getSchemaBuilder();
+            $now = now();
+
+            if ($schema->hasColumn('jibom_incidents', 'description')) {
+                DB::table('jibom_incidents')
+                    ->whereNull('description')
+                    ->update(['description' => $descriptions[0], 'updated_at' => $now]);
+            }
+
+            if ($schema->hasColumn('jibom_incidents', 'photos')) {
+                DB::table('jibom_incidents')
+                    ->whereNull('photos')
+                    ->update(['photos' => json_encode([]), 'updated_at' => $now]);
+            }
+
+            return;
+        }
 
         $villageRows = $this->pickVillages(30);
         if (count($villageRows) === 0) {
@@ -36,10 +56,13 @@ class JibomIncidentsSeeder extends Seeder
         foreach ($villageRows as $village) {
             $incidentType = $types[$i % count($types)];
             $findingType = $incidentType === 'temuan' ? $findingTypes[$i % count($findingTypes)] : null;
+            $description = $descriptions[$i % count($descriptions)];
 
             $rows[] = [
                 'incident_type' => $incidentType,
                 'finding_type' => $findingType,
+                'description' => $description,
+                'photos' => json_encode([]),
                 'province_id' => $village->province_id,
                 'regency_id' => $village->regency_id,
                 'district_id' => $village->district_id,
@@ -84,4 +107,3 @@ class JibomIncidentsSeeder extends Seeder
         return $rows->all();
     }
 }
-

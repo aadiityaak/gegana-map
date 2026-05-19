@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,8 @@ const props = defineProps<{
         id: number;
         incident_type: string;
         finding_type: string | null;
+        description?: string | null;
+        photos?: string[] | null;
         province_id: string;
         regency_id: string;
         district_id: string;
@@ -55,6 +57,9 @@ const initialType = computed(() => {
 const form = useForm({
     incident_type: props.item?.incident_type ?? initialType.value,
     finding_type: props.item?.finding_type ?? '',
+    description: props.item?.description ?? '',
+    existing_photos: props.item?.photos ?? [],
+    photos: [] as File[],
     province_id: props.item?.province_id ?? '',
     regency_id: props.item?.regency_id ?? '',
     district_id: props.item?.district_id ?? '',
@@ -71,6 +76,88 @@ const loadingDistricts = ref(false);
 const loadingVillages = ref(false);
 
 const isTemuan = computed(() => form.incident_type === 'temuan');
+
+const editorEl = ref<HTMLDivElement | null>(null);
+
+const syncDescriptionFromEditor = () => {
+    form.description = editorEl.value?.innerHTML ?? '';
+};
+
+const exec = (command: string, value?: string) => {
+    editorEl.value?.focus();
+    document.execCommand(command, false, value);
+    syncDescriptionFromEditor();
+};
+
+const addLink = () => {
+    const url = window.prompt('URL');
+    if (!url) return;
+    exec('createLink', url);
+};
+
+const photoInputEl = ref<HTMLInputElement | null>(null);
+const isDraggingPhotos = ref(false);
+const newPhotoPreviews = ref<Array<{ key: string; file: File; url: string }>>([]);
+
+const fileKey = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
+
+const syncPhotosToForm = () => {
+    form.photos = newPhotoPreviews.value.map((p) => p.file);
+};
+
+const addPhotoFiles = (files: File[]) => {
+    const incoming = files.filter((f) => f && f.type.startsWith('image/'));
+    if (incoming.length === 0) return;
+
+    const existingKeys = new Set(newPhotoPreviews.value.map((p) => p.key));
+    for (const f of incoming) {
+        const key = fileKey(f);
+        if (existingKeys.has(key)) continue;
+        newPhotoPreviews.value.push({ key, file: f, url: URL.createObjectURL(f) });
+        existingKeys.add(key);
+    }
+    syncPhotosToForm();
+};
+
+const onPhotosChange = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    addPhotoFiles(files);
+    input.value = '';
+};
+
+const openPhotoPicker = () => {
+    photoInputEl.value?.click();
+};
+
+const onPhotosDrop = (e: DragEvent) => {
+    e.preventDefault();
+    isDraggingPhotos.value = false;
+    const files = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : [];
+    addPhotoFiles(files);
+};
+
+const removeNewPhoto = (key: string) => {
+    const idx = newPhotoPreviews.value.findIndex((p) => p.key === key);
+    if (idx < 0) return;
+    const [removed] = newPhotoPreviews.value.splice(idx, 1);
+    if (removed?.url) URL.revokeObjectURL(removed.url);
+    syncPhotosToForm();
+};
+
+const removeExistingPhoto = (path: string) => {
+    form.existing_photos = (form.existing_photos ?? []).filter((p: string) => p !== path);
+};
+
+const photoUrl = (path: string) => `/storage/${path}`;
+
+const photosError = computed(() => form.errors.photos || form.errors['photos.0'] || '');
+
+onBeforeUnmount(() => {
+    for (const p of newPhotoPreviews.value) {
+        URL.revokeObjectURL(p.url);
+    }
+});
 
 const fetchJson = async (url: string) => {
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -156,14 +243,18 @@ onMounted(async () => {
     if (form.province_id) await loadRegencies(form.province_id);
     if (form.regency_id) await loadDistricts(form.regency_id);
     if (form.district_id) await loadVillages(form.district_id);
+    if (editorEl.value) {
+        editorEl.value.innerHTML = String(form.description ?? '');
+    }
 });
 
 const submit = () => {
+    syncDescriptionFromEditor();
     if (props.mode === 'edit' && props.item) {
-        form.put(`/jibom/${props.item.id}`);
+        form.put(`/jibom/${props.item.id}`, { forceFormData: true });
         return;
     }
-    form.post('/jibom');
+    form.post('/jibom', { forceFormData: true });
 };
 
 const title = computed(() => (props.mode === 'edit' ? 'Edit JIBOM' : 'Tambah JIBOM'));
@@ -224,6 +315,112 @@ const title = computed(() => (props.mode === 'edit' ? 'Edit JIBOM' : 'Tambah JIB
                     </SelectContent>
                 </Select>
                 <InputError :message="form.errors.finding_type" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label>Deskripsi</Label>
+                <div class="rounded-lg border border-green-500/15 bg-black/30">
+                    <div class="flex flex-wrap gap-2 border-b border-green-500/15 p-2">
+                        <Button type="button" size="sm" variant="secondary" @click="exec('bold')">
+                            Bold
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="exec('italic')">
+                            Italic
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="exec('underline')">
+                            Underline
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="exec('insertUnorderedList')">
+                            UL
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="exec('insertOrderedList')">
+                            OL
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="addLink">
+                            Link
+                        </Button>
+                        <Button type="button" size="sm" variant="secondary" @click="exec('removeFormat')">
+                            Clear
+                        </Button>
+                    </div>
+                    <div
+                        ref="editorEl"
+                        class="min-h-[140px] px-3 py-2 text-sm text-green-200/85 outline-none"
+                        contenteditable
+                        @input="syncDescriptionFromEditor"
+                        @blur="syncDescriptionFromEditor"
+                    />
+                </div>
+                <InputError :message="form.errors.description" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label>Gallery Foto</Label>
+                <input
+                    ref="photoInputEl"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    class="hidden"
+                    @change="onPhotosChange"
+                />
+                <button
+                    type="button"
+                    class="w-full rounded-lg border border-dashed border-green-500/25 bg-black/30 px-3 py-6 text-left text-xs text-green-200/85"
+                    :class="isDraggingPhotos ? 'bg-green-500/10' : ''"
+                    @click="openPhotoPicker"
+                    @dragenter.prevent="isDraggingPhotos = true"
+                    @dragover.prevent="isDraggingPhotos = true"
+                    @dragleave.prevent="isDraggingPhotos = false"
+                    @drop="onPhotosDrop"
+                >
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <div class="text-green-200/90">> drag & drop foto di sini</div>
+                            <div class="mt-1 text-green-300/60">> atau klik untuk pilih file</div>
+                        </div>
+                        <div v-if="newPhotoPreviews.length > 0" class="rounded border border-green-500/15 bg-black/20 px-2 py-1 text-[11px] text-green-200/85">
+                            > baru: {{ newPhotoPreviews.length }}
+                        </div>
+                    </div>
+                </button>
+                <InputError :message="photosError" />
+
+                <div v-if="(form.existing_photos ?? []).length > 0" class="grid gap-2">
+                    <div class="text-xs text-green-300/60">> foto tersimpan</div>
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                        <button
+                            v-for="p in (form.existing_photos ?? [])"
+                            :key="p"
+                            type="button"
+                            class="group relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                            @click="removeExistingPhoto(p)"
+                        >
+                            <img :src="photoUrl(p)" class="h-24 w-full object-cover" />
+                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-green-200/85">
+                                > remove
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="newPhotoPreviews.length > 0" class="grid gap-2">
+                    <div class="text-xs text-green-300/60">> preview foto baru</div>
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                        <button
+                            v-for="p in newPhotoPreviews"
+                            :key="p.key"
+                            type="button"
+                            class="group relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                            @click="removeNewPhoto(p.key)"
+                        >
+                            <img :src="p.url" class="h-24 w-full object-cover" />
+                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-green-200/85">
+                                > remove
+                            </div>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
@@ -315,4 +512,3 @@ const title = computed(() => (props.mode === 'edit' ? 'Edit JIBOM' : 'Tambah JIB
         </div>
     </div>
 </template>
-

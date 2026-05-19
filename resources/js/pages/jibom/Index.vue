@@ -8,6 +8,8 @@ type JibomItem = {
     id: number;
     incident_type: string;
     finding_type: string | null;
+    description?: string | null;
+    photos?: unknown;
     province_id: string;
     regency_id: string;
     district_id: string;
@@ -74,6 +76,32 @@ const listHref = (type: string | null) => {
 
 const deleteItem = (id: number) => {
     router.delete(`/jibom/${id}`);
+};
+
+const stripHtml = (value: string) =>
+    value
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const descriptionPreview = (value: string | null | undefined) => {
+    if (!value) return '';
+    const text = stripHtml(String(value));
+    if (text.length <= 90) return text;
+    return `${text.slice(0, 90)}...`;
+};
+
+const photosCount = (value: unknown) => {
+    if (Array.isArray(value)) return value.length;
+    if (typeof value === 'string') {
+        try {
+            const parsed = JSON.parse(value) as unknown;
+            if (Array.isArray(parsed)) return parsed.length;
+        } catch {
+            return 0;
+        }
+    }
+    return 0;
 };
 
 type ProvinceCount = {
@@ -409,6 +437,14 @@ onMounted(async () => {
                             .filter(Boolean)
                             .join(', ') || `${row.village_id}, ${row.district_id}, ${row.regency_id}, ${row.province_id}`
                     }}
+                    <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
+                        <span v-if="photosCount(row.photos) > 0" class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5">
+                            > foto: {{ photosCount(row.photos) }}
+                        </span>
+                        <span v-if="descriptionPreview(row.description)" class="max-w-full truncate">
+                            > {{ descriptionPreview(row.description) }}
+                        </span>
+                    </div>
                 </div>
                 <div class="col-span-2 flex justify-end gap-2">
                     <Button size="sm" variant="secondary" as-child>
