@@ -41,7 +41,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
             <Button
                 type="button"
                 variant="outline"
-                class="w-full"
+                class="w-full border-green-500/25 bg-black/30 text-green-200 hover:bg-green-500/10 hover:text-green-100"
                 @click="verify"
                 :disabled="isLoading"
             >
@@ -61,10 +61,10 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
 
         <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
-                <Separator class="w-full" />
+                <Separator class="w-full bg-green-500/20" />
             </div>
             <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-background px-2 text-muted-foreground">
+                <span class="bg-black/60 px-2 font-mono tracking-wider text-green-300/60">
                     {{ props.separator ?? 'Or continue with email' }}
                 </span>
             </div>
