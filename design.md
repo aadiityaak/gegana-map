@@ -96,6 +96,44 @@
 - Easing: ease-out untuk hover, ease-in-out untuk transisi panel.
 - Hindari animasi besar; fokus pada feedback kecil (glow/fade/slide tipis).
 
+## Hacker Animation (Dashboard)
+
+- Prinsip: animasi harus terasa “terminal/sistem”, halus, dan tidak mengganggu keterbacaan.
+- Overlay wajib `pointer-events: none` agar tidak mengganggu klik/scroll.
+- Gunakan `prefers-reduced-motion` untuk mematikan animasi pada user yang sensitif terhadap motion.
+
+### Layer Overlay
+
+- Grid (`.fx-grid`)
+    - Pola: garis horizontal tipis + garis vertikal jarang.
+    - Opacity rendah (±0.12–0.20) dan saturasi ringan.
+- Scanline (`.fx-scan`)
+    - Gradient vertikal tipis bergerak dari atas ke bawah (loop).
+    - Mix blend: `screen` agar tidak “menutupi” konten.
+    - Durasi: ±6–7s linear infinite.
+- Noise (`.fx-noise`)
+    - Dot-noise ringan dengan `mix-blend-mode: overlay`.
+    - Animasi “jitter” kecil (steps) supaya terasa analog, bukan shimmer besar.
+
+### Animasi Konten
+
+- Glitch title (`.glitch`)
+    - Menggunakan `::before` dan `::after` dengan `clip-path` segment atas/bawah.
+    - Offset horizontal kecil (±0.4–0.8px) + text-shadow warna aksen.
+    - Durasi: ±2.3–2.7s (alternate/alternate-reverse).
+- Cursor blink (`.cursor`)
+    - Opacity step (on/off) 1s infinite.
+- Card glow pulse (`.dash-card`)
+    - Box-shadow hijau tipis yang “bernapas” (3–4s ease-in-out).
+- Chart line draw (`.dash-draw`)
+    - `stroke-dasharray`/`stroke-dashoffset` untuk efek “digambar”.
+    - Delay per seri: `.dash-draw-1/.dash-draw-2/.dash-draw-3`.
+
+### Reduced Motion
+
+- Untuk `prefers-reduced-motion: reduce`, nonaktifkan:
+    - `.fx-scan`, `.fx-noise`, `.dash-card`, `.dash-draw`, `.glitch::before`, `.glitch::after`, `.cursor`
+
 ## Aksesibilitas
 
 - Kontras teks utama tetap tinggi di background gelap.

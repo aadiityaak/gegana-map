@@ -39,7 +39,7 @@ const wanTerorUrl = (path?: string) =>
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: 'DASHBOARD',
         href: dashboardUrl.value,
         icon: LayoutGrid,
     },

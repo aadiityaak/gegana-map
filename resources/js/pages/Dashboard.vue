@@ -161,11 +161,18 @@ const hoverX = computed(() => {
 <template>
     <Head title="Dashboard" />
 
-    <div class="p-6 font-mono">
+    <div class="relative p-6 font-mono dashboard-fx">
+        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <div class="fx-grid absolute inset-0" />
+            <div class="fx-scan absolute inset-0" />
+            <div class="fx-noise absolute inset-0" />
+        </div>
+
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
-                    > DASHBOARD
+                    > <span class="glitch" data-text="DASHBOARD">DASHBOARD</span
+                    ><span class="cursor">_</span>
                 </h1>
                 <Badge class="border border-green-500/25 bg-black/30 text-green-200">
                     total: {{ fmt(props.dashboard.totals.all) }}
@@ -177,7 +184,7 @@ const hoverX = computed(() => {
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
                 <div class="text-xs text-green-300/60">> TOTAL</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
                     {{ fmt(props.dashboard.totals.all) }}
@@ -186,21 +193,21 @@ const hoverX = computed(() => {
                     > semua modul (kejadian)
                 </div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
                 <div class="text-xs text-green-300/60">> JIBOM</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
                     {{ fmt(props.dashboard.totals.jibom) }}
                 </div>
                 <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
                 <div class="text-xs text-green-300/60">> KWRN</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
                     {{ fmt(props.dashboard.totals.kwrn) }}
                 </div>
                 <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
                 <div class="text-xs text-green-300/60">> WAN TEROR</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
                     {{ fmt(props.dashboard.totals.wanTeror) }}
@@ -210,7 +217,7 @@ const hoverX = computed(() => {
         </div>
 
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 lg:col-span-2">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs font-semibold tracking-widest text-green-300/60">
                         > GRAFIK 12 BULAN (JIBOM / KWRN / WAN TEROR)
@@ -231,7 +238,7 @@ const hoverX = computed(() => {
                     </div>
                 </div>
 
-                <div class="relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-3">
+                <div class="relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-3 dash-chart">
                     <div v-if="months.length === 0" class="text-xs text-green-300/60">
                         > belum ada data grafik.
                     </div>
@@ -280,6 +287,7 @@ const hoverX = computed(() => {
                             stroke-width="2.2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            class="dash-draw dash-draw-1"
                         />
                         <path
                             v-if="pathKwrn"
@@ -289,6 +297,7 @@ const hoverX = computed(() => {
                             stroke-width="2.2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            class="dash-draw dash-draw-2"
                         />
                         <path
                             v-if="pathWanTeror"
@@ -298,6 +307,7 @@ const hoverX = computed(() => {
                             stroke-width="2.2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
+                            class="dash-draw dash-draw-3"
                         />
 
                         <g v-if="hoverIndex !== null && hoverX !== null">
@@ -412,7 +422,7 @@ const hoverX = computed(() => {
                 </div>
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
                 <div class="text-xs font-semibold tracking-widest text-green-300/60">
                     > TOP PROVINSI (ALL)
                 </div>
@@ -440,7 +450,7 @@ const hoverX = computed(() => {
             <div
                 v-for="mod in props.dashboard.modules"
                 :key="mod.key"
-                class="rounded-xl border border-green-500/15 bg-black/20 p-4"
+                class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card"
             >
                 <div class="mb-3 flex items-center justify-between gap-2">
                     <div class="text-xs font-semibold tracking-widest text-green-300/60">
@@ -492,3 +502,232 @@ const hoverX = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.dashboard-fx {
+    isolation: isolate;
+}
+
+.fx-grid {
+    opacity: 0.18;
+    background-image: linear-gradient(
+            to bottom,
+            rgba(34, 197, 94, 0.08) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            to right,
+            rgba(34, 197, 94, 0.05) 1px,
+            transparent 1px
+        );
+    background-size: 100% 3px, 40px 100%;
+    filter: saturate(1.1);
+}
+
+.fx-scan {
+    opacity: 0.22;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(34, 197, 94, 0.08) 45%,
+        rgba(34, 197, 94, 0.12) 50%,
+        rgba(34, 197, 94, 0.08) 55%,
+        transparent 100%
+    );
+    transform: translateY(-120%);
+    animation: scan 6.5s linear infinite;
+    mix-blend-mode: screen;
+}
+
+.fx-noise {
+    opacity: 0.12;
+    background-image: radial-gradient(
+            rgba(34, 197, 94, 0.12) 1px,
+            transparent 1px
+        ),
+        radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 3px 3px, 5px 5px;
+    background-position: 0 0, 1px 2px;
+    animation: noise 1.6s steps(2, end) infinite;
+    mix-blend-mode: overlay;
+}
+
+.dash-card {
+    position: relative;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.06),
+        0 0 26px rgba(34, 197, 94, 0.05);
+    animation: glow 3.8s ease-in-out infinite;
+}
+
+.dash-chart {
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.05),
+        0 0 34px rgba(34, 197, 94, 0.06);
+}
+
+.dash-draw {
+    stroke-dasharray: 1800;
+    stroke-dashoffset: 1800;
+    animation: draw 1.25s ease forwards;
+}
+
+.dash-draw-2 {
+    animation-delay: 0.08s;
+}
+
+.dash-draw-3 {
+    animation-delay: 0.16s;
+}
+
+.glitch {
+    position: relative;
+    display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.glitch::before {
+    transform: translateX(-0.8px);
+    text-shadow: -1px 0 rgba(34, 197, 94, 0.35);
+    clip-path: inset(0 0 55% 0);
+    animation: glitch 2.7s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+    transform: translateX(0.8px);
+    text-shadow: 1px 0 rgba(56, 189, 248, 0.28);
+    clip-path: inset(55% 0 0 0);
+    animation: glitch 2.3s infinite linear alternate;
+}
+
+.cursor {
+    display: inline-block;
+    margin-left: 2px;
+    opacity: 0.9;
+    animation: blink 1s steps(1, end) infinite;
+}
+
+@keyframes scan {
+    0% {
+        transform: translateY(-120%);
+    }
+    100% {
+        transform: translateY(120%);
+    }
+}
+
+@keyframes noise {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    25% {
+        transform: translate3d(-1px, 1px, 0);
+    }
+    50% {
+        transform: translate3d(1px, -1px, 0);
+    }
+    75% {
+        transform: translate3d(-1px, -1px, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes glow {
+    0%,
+    100% {
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.06),
+            0 0 26px rgba(34, 197, 94, 0.05);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.1),
+            0 0 40px rgba(34, 197, 94, 0.08);
+    }
+}
+
+@keyframes draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes blink {
+    0%,
+    49% {
+        opacity: 0.9;
+    }
+    50%,
+    100% {
+        opacity: 0.1;
+    }
+}
+
+@keyframes glitch {
+    0% {
+        clip-path: inset(0 0 55% 0);
+        transform: translateX(-0.8px);
+    }
+    10% {
+        clip-path: inset(8% 0 42% 0);
+        transform: translateX(0.6px);
+    }
+    20% {
+        clip-path: inset(18% 0 60% 0);
+        transform: translateX(-0.4px);
+    }
+    30% {
+        clip-path: inset(42% 0 22% 0);
+        transform: translateX(0.8px);
+    }
+    40% {
+        clip-path: inset(58% 0 10% 0);
+        transform: translateX(-0.6px);
+    }
+    50% {
+        clip-path: inset(22% 0 55% 0);
+        transform: translateX(0.4px);
+    }
+    60% {
+        clip-path: inset(0 0 65% 0);
+        transform: translateX(-0.8px);
+    }
+    70% {
+        clip-path: inset(65% 0 0 0);
+        transform: translateX(0.6px);
+    }
+    80% {
+        clip-path: inset(35% 0 40% 0);
+        transform: translateX(-0.4px);
+    }
+    90% {
+        clip-path: inset(50% 0 25% 0);
+        transform: translateX(0.8px);
+    }
+    100% {
+        clip-path: inset(0 0 55% 0);
+        transform: translateX(-0.8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-scan,
+    .fx-noise,
+    .dash-card,
+    .dash-draw,
+    .glitch::before,
+    .glitch::after,
+    .cursor {
+        animation: none !important;
+    }
+}
+</style>
