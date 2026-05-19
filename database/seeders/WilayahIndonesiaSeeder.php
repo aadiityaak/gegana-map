@@ -58,44 +58,87 @@ class WilayahIndonesiaSeeder extends Seeder
         }
 
         DB::transaction(function () {
+            DB::table('reg_villages')->delete();
+            DB::table('reg_districts')->delete();
+            DB::table('reg_regencies')->delete();
+            DB::table('reg_provinces')->delete();
+
             $provinces = [
+                ['id' => '11', 'name' => 'Aceh'],
+                ['id' => '12', 'name' => 'Sumatera Utara'],
+                ['id' => '13', 'name' => 'Sumatera Barat'],
+                ['id' => '14', 'name' => 'Riau'],
+                ['id' => '15', 'name' => 'Jambi'],
+                ['id' => '16', 'name' => 'Sumatera Selatan'],
+                ['id' => '17', 'name' => 'Bengkulu'],
+                ['id' => '18', 'name' => 'Lampung'],
+                ['id' => '19', 'name' => 'Kepulauan Bangka Belitung'],
+                ['id' => '21', 'name' => 'Kepulauan Riau'],
                 ['id' => '31', 'name' => 'DKI Jakarta'],
                 ['id' => '32', 'name' => 'Jawa Barat'],
                 ['id' => '33', 'name' => 'Jawa Tengah'],
                 ['id' => '34', 'name' => 'DI Yogyakarta'],
                 ['id' => '35', 'name' => 'Jawa Timur'],
+                ['id' => '36', 'name' => 'Banten'],
+                ['id' => '51', 'name' => 'Bali'],
+                ['id' => '52', 'name' => 'Nusa Tenggara Barat'],
+                ['id' => '53', 'name' => 'Nusa Tenggara Timur'],
+                ['id' => '61', 'name' => 'Kalimantan Barat'],
+                ['id' => '62', 'name' => 'Kalimantan Tengah'],
+                ['id' => '63', 'name' => 'Kalimantan Selatan'],
+                ['id' => '64', 'name' => 'Kalimantan Timur'],
+                ['id' => '65', 'name' => 'Kalimantan Utara'],
+                ['id' => '71', 'name' => 'Sulawesi Utara'],
+                ['id' => '72', 'name' => 'Sulawesi Tengah'],
+                ['id' => '73', 'name' => 'Sulawesi Selatan'],
+                ['id' => '74', 'name' => 'Sulawesi Tenggara'],
+                ['id' => '75', 'name' => 'Gorontalo'],
+                ['id' => '76', 'name' => 'Sulawesi Barat'],
+                ['id' => '81', 'name' => 'Maluku'],
+                ['id' => '82', 'name' => 'Maluku Utara'],
+                ['id' => '91', 'name' => 'Papua'],
+                ['id' => '92', 'name' => 'Papua Barat'],
+                ['id' => '93', 'name' => 'Papua Selatan'],
+                ['id' => '94', 'name' => 'Papua Tengah'],
+                ['id' => '95', 'name' => 'Papua Pegunungan'],
+                ['id' => '96', 'name' => 'Papua Barat Daya'],
             ];
 
             DB::table('reg_provinces')->insert($provinces);
 
-            $regencies = [
-                ['id' => '3171', 'province_id' => '31', 'name' => 'Kota Jakarta Selatan'],
-                ['id' => '3273', 'province_id' => '32', 'name' => 'Kota Bandung'],
-                ['id' => '3374', 'province_id' => '33', 'name' => 'Kota Semarang'],
-                ['id' => '3471', 'province_id' => '34', 'name' => 'Kota Yogyakarta'],
-                ['id' => '3578', 'province_id' => '35', 'name' => 'Kota Surabaya'],
-            ];
+            $regencies = [];
+            $districts = [];
+            $villages = [];
+
+            foreach ($provinces as $prov) {
+                $provinceId = (string) $prov['id'];
+                $provinceName = (string) $prov['name'];
+
+                $regencyId = $provinceId . '01';
+                $districtId = $regencyId . '01';
+                $villageId = $districtId . '0001';
+
+                $regencies[] = [
+                    'id' => $regencyId,
+                    'province_id' => $provinceId,
+                    'name' => 'Kabupaten Contoh ' . $provinceName,
+                ];
+
+                $districts[] = [
+                    'id' => $districtId,
+                    'regency_id' => $regencyId,
+                    'name' => 'Kecamatan Contoh ' . $provinceName,
+                ];
+
+                $villages[] = [
+                    'id' => $villageId,
+                    'district_id' => $districtId,
+                    'name' => 'Desa Contoh ' . $provinceName,
+                ];
+            }
 
             DB::table('reg_regencies')->insert($regencies);
-
-            $districts = [
-                ['id' => '317102', 'regency_id' => '3171', 'name' => 'Kebayoran Baru'],
-                ['id' => '327301', 'regency_id' => '3273', 'name' => 'Coblong'],
-                ['id' => '337401', 'regency_id' => '3374', 'name' => 'Semarang Tengah'],
-                ['id' => '347101', 'regency_id' => '3471', 'name' => 'Gondokusuman'],
-                ['id' => '357801', 'regency_id' => '3578', 'name' => 'Tegalsari'],
-            ];
-
             DB::table('reg_districts')->insert($districts);
-
-            $villages = [
-                ['id' => '3171021001', 'district_id' => '317102', 'name' => 'Selong'],
-                ['id' => '3273011001', 'district_id' => '327301', 'name' => 'Dago'],
-                ['id' => '3374011001', 'district_id' => '337401', 'name' => 'Miroto'],
-                ['id' => '3471011001', 'district_id' => '347101', 'name' => 'Demangan'],
-                ['id' => '3578011001', 'district_id' => '357801', 'name' => 'Keputran'],
-            ];
-
             DB::table('reg_villages')->insert($villages);
         });
     }

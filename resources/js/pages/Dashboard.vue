@@ -186,9 +186,16 @@ const normalizeName = (value: string) =>
         .replace(/\s+/g, ' ')
         .trim();
 
-const titleAliases: Record<string, string> = {
+const provinceAliases: Record<string, string> = {
     'JAKARTA RAYA': 'DKI JAKARTA',
-    YOGYAKARTA: 'DAERAH ISTIMEWA YOGYAKARTA',
+    JAKARTA: 'DKI JAKARTA',
+    YOGYAKARTA: 'DI YOGYAKARTA',
+    'DAERAH ISTIMEWA YOGYAKARTA': 'DI YOGYAKARTA',
+};
+
+const provinceKey = (value: string) => {
+    const k = normalizeName(value);
+    return provinceAliases[k] ?? k;
 };
 
 const colorForCount = (count: number, max: number) => {
@@ -236,8 +243,7 @@ const applyCountsToSvg = async (options: {
     const countsByProvinceName: Record<string, number> = {};
     const provinceIdByName: Record<string, string> = {};
     for (const row of options.counts) {
-        const n = normalizeName(row.name);
-        const mapped = titleAliases[n] ?? n;
+        const mapped = provinceKey(row.name);
         countsByProvinceName[mapped] = Number(row.count) || 0;
         provinceIdByName[mapped] = row.id;
     }
@@ -267,8 +273,7 @@ const applyCountsToSvg = async (options: {
 
         const rawTitle = originalName;
         if (!rawTitle) continue;
-        const normalizedTitle = normalizeName(rawTitle);
-        const mappedTitle = titleAliases[normalizedTitle] ?? normalizedTitle;
+        const mappedTitle = provinceKey(rawTitle);
         const count = countsByProvinceName[mappedTitle] ?? 0;
         const provinceId = provinceIdByName[mappedTitle] ?? null;
 

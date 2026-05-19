@@ -66,41 +66,44 @@ class KwrnIncidentsSeeder extends Seeder
 
         $rows = [];
 
-        $existingProvinces = DB::table('kwrn_incidents')
-            ->distinct()
-            ->pluck('province_id')
+        $currentCounts = DB::table('kwrn_incidents')
+            ->select(['province_id', DB::raw('count(*) as c')])
+            ->groupBy('province_id')
+            ->pluck('c', 'province_id')
             ->all();
-        $existingProvinceMap = array_fill_keys($existingProvinces, true);
-        $missingProvinceIds = array_values(array_filter(
-            $allProvinceIds,
-            fn($id) => ! isset($existingProvinceMap[$id]),
-        ));
 
-        foreach ($missingProvinceIds as $provinceId) {
-            if (count($rows) >= $need) {
-                break;
-            }
-            $row = $this->makeIncidentRow(
-                provinceId: (string) $provinceId,
-                types: $types,
-                findingTypes: $findingTypes,
-                descriptionsByType: $descriptionsByType,
-            );
-            if ($row) {
-                $rows[] = $row;
-            }
-        }
+        $orderedProvinceIds = array_values($allProvinceIds);
 
         while (count($rows) < $need) {
-            $provinceId = (string) $this->randomElement($allProvinceIds);
-            $row = $this->makeIncidentRow(
-                provinceId: $provinceId,
-                types: $types,
-                findingTypes: $findingTypes,
-                descriptionsByType: $descriptionsByType,
-            );
-            if ($row) {
+            usort($orderedProvinceIds, function ($a, $b) use (&$currentCounts) {
+                $ca = (int) ($currentCounts[(string) $a] ?? 0);
+                $cb = (int) ($currentCounts[(string) $b] ?? 0);
+                if ($ca === $cb) {
+                    return strcmp((string) $a, (string) $b);
+                }
+                return $ca <=> $cb;
+            });
+
+            foreach ($orderedProvinceIds as $provinceId) {
+                if (count($rows) >= $need) {
+                    break 2;
+                }
+
+                $provinceId = (string) $provinceId;
+                $row = $this->makeIncidentRow(
+                    provinceId: $provinceId,
+                    types: $types,
+                    findingTypes: $findingTypes,
+                    descriptionsByType: $descriptionsByType,
+                );
+
+                if (! $row) {
+                    $currentCounts[$provinceId] = (int) ($currentCounts[$provinceId] ?? 0) + 1000;
+                    continue;
+                }
+
                 $rows[] = $row;
+                $currentCounts[$provinceId] = (int) ($currentCounts[$provinceId] ?? 0) + 1;
             }
         }
 

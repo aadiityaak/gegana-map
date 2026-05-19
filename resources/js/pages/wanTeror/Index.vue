@@ -117,7 +117,7 @@ const provinces = ref<ProvinceRef[]>([]);
 const provinceIdByName = computed(() => {
     const map: Record<string, string> = {};
     for (const row of provinces.value) {
-        map[normalizeName(row.name)] = row.id;
+        map[provinceKey(row.name)] = row.id;
     }
     return map;
 });
@@ -135,15 +135,22 @@ const normalizeName = (value: string) =>
         .replace(/\s+/g, ' ')
         .trim();
 
-const titleAliases: Record<string, string> = {
+const provinceAliases: Record<string, string> = {
     'JAKARTA RAYA': 'DKI JAKARTA',
-    YOGYAKARTA: 'DAERAH ISTIMEWA YOGYAKARTA',
+    JAKARTA: 'DKI JAKARTA',
+    YOGYAKARTA: 'DI YOGYAKARTA',
+    'DAERAH ISTIMEWA YOGYAKARTA': 'DI YOGYAKARTA',
+};
+
+const provinceKey = (value: string) => {
+    const k = normalizeName(value);
+    return provinceAliases[k] ?? k;
 };
 
 const countsByProvinceName = computed(() => {
     const map: Record<string, number> = {};
     for (const row of counts.value) {
-        map[normalizeName(row.name)] = Number(row.count) || 0;
+        map[provinceKey(row.name)] = Number(row.count) || 0;
     }
     return map;
 });
@@ -193,8 +200,7 @@ const applyCountsToSvg = async () => {
         }
         const rawTitle = originalTitle;
         if (!rawTitle) continue;
-        const normalizedTitle = normalizeName(rawTitle);
-        const mappedTitle = titleAliases[normalizedTitle] ?? normalizedTitle;
+        const mappedTitle = provinceKey(rawTitle);
         const count = countsByProvinceName.value[mappedTitle] ?? 0;
         const provinceId = provinceIdByName.value[mappedTitle] ?? null;
 
