@@ -5,6 +5,7 @@ import {
     Bomb,
     Brain,
     DollarSign,
+    Globe,
     Info,
     Landmark,
     LayoutGrid,
@@ -36,6 +37,7 @@ const jibomUrl = (path?: string) => (path ? `/jibom${path}` : '/jibom');
 const kwrnUrl = (path?: string) => (path ? `/kwrn${path}` : '/kwrn');
 const wanTerorUrl = (path?: string) =>
     path ? `/wan-teror${path}` : '/wan-teror';
+const worldMonitoringUrl = computed(() => '/world-monitoring');
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -253,6 +255,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                 href: wanTerorUrl('?type=aksi-teror'),
             },
         ],
+    },
+    {
+        title: 'WORLD MONITORING',
+        href: worldMonitoringUrl.value,
+        icon: Globe,
     },
 ]);
 

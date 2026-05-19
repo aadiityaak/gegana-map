@@ -485,6 +485,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         },
     ])->name('dashboard');
 
+    Route::inertia('world-monitoring', 'WorldMonitoring')
+        ->name('world-monitoring');
+
     Route::inertia('ipoleksosbudkam/ekonomi/ekonomi-harga-sembako', 'KetahanPangan/Index', [
         'komoditas' => fn() => [
             ['value' => '27', 'label' => 'Beras Premium'],
