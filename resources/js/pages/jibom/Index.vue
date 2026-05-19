@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -37,7 +37,7 @@ type Paginated<T> = {
 
 const props = defineProps<{
     items: Paginated<JibomItem>;
-    filters: { type: string | null };
+    filters: { type: string | null; province_id: string | null };
 }>();
 
 const typeLabel = (value: string) =>
@@ -57,11 +57,20 @@ const findingLabel = (value: string | null) =>
     })[value ?? ''] ?? value ?? '-';
 
 const currentType = computed(() => props.filters.type);
+const currentProvinceId = computed(() => props.filters.province_id);
 
 const createHref = computed(() => {
     if (!currentType.value) return '/jibom/create';
     return `/jibom/create?type=${encodeURIComponent(currentType.value)}`;
 });
+
+const listHref = (type: string | null) => {
+    const qs = new URLSearchParams();
+    if (type) qs.set('type', type);
+    if (currentProvinceId.value) qs.set('province_id', currentProvinceId.value);
+    const s = qs.toString();
+    return s ? `/jibom?${s}` : '/jibom';
+};
 
 const deleteItem = (id: number) => {
     router.delete(`/jibom/${id}`);
@@ -73,11 +82,31 @@ type ProvinceCount = {
     count: number;
 };
 
+type ProvinceRef = {
+    id: string;
+    name: string;
+};
+
 const mapSvg = ref<string>('');
 const mapError = ref<string | null>(null);
 const mapRoot = ref<HTMLDivElement | null>(null);
 const counts = ref<ProvinceCount[]>([]);
 const hovered = ref<{ name: string; count: number } | null>(null);
+const provinces = ref<ProvinceRef[]>([]);
+const provinceIdByName = computed(() => {
+    const map: Record<string, string> = {};
+    for (const row of provinces.value) {
+        map[normalizeName(row.name)] = row.id;
+    }
+    return map;
+});
+const provinceNameById = computed(() => {
+    const map: Record<string, string> = {};
+    for (const row of provinces.value) {
+        map[row.id] = row.name;
+    }
+    return map;
+});
 
 const normalizeName = (value: string) =>
     value
@@ -137,15 +166,26 @@ const applyCountsToSvg = async () => {
 
     const paths = svg.querySelectorAll<SVGPathElement>('#polygons .land');
     for (const el of Array.from(paths)) {
-        const rawTitle = (el.getAttribute('title') ?? '').trim();
+        const originalTitle = (el.getAttribute('data-title-original') ?? el.getAttribute('title') ?? '').trim();
+        if (!el.getAttribute('data-title-original') && originalTitle) {
+            el.setAttribute('data-title-original', originalTitle);
+        }
+        const rawTitle = originalTitle;
         if (!rawTitle) continue;
         const normalizedTitle = normalizeName(rawTitle);
         const mappedTitle = titleAliases[normalizedTitle] ?? normalizedTitle;
         const count = countsByProvinceName.value[mappedTitle] ?? 0;
+        const provinceId = provinceIdByName.value[mappedTitle] ?? null;
 
         el.style.fill = colorForCount(count, max);
-        el.style.stroke = 'rgba(34,197,94,0.25)';
-        el.style.strokeWidth = '0.7';
+        el.style.stroke =
+            currentProvinceId.value && provinceId === currentProvinceId.value
+                ? 'rgba(34,197,94,0.8)'
+                : 'rgba(34,197,94,0.25)';
+        el.style.strokeWidth =
+            currentProvinceId.value && provinceId === currentProvinceId.value
+                ? '1.4'
+                : '0.7';
         el.style.cursor = 'pointer';
         el.setAttribute('data-count', String(count));
         el.setAttribute('title', `${rawTitle} (${count})`);
@@ -155,6 +195,18 @@ const applyCountsToSvg = async () => {
         };
         el.onmouseleave = () => {
             hovered.value = null;
+        };
+        el.onclick = () => {
+            if (!provinceId) return;
+            const nextProvinceId = currentProvinceId.value === provinceId ? null : provinceId;
+            router.get(
+                '/jibom',
+                {
+                    type: currentType.value ?? undefined,
+                    province_id: nextProvinceId ?? undefined,
+                },
+                { preserveScroll: true, preserveState: true, replace: true },
+            );
         };
 
         if (count > 0) {
@@ -194,6 +246,33 @@ const loadCounts = async () => {
     counts.value = Array.isArray(json.data) ? json.data : [];
 };
 
+const loadProvinces = async () => {
+    const res = await fetch('/api/wilayah/provinces', {
+        headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+        return;
+    }
+    const json = (await res.json()) as ProvinceRef[];
+    provinces.value = Array.isArray(json) ? json : [];
+};
+
+watch(
+    () => props.filters.type,
+    async (value, oldValue) => {
+        if (value === oldValue) return;
+        await loadCounts();
+        await applyCountsToSvg();
+    },
+);
+
+watch(
+    () => props.filters.province_id,
+    async (value, oldValue) => {
+        if (value === oldValue) return;
+        await applyCountsToSvg();
+    },
+);
 
 onMounted(async () => {
     try {
@@ -204,6 +283,7 @@ onMounted(async () => {
             mapError.value = `Gagal memuat map (${res.status})`;
             return;
         }
+        await loadProvinces();
         await loadCounts();
         mapSvg.value = await res.text();
         await applyCountsToSvg();
@@ -225,6 +305,12 @@ onMounted(async () => {
                 <Badge class="border border-green-500/25 bg-black/30 text-green-200">
                     {{ currentType ? typeLabel(currentType) : 'Semua' }}
                 </Badge>
+                <Badge
+                    v-if="currentProvinceId"
+                    class="border border-green-500/25 bg-black/30 text-green-200"
+                >
+                    {{ provinceNameById[currentProvinceId] ?? currentProvinceId }}
+                </Badge>
             </div>
             <div class="flex items-center gap-2">
                 <Button as-child>
@@ -239,28 +325,28 @@ onMounted(async () => {
                 :class="currentType ? '' : 'border-green-500/25 bg-green-500/10 text-green-200'"
                 as-child
             >
-                <Link href="/jibom">Semua</Link>
+                <Link :href="listHref(null)">Semua</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'ancaman' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link href="/jibom?type=ancaman">Ancaman</Link>
+                <Link :href="listHref('ancaman')">Ancaman</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'temuan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link href="/jibom?type=temuan">Temuan</Link>
+                <Link :href="listHref('temuan')">Temuan</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'ledakan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link href="/jibom?type=ledakan">Ledakan</Link>
+                <Link :href="listHref('ledakan')">Ledakan</Link>
             </Button>
         </div>
 
@@ -269,18 +355,25 @@ onMounted(async () => {
                 <span>> MAP INDONESIA</span>
                 <span class="text-[11px]">> indonesiaLow.svg</span>
             </div>
-            <div v-if="hovered" class="mb-2 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/30 px-3 py-2 text-xs text-green-200/85">
-                <span>> {{ hovered.name }}</span>
-                <span class="text-[11px]">> kejadian: {{ hovered.count }}</span>
-            </div>
             <div v-if="mapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
                 > {{ mapError }}
             </div>
             <div
                 v-else-if="mapSvg"
-                class="w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+                class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
             >
-                <div ref="mapRoot" class="mx-auto max-w-[980px] [&_svg]:h-auto [&_svg]:w-full" v-html="mapSvg" />
+                <div
+                    v-if="hovered"
+                    class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+                >
+                    <span>> {{ hovered.name }}</span>
+                    <span class="text-[11px]">> kejadian: {{ hovered.count }}</span>
+                </div>
+                <div
+                    ref="mapRoot"
+                    class="mx-auto max-w-[1210px] [&_svg]:h-auto [&_svg]:w-full"
+                    v-html="mapSvg"
+                />
             </div>
             <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
                 loading_map...

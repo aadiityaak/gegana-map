@@ -19,6 +19,19 @@ class JibomIncidentController extends Controller
             $type = null;
         }
 
+        $provinceId = $request->query('province_id');
+        if (is_string($provinceId)) {
+            $provinceId = trim($provinceId);
+        }
+        if (! is_string($provinceId) || $provinceId === '' || strlen($provinceId) !== 2) {
+            $provinceId = null;
+        } else {
+            $exists = DB::table('reg_provinces')->where('id', $provinceId)->exists();
+            if (! $exists) {
+                $provinceId = null;
+            }
+        }
+
         $query = DB::table('jibom_incidents as ji')
             ->leftJoin('reg_provinces as p', 'p.id', '=', 'ji.province_id')
             ->leftJoin('reg_regencies as r', 'r.id', '=', 'ji.regency_id')
@@ -43,12 +56,17 @@ class JibomIncidentController extends Controller
             $query->where('ji.incident_type', $type);
         }
 
+        if (is_string($provinceId) && $provinceId !== '') {
+            $query->where('ji.province_id', $provinceId);
+        }
+
         $items = $query->orderByDesc('ji.id')->paginate(20)->withQueryString();
 
         return Inertia::render('jibom/Index', [
             'items' => $items,
             'filters' => [
                 'type' => $type,
+                'province_id' => $provinceId,
             ],
         ]);
     }
