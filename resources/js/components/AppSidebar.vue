@@ -267,34 +267,204 @@ const footerNavItems: NavItem[] = [
 
 <template>
     <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboardUrl">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" class="justify-start px-2">
-                        <Users class="size-4 shrink-0" />
-                        <span class="truncate font-semibold">ADMIN</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarHeader>
+        <div class="relative flex h-full flex-col sidebar-hacker">
+            <div class="pointer-events-none absolute inset-0 overflow-hidden">
+                <div class="sb-fx-grid absolute inset-0" />
+                <div class="sb-fx-scan absolute inset-0" />
+                <div class="sb-fx-noise absolute inset-0" />
+                <div class="sb-fx-edge absolute inset-0" />
+            </div>
 
-        <SidebarContent>
-            <NavMain :items="mainNavItems" />
-        </SidebarContent>
+            <SidebarHeader class="relative z-10">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" as-child>
+                            <Link :href="dashboardUrl">
+                                <AppLogo />
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" class="justify-start px-2">
+                            <Users class="size-4 shrink-0" />
+                            <span class="truncate font-semibold">ADMIN</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
 
-        <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
-            <NavUser />
-        </SidebarFooter>
+            <SidebarContent class="relative z-10">
+                <NavMain :items="mainNavItems" />
+            </SidebarContent>
+
+            <SidebarFooter class="relative z-10">
+                <NavFooter :items="footerNavItems" />
+                <NavUser />
+            </SidebarFooter>
+        </div>
     </Sidebar>
     <slot />
 </template>
+
+<style scoped>
+.sidebar-hacker {
+    isolation: isolate;
+}
+
+.sb-fx-grid {
+    opacity: 0.18;
+    background-image: linear-gradient(
+            to bottom,
+            rgba(34, 197, 94, 0.08) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            to right,
+            rgba(34, 197, 94, 0.05) 1px,
+            transparent 1px
+        );
+    background-size: 100% 3px, 36px 100%;
+}
+
+.sb-fx-scan {
+    opacity: 0.22;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(34, 197, 94, 0.06) 45%,
+        rgba(34, 197, 94, 0.12) 50%,
+        rgba(34, 197, 94, 0.06) 55%,
+        transparent 100%
+    );
+    transform: translateY(-120%);
+    animation: sb-scan 7.2s linear infinite;
+    mix-blend-mode: screen;
+}
+
+.sb-fx-noise {
+    opacity: 0.12;
+    background-image: radial-gradient(
+            rgba(34, 197, 94, 0.12) 1px,
+            transparent 1px
+        ),
+        radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 3px 3px, 5px 5px;
+    background-position: 0 0, 1px 2px;
+    animation: sb-noise 1.8s steps(2, end) infinite;
+    mix-blend-mode: overlay;
+}
+
+.sb-fx-edge {
+    opacity: 0.9;
+    background: radial-gradient(
+        70% 60% at 20% 10%,
+        rgba(34, 197, 94, 0.12) 0%,
+        transparent 60%
+    );
+}
+
+:deep([data-sidebar='menu-button']),
+:deep([data-sidebar='menu-sub-button']) {
+    position: relative;
+    transition: box-shadow 200ms ease, border-color 200ms ease, background-color 200ms ease;
+}
+
+:deep([data-sidebar='menu-button']::before),
+:deep([data-sidebar='menu-sub-button']::before) {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 0.55rem;
+    opacity: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(34, 197, 94, 0.18) 45%,
+        rgba(34, 197, 94, 0.28) 50%,
+        rgba(34, 197, 94, 0.18) 55%,
+        transparent 100%
+    );
+    transform: translateX(-35%);
+    filter: blur(0.2px);
+    pointer-events: none;
+}
+
+:deep([data-sidebar='menu-button']:hover::before),
+:deep([data-sidebar='menu-sub-button']:hover::before) {
+    opacity: 0.65;
+    animation: sb-sweep 900ms ease-out forwards;
+}
+
+:deep([data-sidebar='menu-button'][data-active='true']),
+:deep([data-sidebar='menu-sub-button'][data-active='true']) {
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12),
+        0 0 26px rgba(34, 197, 94, 0.06);
+    animation: sb-glow 3.6s ease-in-out infinite;
+}
+
+:deep([data-sidebar='menu-button'][data-active='true'] > a),
+:deep([data-sidebar='menu-sub-button'][data-active='true'] > a) {
+    text-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+}
+
+@keyframes sb-scan {
+    0% {
+        transform: translateY(-120%);
+    }
+    100% {
+        transform: translateY(120%);
+    }
+}
+
+@keyframes sb-noise {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    25% {
+        transform: translate3d(-1px, 1px, 0);
+    }
+    50% {
+        transform: translate3d(1px, -1px, 0);
+    }
+    75% {
+        transform: translate3d(-1px, -1px, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes sb-sweep {
+    from {
+        transform: translateX(-35%);
+    }
+    to {
+        transform: translateX(35%);
+    }
+}
+
+@keyframes sb-glow {
+    0%,
+    100% {
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12),
+            0 0 26px rgba(34, 197, 94, 0.06);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18),
+            0 0 38px rgba(34, 197, 94, 0.09);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sb-fx-scan,
+    .sb-fx-noise,
+    :deep([data-sidebar='menu-button'][data-active='true']),
+    :deep([data-sidebar='menu-sub-button'][data-active='true']),
+    :deep([data-sidebar='menu-button']:hover::before),
+    :deep([data-sidebar='menu-sub-button']:hover::before) {
+        animation: none !important;
+    }
+}
+</style>
