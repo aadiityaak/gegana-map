@@ -227,31 +227,282 @@ const renderTradingViewWidget = async () => {
 
     widgetRoot.value.innerHTML = '';
 
-    const container = document.createElement('div');
-    container.className = 'tradingview-widget-container';
-    container.style.width = '100%';
+    const appendEmbed = (options: {
+        title: string;
+        scriptSrc: string;
+        config: Record<string, unknown>;
+        minHeight: number;
+    }) => {
+        if (!widgetRoot.value) return;
 
-    const widgetInner = document.createElement('div');
-    widgetInner.className = 'tradingview-widget-container__widget';
-    container.appendChild(widgetInner);
+        const block = document.createElement('div');
+        block.style.cssText =
+            'width: 100%; border: 1px solid rgba(34,197,94,0.15); background: rgba(0,0,0,0.20); border-radius: 12px; overflow: hidden;';
 
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
+        const header = document.createElement('div');
+        header.textContent = `> ${options.title}`;
+        header.style.cssText =
+            'padding: 10px 12px; border-bottom: 1px solid rgba(34,197,94,0.15); font-size: 12px; letter-spacing: 0.12em; color: rgba(134,239,172,0.70); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;';
+        block.appendChild(header);
+
+        const container = document.createElement('div');
+        container.className = 'tradingview-widget-container';
+        container.style.width = '100%';
+        container.style.minHeight = `${options.minHeight}px`;
+
+        const widgetInner = document.createElement('div');
+        widgetInner.className = 'tradingview-widget-container__widget';
+        container.appendChild(widgetInner);
+
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = options.scriptSrc;
+        script.text = JSON.stringify(options.config);
+        script.onerror = () => {
+            widgetError.value = 'Gagal memuat widget TradingView.';
+        };
+
+        container.appendChild(script);
+        block.appendChild(container);
+        widgetRoot.value.appendChild(block);
+
+        const spacer = document.createElement('div');
+        spacer.style.height = '12px';
+        widgetRoot.value.appendChild(spacer);
+    };
 
     if (props.subcategory === 'ekonomi-kurs-mata-uang') {
-        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js';
-        script.text = JSON.stringify({
-            width: '100%',
-            height: 560,
-            currencies: ['IDR', 'USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CNY', 'SGD'],
-            isTransparent: true,
-            colorTheme: 'dark',
-            locale: 'id',
+        appendEmbed({
+            title: 'Ticker Tape',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js',
+            minHeight: 72,
+            config: {
+                colorTheme: 'dark',
+                isTransparent: false,
+                displayMode: 'adaptive',
+                locale: 'id',
+                showSymbolLogo: true,
+                symbols: [
+                    { proName: 'FX_IDC:USDIDR', title: 'USD/IDR' },
+                    { proName: 'FX:EURUSD', title: 'EUR/USD' },
+                    { proName: 'FX:GBPUSD', title: 'GBP/USD' },
+                    { proName: 'FX:USDJPY', title: 'USD/JPY' },
+                    { proName: 'FX:AUDUSD', title: 'AUD/USD' },
+                ],
+            },
         });
-    } else {
-        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
-        script.text = JSON.stringify({
+
+        appendEmbed({
+            title: 'Forex Cross Rates',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js',
+            minHeight: 560,
+            config: {
+                width: '100%',
+                height: 560,
+                currencies: ['IDR', 'USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CNY', 'SGD'],
+                isTransparent: false,
+                colorTheme: 'dark',
+                locale: 'id',
+            },
+        });
+
+        appendEmbed({
+            title: 'Market Quotes (Forex)',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js',
+            minHeight: 520,
+            config: {
+                width: '100%',
+                height: 520,
+                locale: 'id',
+                colorTheme: 'dark',
+                isTransparent: false,
+                showSymbolLogo: true,
+                symbolsGroups: [
+                    {
+                        name: 'Major',
+                        originalName: 'Forex',
+                        symbols: [
+                            { name: 'FX_IDC:USDIDR', displayName: 'USD/IDR' },
+                            { name: 'FX:EURUSD', displayName: 'EUR/USD' },
+                            { name: 'FX:GBPUSD', displayName: 'GBP/USD' },
+                            { name: 'FX:USDJPY', displayName: 'USD/JPY' },
+                            { name: 'FX:AUDUSD', displayName: 'AUD/USD' },
+                        ],
+                    },
+                ],
+            },
+        });
+
+        appendEmbed({
+            title: 'Symbol Overview',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js',
+            minHeight: 520,
+            config: {
+                symbols: [
+                    ['FX_IDC:USDIDR|1D'],
+                    ['FX:EURUSD|1D'],
+                    ['FX:USDJPY|1D'],
+                ],
+                chartOnly: false,
+                width: '100%',
+                height: 520,
+                locale: 'id',
+                colorTheme: 'dark',
+                isTransparent: false,
+                autosize: false,
+                showVolume: true,
+                showMA: true,
+                hideDateRanges: false,
+                hideMarketStatus: false,
+                hideSymbolLogo: false,
+                scalePosition: 'right',
+                scaleMode: 'Normal',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
+                fontSize: '10',
+                noTimeScale: false,
+                valuesTracking: '1',
+                changeMode: 'price-and-percent',
+            },
+        });
+
+        appendEmbed({
+            title: 'Technical Analysis (USD/IDR)',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',
+            minHeight: 520,
+            config: {
+                interval: '1D',
+                width: '100%',
+                height: 520,
+                isTransparent: false,
+                symbol: 'FX_IDC:USDIDR',
+                showIntervalTabs: true,
+                locale: 'id',
+                colorTheme: 'dark',
+            },
+        });
+
+        return;
+    }
+
+    if (props.subcategory === 'ekonomi-pasar-saham') {
+        appendEmbed({
+            title: 'Ticker Tape',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js',
+            minHeight: 72,
+            config: {
+                colorTheme: 'dark',
+                isTransparent: false,
+                displayMode: 'adaptive',
+                locale: 'id',
+                showSymbolLogo: true,
+                symbols: [
+                    { proName: 'IDX:COMPOSITE', title: 'IHSG' },
+                    { proName: 'FX_IDC:USDIDR', title: 'USD/IDR' },
+                    { proName: 'FX:EURUSD', title: 'EUR/USD' },
+                    { proName: 'NASDAQ:NDX', title: 'Nasdaq 100' },
+                    { proName: 'SP:SPX', title: 'S&P 500' },
+                ],
+            },
+        });
+
+        appendEmbed({
+            title: 'Market Overview',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',
+            minHeight: 560,
+            config: {
+                colorTheme: 'dark',
+                dateRange: '12M',
+                showChart: true,
+                locale: 'id',
+                width: '100%',
+                height: 560,
+                isTransparent: false,
+                tabs: [
+                    {
+                        title: 'Index',
+                        symbols: [
+                            { s: 'IDX:COMPOSITE', d: 'Jakarta Composite' },
+                            { s: 'SP:SPX', d: 'S&P 500' },
+                            { s: 'NASDAQ:NDX', d: 'Nasdaq 100' },
+                            { s: 'FOREXCOM:DJI', d: 'Dow Jones' },
+                        ],
+                        originalTitle: 'Indices',
+                    },
+                    {
+                        title: 'FX',
+                        symbols: [
+                            { s: 'FX_IDC:USDIDR', d: 'USD/IDR' },
+                            { s: 'FX:EURUSD', d: 'EUR/USD' },
+                            { s: 'FX:GBPUSD', d: 'GBP/USD' },
+                            { s: 'FX:USDJPY', d: 'USD/JPY' },
+                        ],
+                        originalTitle: 'Forex',
+                    },
+                ],
+            },
+        });
+
+        appendEmbed({
+            title: 'Market Quotes',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js',
+            minHeight: 520,
+            config: {
+                width: '100%',
+                height: 520,
+                locale: 'id',
+                colorTheme: 'dark',
+                isTransparent: false,
+                showSymbolLogo: true,
+                symbolsGroups: [
+                    {
+                        name: 'Index',
+                        originalName: 'Indices',
+                        symbols: [
+                            { name: 'IDX:COMPOSITE', displayName: 'IHSG' },
+                            { name: 'SP:SPX', displayName: 'S&P 500' },
+                            { name: 'NASDAQ:NDX', displayName: 'Nasdaq 100' },
+                            { name: 'FOREXCOM:DJI', displayName: 'Dow Jones' },
+                        ],
+                    },
+                    {
+                        name: 'FX',
+                        originalName: 'Forex',
+                        symbols: [
+                            { name: 'FX_IDC:USDIDR', displayName: 'USD/IDR' },
+                            { name: 'FX:EURUSD', displayName: 'EUR/USD' },
+                            { name: 'FX:GBPUSD', displayName: 'GBP/USD' },
+                            { name: 'FX:USDJPY', displayName: 'USD/JPY' },
+                        ],
+                    },
+                ],
+            },
+        });
+
+        appendEmbed({
+            title: 'Technical Analysis (IHSG)',
+            scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',
+            minHeight: 520,
+            config: {
+                interval: '1D',
+                width: '100%',
+                height: 520,
+                isTransparent: false,
+                symbol: 'IDX:COMPOSITE',
+                showIntervalTabs: true,
+                locale: 'id',
+                colorTheme: 'dark',
+            },
+        });
+
+        return;
+    }
+
+    appendEmbed({
+        title: 'Market Overview',
+        scriptSrc: 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',
+        minHeight: 700,
+        config: {
             colorTheme: 'dark',
             dateRange: '12M',
             showChart: true,
@@ -281,15 +532,8 @@ const renderTradingViewWidget = async () => {
                     originalTitle: 'Forex',
                 },
             ],
-        });
-    }
-
-    script.onerror = () => {
-        widgetError.value = 'Gagal memuat widget TradingView.';
-    };
-
-    container.appendChild(script);
-    widgetRoot.value.appendChild(container);
+        },
+    });
 };
 
 const detailCoords = computed(() => {
@@ -856,9 +1100,6 @@ watchEffect(() => {
                 <div
                     ref="widgetRoot"
                     class="w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
-                    :style="{
-                        minHeight: props.subcategory === 'ekonomi-kurs-mata-uang' ? '560px' : '700px',
-                    }"
                 />
             </div>
         </div>
