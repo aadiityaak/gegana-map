@@ -174,6 +174,160 @@ const hoverX = computed(() => {
     return padLeft + hoverIndex.value * stepX.value;
 });
 
+type ProvinceCount = {
+    id: string;
+    name: string;
+    count: number;
+};
+
+const normalizeName = (value: string) =>
+    value
+        .toUpperCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const titleAliases: Record<string, string> = {
+    'JAKARTA RAYA': 'DKI JAKARTA',
+    YOGYAKARTA: 'DAERAH ISTIMEWA YOGYAKARTA',
+};
+
+const colorForCount = (count: number, max: number) => {
+    if (count <= 0) return '#052e16';
+    if (max <= 0) return '#14532d';
+    const ratio = count / max;
+    if (ratio <= 0.25) return '#14532d';
+    if (ratio <= 0.5) return '#166534';
+    if (ratio <= 0.75) return '#16a34a';
+    return '#22c55e';
+};
+
+const jibomMapSvg = ref<string>('');
+const jibomMapError = ref<string | null>(null);
+const jibomMapRoot = ref<HTMLDivElement | null>(null);
+const jibomCounts = ref<ProvinceCount[]>([]);
+const jibomHovered = ref<{ name: string; count: number } | null>(null);
+
+const kwrnMapSvg = ref<string>('');
+const kwrnMapError = ref<string | null>(null);
+const kwrnMapRoot = ref<HTMLDivElement | null>(null);
+const kwrnCounts = ref<ProvinceCount[]>([]);
+const kwrnHovered = ref<{ name: string; count: number } | null>(null);
+
+const wanTerorMapSvg = ref<string>('');
+const wanTerorMapError = ref<string | null>(null);
+const wanTerorMapRoot = ref<HTMLDivElement | null>(null);
+const wanTerorCounts = ref<ProvinceCount[]>([]);
+const wanTerorHovered = ref<{ name: string; count: number } | null>(null);
+
+const applyCountsToSvg = async (options: {
+    root: HTMLDivElement | null;
+    counts: ProvinceCount[];
+    hovered: typeof jibomHovered;
+    labelsId: string;
+    listBaseHref: string;
+}) => {
+    await nextTick();
+
+    const root = options.root;
+    if (!root) return;
+    const svg = root.querySelector('svg') as SVGSVGElement | null;
+    if (!svg) return;
+
+    const countsByProvinceName: Record<string, number> = {};
+    const provinceIdByName: Record<string, string> = {};
+    for (const row of options.counts) {
+        const n = normalizeName(row.name);
+        const mapped = titleAliases[n] ?? n;
+        countsByProvinceName[mapped] = Number(row.count) || 0;
+        provinceIdByName[mapped] = row.id;
+    }
+
+    const max = Math.max(
+        0,
+        ...Object.values(countsByProvinceName).map((v) => (Number.isFinite(v) ? v : 0)),
+    );
+
+    const labelsGroupId = `dashboard-count-labels-${options.labelsId}`;
+    const oldLabels = svg.querySelector(`#${labelsGroupId}`);
+    oldLabels?.remove();
+
+    const labelsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    labelsGroup.setAttribute('id', labelsGroupId);
+    svg.appendChild(labelsGroup);
+
+    const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
+    for (const el of Array.from(paths)) {
+        const rawName = (el.getAttribute('data-name') ?? el.getAttribute('title') ?? '').trim();
+        if (!rawName) continue;
+
+        const originalName = (el.getAttribute('data-title-original') ?? '').trim() || rawName;
+        if (!el.getAttribute('data-title-original') && originalName) {
+            el.setAttribute('data-title-original', originalName);
+        }
+
+        const rawTitle = originalName;
+        if (!rawTitle) continue;
+        const normalizedTitle = normalizeName(rawTitle);
+        const mappedTitle = titleAliases[normalizedTitle] ?? normalizedTitle;
+        const count = countsByProvinceName[mappedTitle] ?? 0;
+        const provinceId = provinceIdByName[mappedTitle] ?? null;
+
+        el.style.fill = colorForCount(count, max);
+        el.style.stroke = 'rgba(34,197,94,0.25)';
+        el.style.strokeWidth = '0.7';
+        el.style.cursor = provinceId ? 'pointer' : 'default';
+        el.setAttribute('data-count', String(count));
+        el.setAttribute('title', `${rawTitle} (${count})`);
+
+        el.onmouseenter = () => {
+            options.hovered.value = { name: rawTitle, count };
+        };
+        el.onmouseleave = () => {
+            options.hovered.value = null;
+        };
+        el.onclick = () => {
+            if (!provinceId) return;
+            router.visit(`${options.listBaseHref}?province_id=${encodeURIComponent(provinceId)}`);
+        };
+
+        if (count > 0) {
+            try {
+                const bbox = el.getBBox();
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.textContent = String(count);
+                text.setAttribute('x', String(bbox.x + bbox.width / 2));
+                text.setAttribute('y', String(bbox.y + bbox.height / 2));
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute(
+                    'style',
+                    'font-size: 10px; font-weight: 700; fill: rgba(236, 253, 245, 0.95); paint-order: stroke; stroke: rgba(0,0,0,0.65); stroke-width: 2px; pointer-events: none;',
+                );
+                labelsGroup.appendChild(text);
+            } catch {
+                //
+            }
+        }
+    }
+};
+
+const loadSvgMap = async (url: string): Promise<string> => {
+    const res = await fetch(url, { headers: { Accept: 'image/svg+xml' } });
+    if (!res.ok) {
+        throw new Error(`Gagal memuat map (${res.status})`);
+    }
+    return await res.text();
+};
+
+const loadCountsByProvince = async (url: string): Promise<ProvinceCount[]> => {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const json = (await res.json().catch(() => null)) as { data?: Array<{ id: string; name: string; count: number }> } | { message?: string } | null;
+    if (!res.ok) {
+        throw new Error((json as any)?.message ?? `Gagal memuat counts (${res.status})`);
+    }
+    return (json as any)?.data ?? [];
+};
+
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: any | null = null;
 let markerLayer: any | null = null;
@@ -377,6 +531,30 @@ onMounted(async () => {
     await loadMapData();
     await ensureMap();
     await updateMapMarkers();
+
+    try {
+        const [svgJibom, svgKwrn, svgWan, countsJibom, countsKwrn, countsWan] = await Promise.all([
+            loadSvgMap('/api/jibom/indonesia-map-svg'),
+            loadSvgMap('/api/kwrn/indonesia-map-svg'),
+            loadSvgMap('/api/wan-teror/indonesia-map-svg'),
+            loadCountsByProvince('/api/jibom/counts-by-province'),
+            loadCountsByProvince('/api/kwrn/counts-by-province'),
+            loadCountsByProvince('/api/wan-teror/counts-by-province'),
+        ]);
+
+        jibomMapSvg.value = svgJibom;
+        kwrnMapSvg.value = svgKwrn;
+        wanTerorMapSvg.value = svgWan;
+
+        jibomCounts.value = countsJibom;
+        kwrnCounts.value = countsKwrn;
+        wanTerorCounts.value = countsWan;
+    } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Gagal memuat peta provinsi.';
+        jibomMapError.value = msg;
+        kwrnMapError.value = msg;
+        wanTerorMapError.value = msg;
+    }
 });
 
 onBeforeUnmount(() => {
@@ -395,6 +573,48 @@ watch(
         void updateMapMarkers();
     },
     { deep: true },
+);
+
+watch(
+    [jibomMapSvg, jibomCounts, jibomMapRoot],
+    () => {
+        void applyCountsToSvg({
+            root: jibomMapRoot.value,
+            counts: jibomCounts.value,
+            hovered: jibomHovered,
+            labelsId: 'jibom',
+            listBaseHref: '/jibom',
+        });
+    },
+    { deep: true, flush: 'post', immediate: true },
+);
+
+watch(
+    [kwrnMapSvg, kwrnCounts, kwrnMapRoot],
+    () => {
+        void applyCountsToSvg({
+            root: kwrnMapRoot.value,
+            counts: kwrnCounts.value,
+            hovered: kwrnHovered,
+            labelsId: 'kwrn',
+            listBaseHref: '/kwrn',
+        });
+    },
+    { deep: true, flush: 'post', immediate: true },
+);
+
+watch(
+    [wanTerorMapSvg, wanTerorCounts, wanTerorMapRoot],
+    () => {
+        void applyCountsToSvg({
+            root: wanTerorMapRoot.value,
+            counts: wanTerorCounts.value,
+            hovered: wanTerorHovered,
+            labelsId: 'wan-teror',
+            listBaseHref: '/wan-teror',
+        });
+    },
+    { deep: true, flush: 'post', immediate: true },
 );
 </script>
 
@@ -704,6 +924,98 @@ watch(
                 ref="mapContainer"
                 class="relative z-0 h-[420px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
             />
+        </div>
+
+        <div class="mt-6 grid gap-4 lg:grid-cols-3">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
+                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                    <span>> MAP JIBOM</span>
+                    <span class="text-[11px]">> by_province</span>
+                </div>
+                <div v-if="jibomMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                    > {{ jibomMapError }}
+                </div>
+                <div
+                    v-else-if="jibomMapSvg"
+                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+                >
+                    <div
+                        v-if="jibomHovered"
+                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+                    >
+                        <span>> {{ jibomHovered.name }}</span>
+                        <span class="text-[11px]">> kejadian: {{ fmt(jibomHovered.count) }}</span>
+                    </div>
+                    <div
+                        ref="jibomMapRoot"
+                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
+                        v-html="jibomMapSvg"
+                    />
+                </div>
+                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
+                    loading_map...
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
+                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                    <span>> MAP KWRN</span>
+                    <span class="text-[11px]">> by_province</span>
+                </div>
+                <div v-if="kwrnMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                    > {{ kwrnMapError }}
+                </div>
+                <div
+                    v-else-if="kwrnMapSvg"
+                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+                >
+                    <div
+                        v-if="kwrnHovered"
+                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+                    >
+                        <span>> {{ kwrnHovered.name }}</span>
+                        <span class="text-[11px]">> kejadian: {{ fmt(kwrnHovered.count) }}</span>
+                    </div>
+                    <div
+                        ref="kwrnMapRoot"
+                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
+                        v-html="kwrnMapSvg"
+                    />
+                </div>
+                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
+                    loading_map...
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
+                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                    <span>> MAP WAN TEROR</span>
+                    <span class="text-[11px]">> by_province</span>
+                </div>
+                <div v-if="wanTerorMapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+                    > {{ wanTerorMapError }}
+                </div>
+                <div
+                    v-else-if="wanTerorMapSvg"
+                    class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
+                >
+                    <div
+                        v-if="wanTerorHovered"
+                        class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
+                    >
+                        <span>> {{ wanTerorHovered.name }}</span>
+                        <span class="text-[11px]">> kejadian: {{ fmt(wanTerorHovered.count) }}</span>
+                    </div>
+                    <div
+                        ref="wanTerorMapRoot"
+                        class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
+                        v-html="wanTerorMapSvg"
+                    />
+                </div>
+                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
+                    loading_map...
+                </div>
+            </div>
         </div>
 
         <div class="mt-6 grid gap-4 xl:grid-cols-3">

@@ -1154,13 +1154,10 @@ watchEffect(() => {
                 <div v-if="detailItem.gallery?.length" class="space-y-2">
                     <div class="text-xs tracking-widest text-green-300/60">GALLERY</div>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        <a
+                        <div
                             v-for="img in detailItem.gallery"
                             :key="img.path"
-                            class="group block overflow-hidden rounded-md border border-green-500/15 bg-black/20 hover:border-green-400/25"
-                            :href="img.url"
-                            target="_blank"
-                            rel="noreferrer"
+                            class="overflow-hidden rounded-md border border-green-500/15 bg-black/20"
                         >
                             <div
                                 class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]"
@@ -1168,14 +1165,11 @@ watchEffect(() => {
                                 <img
                                     :src="img.url"
                                     :alt="img.path"
-                                    class="absolute inset-0 h-full w-full object-contain p-2 opacity-95 transition group-hover:opacity-100"
+                                    class="absolute inset-0 h-full w-full object-contain p-2 opacity-95"
                                     loading="lazy"
                                 />
                             </div>
-                            <div class="truncate border-t border-green-500/10 px-3 py-2 text-[11px] text-green-300/70">
-                                > {{ img.path }}
-                            </div>
-                        </a>
+                        </div>
                     </div>
                 </div>
 

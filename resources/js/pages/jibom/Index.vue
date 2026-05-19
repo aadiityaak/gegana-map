@@ -156,7 +156,7 @@ const countsByProvinceName = computed(() => {
 });
 
 const colorForCount = (count: number, max: number) => {
-    if (count <= 0) return '#0b0f0b';
+    if (count <= 0) return '#052e16';
     if (max <= 0) return '#14532d';
     const ratio = count / max;
     if (ratio <= 0.25) return '#14532d';
@@ -179,9 +179,6 @@ const applyCountsToSvg = async () => {
         ),
     );
 
-    const polygons = svg.querySelector('#polygons') as SVGGElement | null;
-    if (!polygons) return;
-
     const oldLabels = svg.querySelector('#jibom-count-labels');
     oldLabels?.remove();
 
@@ -190,11 +187,14 @@ const applyCountsToSvg = async () => {
         'g',
     );
     labelsGroup.setAttribute('id', 'jibom-count-labels');
-    polygons.appendChild(labelsGroup);
+    svg.appendChild(labelsGroup);
 
-    const paths = svg.querySelectorAll<SVGPathElement>('#polygons .land');
+    const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
     for (const el of Array.from(paths)) {
-        const originalTitle = (el.getAttribute('data-title-original') ?? el.getAttribute('title') ?? '').trim();
+        const rawName = (el.getAttribute('data-name') ?? el.getAttribute('title') ?? '').trim();
+        if (!rawName) continue;
+
+        const originalTitle = (el.getAttribute('data-title-original') ?? '').trim() || rawName;
         if (!el.getAttribute('data-title-original') && originalTitle) {
             el.setAttribute('data-title-original', originalTitle);
         }
@@ -214,7 +214,7 @@ const applyCountsToSvg = async () => {
             currentProvinceId.value && provinceId === currentProvinceId.value
                 ? '1.4'
                 : '0.7';
-        el.style.cursor = 'pointer';
+        el.style.cursor = provinceId ? 'pointer' : 'default';
         el.setAttribute('data-count', String(count));
         el.setAttribute('title', `${rawTitle} (${count})`);
 
@@ -473,4 +473,3 @@ onMounted(async () => {
         </div>
     </div>
 </template>
-
