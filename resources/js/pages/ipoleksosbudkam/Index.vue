@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
@@ -49,6 +49,17 @@ const meta = ref<MonitoringResponse['meta'] | null>(null);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
 
+const parsePositiveInt = (value: string | null): number | null => {
+    if (!value) return null;
+    const n = Number.parseInt(value, 10);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return n;
+};
+
+const initialQuery = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+const currentPage = ref<number>(parsePositiveInt(initialQuery?.get('page') ?? null) ?? 1);
+const perPage = ref<number>(parsePositiveInt(initialQuery?.get('per_page') ?? null) ?? 25);
+
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: any | null = null;
 let markerLayer: any | null = null;
@@ -62,7 +73,6 @@ const detailLoading = ref(false);
 const detailError = ref<string | null>(null);
 const detailItem = ref<MonitoringItem | null>(null);
 
-const page = usePage();
 const isDetailPage = computed(() => typeof props.detailId === 'number' && Number.isFinite(props.detailId));
 const isWidgetPage = computed(() => {
     if (props.category !== 'ekonomi') return false;
@@ -144,6 +154,51 @@ const formatDateTime = (value: string | null) => {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return '-';
     return d.toLocaleString('id-ID');
+};
+
+const sanitizeHtml = (input: string | null): string | null => {
+    if (!input) return null;
+    const html = String(input).trim();
+    if (!html) return null;
+
+    if (typeof window === 'undefined') {
+        return html;
+    }
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    for (const el of Array.from(doc.querySelectorAll('script,style,iframe,object,embed,link,meta'))) {
+        el.remove();
+    }
+
+    for (const node of Array.from(doc.body.querySelectorAll('*'))) {
+        for (const attr of Array.from(node.attributes)) {
+            const name = attr.name.toLowerCase();
+            if (name.startsWith('on')) {
+                node.removeAttribute(attr.name);
+                continue;
+            }
+            if (node.tagName.toLowerCase() === 'a' && name === 'href') {
+                continue;
+            }
+            node.removeAttribute(attr.name);
+        }
+    }
+
+    for (const a of Array.from(doc.body.querySelectorAll('a[href]'))) {
+        const href = a.getAttribute('href') ?? '';
+        const safe =
+            href.startsWith('/') ||
+            href.startsWith('#') ||
+            /^https?:\/\//i.test(href) ||
+            /^mailto:/i.test(href) ||
+            /^tel:/i.test(href);
+        if (!safe) {
+            a.removeAttribute('href');
+        }
+    }
+
+    return doc.body.innerHTML.trim() || null;
 };
 
 const locationLabel = (item: MonitoringItem) => {
@@ -720,7 +775,8 @@ const load = async () => {
 
     try {
         const params = new URLSearchParams();
-        params.set('per_page', '200');
+        params.set('page', String(currentPage.value));
+        params.set('per_page', String(perPage.value));
         params.set('sort_by', 'incident_date');
         params.set('sort_dir', 'desc');
         if (props.category) params.set('category', props.category);
@@ -743,6 +799,11 @@ const load = async () => {
 
         items.value = (json as MonitoringResponse).data ?? [];
         meta.value = (json as MonitoringResponse).meta ?? null;
+
+        if (meta.value) {
+            currentPage.value = meta.value.current_page ?? currentPage.value;
+            perPage.value = meta.value.per_page ?? perPage.value;
+        }
     } catch (e) {
         errorMessage.value = 'Gagal memuat data.';
         items.value = [];
@@ -752,11 +813,60 @@ const load = async () => {
     }
 };
 
-watchEffect(() => {
-    if (isDetailPage.value) return;
-    if (isWidgetPage.value) return;
-    void load();
+const syncListQuery = () => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', String(currentPage.value));
+    url.searchParams.set('per_page', String(perPage.value));
+    window.history.replaceState({}, '', url.toString());
+};
+
+const clampPage = (value: number): number => {
+    const last = meta.value?.last_page ?? value;
+    return Math.min(Math.max(1, value), Math.max(1, last));
+};
+
+const setPage = (value: number) => {
+    const clamped = clampPage(value);
+    if (clamped === currentPage.value) return;
+    currentPage.value = clamped;
+};
+
+const pageButtons = computed<number[]>(() => {
+    const last = meta.value?.last_page ?? 1;
+    const current = meta.value?.current_page ?? currentPage.value;
+    if (last <= 1) return [1];
+
+    const windowSize = 5;
+    const half = Math.floor(windowSize / 2);
+
+    let start = Math.max(1, current - half);
+    let end = Math.min(last, start + windowSize - 1);
+    start = Math.max(1, end - windowSize + 1);
+
+    const pages: number[] = [];
+    for (let p = start; p <= end; p += 1) pages.push(p);
+    return pages;
 });
+
+watch(
+    [() => props.category, () => props.subcategory, currentPage, perPage],
+    ([newCategory, newSubcategory, newPage], oldValue) => {
+        if (isDetailPage.value || isWidgetPage.value) return;
+
+        const oldCategory = Array.isArray(oldValue) ? oldValue[0] : undefined;
+        const oldSubcategory = Array.isArray(oldValue) ? oldValue[1] : undefined;
+
+        if ((newCategory !== oldCategory || newSubcategory !== oldSubcategory) && newPage !== 1) {
+            currentPage.value = 1;
+            return;
+        }
+
+        syncListQuery();
+        void load();
+    },
+    { immediate: true },
+);
 
 const totalData = computed(() => meta.value?.total ?? items.value.length);
 
@@ -1197,9 +1307,11 @@ watchEffect(() => {
                                     </div>
                                 </div>
 
-                                <div v-if="item.description" class="text-sm text-green-200/80">
-                                    {{ item.description }}
-                                </div>
+                                <div
+                                    v-if="item.description"
+                                    class="text-sm text-green-200/80 overflow-hidden [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]"
+                                    v-html="sanitizeHtml(item.description)"
+                                />
 
                                 <div class="flex flex-wrap gap-3 text-xs text-green-300/60">
                                     <div v-if="item.category?.name">
@@ -1223,6 +1335,52 @@ watchEffect(() => {
                             class="rounded border border-green-500/15 bg-black/20 p-4 text-green-300/60"
                         >
                             > tidak ada data untuk filter ini.
+                        </div>
+
+                        <div
+                            v-if="meta && meta.last_page > 1"
+                            class="rounded-xl border border-green-500/15 bg-black/20 p-3"
+                        >
+                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+                                <div>
+                                    > halaman {{ meta.current_page }} / {{ meta.last_page }} · tampil: {{ items.length }} · total: {{ meta.total }}
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-green-200 hover:border-green-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                                        :disabled="loading || meta.current_page <= 1"
+                                        @click="setPage(meta.current_page - 1)"
+                                    >
+                                        > PREV
+                                    </button>
+
+                                    <button
+                                        v-for="p in pageButtons"
+                                        :key="p"
+                                        type="button"
+                                        class="inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-3 text-[11px] tracking-widest"
+                                        :class="
+                                            p === meta.current_page
+                                                ? 'border-green-400/35 bg-green-500/15 text-green-100'
+                                                : 'border-green-500/15 bg-black/30 text-green-200 hover:border-green-400/25'
+                                        "
+                                        :disabled="loading || p === meta.current_page"
+                                        @click="setPage(p)"
+                                    >
+                                        {{ p }}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-green-200 hover:border-green-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                                        :disabled="loading || meta.current_page >= meta.last_page"
+                                        @click="setPage(meta.current_page + 1)"
+                                    >
+                                        > NEXT
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

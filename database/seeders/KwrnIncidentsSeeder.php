@@ -65,7 +65,6 @@ class KwrnIncidentsSeeder extends Seeder
         }
 
         $rows = [];
-        $faker = fake();
 
         $existingProvinces = DB::table('kwrn_incidents')
             ->distinct()
@@ -74,7 +73,7 @@ class KwrnIncidentsSeeder extends Seeder
         $existingProvinceMap = array_fill_keys($existingProvinces, true);
         $missingProvinceIds = array_values(array_filter(
             $allProvinceIds,
-            fn ($id) => ! isset($existingProvinceMap[$id]),
+            fn($id) => ! isset($existingProvinceMap[$id]),
         ));
 
         foreach ($missingProvinceIds as $provinceId) {
@@ -93,7 +92,7 @@ class KwrnIncidentsSeeder extends Seeder
         }
 
         while (count($rows) < $need) {
-            $provinceId = (string) $faker->randomElement($allProvinceIds);
+            $provinceId = (string) $this->randomElement($allProvinceIds);
             $row = $this->makeIncidentRow(
                 provinceId: $provinceId,
                 types: $types,
@@ -131,27 +130,26 @@ class KwrnIncidentsSeeder extends Seeder
             return null;
         }
 
-        $faker = fake();
-        $roll = $faker->numberBetween(1, 100);
+        $roll = $this->randomBetween(1, 100);
         $incidentType = match (true) {
             $roll <= 35 => 'temuan',
             $roll <= 70 => 'ancaman',
             default => 'ledakan',
         };
         if (! in_array($incidentType, $types, true)) {
-            $incidentType = (string) $faker->randomElement($types);
+            $incidentType = (string) $this->randomElement($types);
         }
 
         $findingType = $incidentType === 'temuan'
-            ? (string) $faker->randomElement($findingTypes)
+            ? (string) $this->randomElement($findingTypes)
             : null;
 
         $descriptionPool = $descriptionsByType[$incidentType] ?? [];
         $description = count($descriptionPool) > 0
-            ? (string) $faker->randomElement($descriptionPool)
+            ? (string) $this->randomElement($descriptionPool)
             : null;
 
-        $createdAt = now()->subDays($faker->numberBetween(0, 180));
+        $createdAt = now()->subDays($this->randomBetween(0, 180));
 
         return [
             'incident_type' => $incidentType,
@@ -165,6 +163,24 @@ class KwrnIncidentsSeeder extends Seeder
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ];
+    }
+
+    private function randomBetween(int $min, int $max): int
+    {
+        if ($min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+        return random_int($min, $max);
+    }
+
+    private function randomElement(array $values): mixed
+    {
+        $count = count($values);
+        if ($count === 0) {
+            return null;
+        }
+        $index = random_int(0, $count - 1);
+        return $values[$index];
     }
 
     private function pickLocationInProvince(string $provinceId): ?object
@@ -201,4 +217,3 @@ class KwrnIncidentsSeeder extends Seeder
         ];
     }
 }
-

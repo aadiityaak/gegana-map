@@ -14,7 +14,10 @@ class WilayahIndonesiaSeeder extends Seeder
         }
 
         $path = env('WILAYAH_SQL_PATH', 'C:\Users\ASUS\Downloads\wilayah_indonesia (1).sql');
-        if (! is_string($path) || $path === '' || ! file_exists($path)) {
+        $hasSqlFile = is_string($path) && $path !== '' && file_exists($path);
+
+        if (! $hasSqlFile) {
+            $this->seedMinimalWilayah();
             return;
         }
 
@@ -45,6 +48,55 @@ class WilayahIndonesiaSeeder extends Seeder
             if (DB::table('reg_villages')->count() === 0) {
                 $this->seedVillagesFromFile($path);
             }
+        });
+    }
+
+    private function seedMinimalWilayah(): void
+    {
+        if (DB::table('reg_villages')->count() > 0) {
+            return;
+        }
+
+        DB::transaction(function () {
+            $provinces = [
+                ['id' => '31', 'name' => 'DKI Jakarta'],
+                ['id' => '32', 'name' => 'Jawa Barat'],
+                ['id' => '33', 'name' => 'Jawa Tengah'],
+                ['id' => '34', 'name' => 'DI Yogyakarta'],
+                ['id' => '35', 'name' => 'Jawa Timur'],
+            ];
+
+            DB::table('reg_provinces')->insert($provinces);
+
+            $regencies = [
+                ['id' => '3171', 'province_id' => '31', 'name' => 'Kota Jakarta Selatan'],
+                ['id' => '3273', 'province_id' => '32', 'name' => 'Kota Bandung'],
+                ['id' => '3374', 'province_id' => '33', 'name' => 'Kota Semarang'],
+                ['id' => '3471', 'province_id' => '34', 'name' => 'Kota Yogyakarta'],
+                ['id' => '3578', 'province_id' => '35', 'name' => 'Kota Surabaya'],
+            ];
+
+            DB::table('reg_regencies')->insert($regencies);
+
+            $districts = [
+                ['id' => '317102', 'regency_id' => '3171', 'name' => 'Kebayoran Baru'],
+                ['id' => '327301', 'regency_id' => '3273', 'name' => 'Coblong'],
+                ['id' => '337401', 'regency_id' => '3374', 'name' => 'Semarang Tengah'],
+                ['id' => '347101', 'regency_id' => '3471', 'name' => 'Gondokusuman'],
+                ['id' => '357801', 'regency_id' => '3578', 'name' => 'Tegalsari'],
+            ];
+
+            DB::table('reg_districts')->insert($districts);
+
+            $villages = [
+                ['id' => '3171021001', 'district_id' => '317102', 'name' => 'Selong'],
+                ['id' => '3273011001', 'district_id' => '327301', 'name' => 'Dago'],
+                ['id' => '3374011001', 'district_id' => '337401', 'name' => 'Miroto'],
+                ['id' => '3471011001', 'district_id' => '347101', 'name' => 'Demangan'],
+                ['id' => '3578011001', 'district_id' => '357801', 'name' => 'Keputran'],
+            ];
+
+            DB::table('reg_villages')->insert($villages);
         });
     }
 

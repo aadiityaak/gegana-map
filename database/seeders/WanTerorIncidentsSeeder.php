@@ -75,7 +75,6 @@ class WanTerorIncidentsSeeder extends Seeder
         }
 
         $rows = [];
-        $faker = fake();
 
         $existingProvinces = DB::table('wan_teror_incidents')
             ->distinct()
@@ -84,7 +83,7 @@ class WanTerorIncidentsSeeder extends Seeder
         $existingProvinceMap = array_fill_keys($existingProvinces, true);
         $missingProvinceIds = array_values(array_filter(
             $allProvinceIds,
-            fn ($id) => ! isset($existingProvinceMap[$id]),
+            fn($id) => ! isset($existingProvinceMap[$id]),
         ));
 
         foreach ($missingProvinceIds as $provinceId) {
@@ -102,7 +101,7 @@ class WanTerorIncidentsSeeder extends Seeder
         }
 
         while (count($rows) < $need) {
-            $provinceId = (string) $faker->randomElement($allProvinceIds);
+            $provinceId = (string) $this->randomElement($allProvinceIds);
             $row = $this->makeIncidentRow(
                 provinceId: $provinceId,
                 types: $types,
@@ -138,14 +137,13 @@ class WanTerorIncidentsSeeder extends Seeder
             return null;
         }
 
-        $faker = fake();
-        $incidentType = (string) $faker->randomElement($types);
+        $incidentType = (string) $this->randomElement($types);
         $descriptionPool = $descriptionsByType[$incidentType] ?? [];
         $description = count($descriptionPool) > 0
-            ? (string) $faker->randomElement($descriptionPool)
+            ? (string) $this->randomElement($descriptionPool)
             : null;
 
-        $createdAt = now()->subDays($faker->numberBetween(0, 240));
+        $createdAt = now()->subDays($this->randomBetween(0, 240));
 
         return [
             'incident_type' => $incidentType,
@@ -159,6 +157,24 @@ class WanTerorIncidentsSeeder extends Seeder
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ];
+    }
+
+    private function randomBetween(int $min, int $max): int
+    {
+        if ($min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+        return random_int($min, $max);
+    }
+
+    private function randomElement(array $values): mixed
+    {
+        $count = count($values);
+        if ($count === 0) {
+            return null;
+        }
+        $index = random_int(0, $count - 1);
+        return $values[$index];
     }
 
     private function pickLocationInProvince(string $provinceId): ?object
@@ -195,4 +211,3 @@ class WanTerorIncidentsSeeder extends Seeder
         ];
     }
 }
-
