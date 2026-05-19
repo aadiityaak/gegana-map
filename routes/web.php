@@ -9,45 +9,49 @@ use App\Http\Controllers\Kwrn\KwrnIncidentController;
 use App\Http\Controllers\WanTeror\WanTerorIncidentController;
 use App\Http\Controllers\WilayahController;
 
-function crimeMapBaseUrl(string $endpoint): ?string
-{
-    $trimmed = rtrim($endpoint, '/');
-    $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
-    if (is_string($base) && $base !== '') {
-        if ($base !== $trimmed) {
-            return $base;
+if (! function_exists('crimeMapBaseUrl')) {
+    function crimeMapBaseUrl(string $endpoint): ?string
+    {
+        $trimmed = rtrim($endpoint, '/');
+        $base = preg_replace('~/api/monitoring-data$~', '', $trimmed);
+        if (is_string($base) && $base !== '') {
+            if ($base !== $trimmed) {
+                return $base;
+            }
         }
-    }
 
-    $parts = parse_url($endpoint);
-    $scheme = $parts['scheme'] ?? null;
-    $host = $parts['host'] ?? null;
-    if (!is_string($scheme) || !is_string($host)) {
-        return null;
-    }
-    $port = isset($parts['port']) ? (':' . $parts['port']) : '';
+        $parts = parse_url($endpoint);
+        $scheme = $parts['scheme'] ?? null;
+        $host = $parts['host'] ?? null;
+        if (!is_string($scheme) || !is_string($host)) {
+            return null;
+        }
+        $port = isset($parts['port']) ? (':' . $parts['port']) : '';
 
-    return $scheme . '://' . $host . $port;
+        return $scheme . '://' . $host . $port;
+    }
 }
 
-function resolveIndonesiaMapSvgPath(?string $envPath): ?string
-{
-    $candidates = [];
+if (! function_exists('resolveIndonesiaMapSvgPath')) {
+    function resolveIndonesiaMapSvgPath(?string $envPath): ?string
+    {
+        $candidates = [];
 
-    if (is_string($envPath) && trim($envPath) !== '') {
-        $candidates[] = $envPath;
-        $candidates[] = base_path($envPath);
-    }
-
-    $candidates[] = public_path('maps/indonesiaHigh.svg');
-
-    foreach ($candidates as $candidate) {
-        if (is_string($candidate) && trim($candidate) !== '' && file_exists($candidate)) {
-            return $candidate;
+        if (is_string($envPath) && trim($envPath) !== '') {
+            $candidates[] = $envPath;
+            $candidates[] = base_path($envPath);
         }
-    }
 
-    return null;
+        $candidates[] = public_path('maps/indonesiaHigh.svg');
+
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && trim($candidate) !== '' && file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
 }
 
 Route::get('/', function () {
