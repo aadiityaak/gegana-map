@@ -48,6 +48,21 @@
             "npm install",
             "npm run build"
         ],
+        "build:production": [
+            "composer install --no-dev --optimize-autoloader",
+            "@php artisan config:cache",
+            "@php artisan route:cache",
+            "@php artisan view:cache",
+            "npm ci",
+            "npm run build"
+        ],
+        "build:production-novendor": [
+            "@php artisan config:cache",
+            "@php artisan route:cache",
+            "@php artisan view:cache",
+            "npm ci",
+            "npm run build"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve --host=localhost --port=8001\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev -- --port 5174\" --names=server,queue,vite --kill-others"
