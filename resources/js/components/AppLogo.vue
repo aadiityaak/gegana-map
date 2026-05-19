@@ -6,13 +6,16 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 const page = usePage();
 const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
 const customName = ref<string | null>(null);
+const customLogoDataUrl = ref<string | null>(null);
 
 const load = () => {
     if (typeof window === 'undefined') return;
     customName.value = localStorage.getItem('branding.name');
+    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
 };
 
 const brandingName = computed(() => (customName.value?.trim() ? customName.value : defaultName.value));
+const brandingLogo = computed(() => (customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : null));
 
 onMounted(() => {
     load();
@@ -28,7 +31,16 @@ onUnmounted(() => {
     <div
         class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
     >
-        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+        <img
+            v-if="brandingLogo"
+            :src="brandingLogo"
+            alt="Logo"
+            class="size-6 object-contain"
+        />
+        <AppLogoIcon
+            v-else
+            class="size-5 fill-current text-white dark:text-black"
+        />
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">
         <span class="mb-0.5 truncate leading-tight font-semibold"

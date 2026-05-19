@@ -31,5 +31,21 @@ createInertiaApp({
 // This will set light / dark mode on page load...
 initializeTheme();
 
+function applyBrandingFavicon(): void {
+    if (typeof window === 'undefined') return;
+    const faviconDataUrl = localStorage.getItem('branding.faviconDataUrl');
+    if (!faviconDataUrl) return;
+
+    const links = Array.from(
+        document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'),
+    );
+    for (const link of links) {
+        link.href = faviconDataUrl;
+    }
+}
+
+applyBrandingFavicon();
+window.addEventListener('branding:update', applyBrandingFavicon);
+
 // This will listen for flash toast data from the server...
 initializeFlashToast();
