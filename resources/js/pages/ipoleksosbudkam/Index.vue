@@ -63,7 +63,6 @@ const detailError = ref<string | null>(null);
 const detailItem = ref<MonitoringItem | null>(null);
 
 const page = usePage();
-const currentTeamSlug = computed(() => (page.props as any)?.currentTeam?.slug as string | undefined);
 const isDetailPage = computed(() => typeof props.detailId === 'number' && Number.isFinite(props.detailId));
 const isWidgetPage = computed(() => {
     if (props.category !== 'ekonomi') return false;
@@ -202,9 +201,7 @@ const normalizeId = (value: number | string): number | null => {
 };
 
 const detailHref = (id: number): string => {
-    const team = currentTeamSlug.value;
-    if (!team) return '/';
-    return `/${team}/ipoleksosbudkam/detail/${id}`;
+    return `/ipoleksosbudkam/detail/${id}`;
 };
 
 const goToDetail = (id: number | string) => {
@@ -971,7 +968,7 @@ watchEffect(() => {
                     </Badge>
                 </div>
                 <a
-                    :href="currentTeamSlug ? `/${currentTeamSlug}/ipoleksosbudkam` : '/'"
+                    href="/ipoleksosbudkam"
                     class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-green-200 hover:border-green-400/25"
                 >
                     > BACK
@@ -1081,7 +1078,7 @@ watchEffect(() => {
                     </Badge>
                 </div>
                 <a
-                    :href="currentTeamSlug ? `/${currentTeamSlug}/ipoleksosbudkam/ekonomi` : '/'"
+                    href="/ipoleksosbudkam/ekonomi"
                     class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-green-200 hover:border-green-400/25"
                 >
                     > BACK

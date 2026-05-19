@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import {
     BookOpen,
     Brain,
@@ -16,7 +16,6 @@ import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import TeamSwitcher from '@/components/TeamSwitcher.vue';
 import {
     Sidebar,
     SidebarContent,
@@ -26,21 +25,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const page = usePage();
-
-const dashboardUrl = computed(() =>
-    page.props.currentTeam ? dashboard(page.props.currentTeam.slug).url : '/',
-);
-
-const ipoleksosbudkamBaseUrl = computed(() =>
-    page.props.currentTeam ? `/${page.props.currentTeam.slug}/ipoleksosbudkam` : '/',
-);
-
-const ipoleksosbudkamUrl = (path: string) =>
-    page.props.currentTeam ? `/${page.props.currentTeam.slug}/ipoleksosbudkam/${path}` : '/';
+const dashboardUrl = computed(() => '/dashboard');
+const ipoleksosbudkamBaseUrl = computed(() => '/ipoleksosbudkam');
+const ipoleksosbudkamUrl = (path: string) => `/ipoleksosbudkam/${path}`;
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -224,7 +213,10 @@ const footerNavItems: NavItem[] = [
             </SidebarMenu>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <TeamSwitcher />
+                    <SidebarMenuButton size="lg" class="justify-start px-2">
+                        <Users class="size-4 shrink-0" />
+                        <span class="truncate font-semibold">ADMIN</span>
+                    </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarHeader>

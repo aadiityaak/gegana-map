@@ -119,7 +119,7 @@ onUnmounted(() => {
                                 : 'truncate font-semibold'
                         "
                     >
-                        {{ currentTeam?.name ?? 'Select team' }}
+                        TEAM
                     </span>
                 </div>
                 <ChevronsUpDown

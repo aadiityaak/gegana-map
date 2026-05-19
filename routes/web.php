@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\Teams\TeamInvitationController;
-use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -29,14 +27,7 @@ function crimeMapBaseUrl(string $endpoint): ?string
 
 Route::get('/', function () {
     if (auth()->check()) {
-        $user = auth()->user();
-        $team = $user?->currentTeam ?? $user?->personalTeam();
-
-        if (! $team) {
-            abort(403);
-        }
-
-        return redirect()->route('dashboard', ['current_team' => $team->slug]);
+        return redirect()->route('dashboard');
     }
 
     return redirect()->route('login');
@@ -233,57 +224,51 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/indonesia-pr
         ->header('Content-Type', $upstream->header('Content-Type', 'text/plain; charset=UTF-8'));
 })->name('api.ketahanan-pangan.indonesia-provinces-ts');
 
-Route::prefix('{current_team}')
-    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
-    ->group(function () {
-        Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 
-        Route::inertia('ipoleksosbudkam/ekonomi/ekonomi-harga-sembako', 'KetahanPangan/Index', [
-            'komoditas' => fn() => [
-                ['value' => '27', 'label' => 'Beras Premium'],
-                ['value' => '28', 'label' => 'Beras Medium'],
-                ['value' => '109', 'label' => 'Beras SPHP'],
-                ['value' => '102', 'label' => 'Jagung Tk Peternak'],
-                ['value' => '29', 'label' => 'Kedelai Biji Kering (Impor)'],
-                ['value' => '30', 'label' => 'Bawang Merah'],
-                ['value' => '31', 'label' => 'Bawang Putih Bonggol'],
-                ['value' => '32', 'label' => 'Cabai Merah Keriting'],
-                ['value' => '126', 'label' => 'Cabai Merah Besar'],
-                ['value' => '34', 'label' => 'Daging Sapi Murni'],
-                ['value' => '33', 'label' => 'Cabai Rawit Merah'],
-                ['value' => '35', 'label' => 'Daging Ayam Ras'],
-                ['value' => '36', 'label' => 'Telur Ayam Ras'],
-                ['value' => '37', 'label' => 'Gula Konsumsi'],
-                ['value' => '38', 'label' => 'Minyak Goreng Kemasan'],
-                ['value' => '101', 'label' => 'Minyak Goreng Curah'],
-                ['value' => '40', 'label' => 'Tepung Terigu (Curah)'],
-                ['value' => '127', 'label' => 'Minyakita'],
-                ['value' => '108', 'label' => 'Tepung Terigu Kemasan'],
-                ['value' => '104', 'label' => 'Ikan Kembung'],
-                ['value' => '105', 'label' => 'Ikan Tongkol'],
-                ['value' => '106', 'label' => 'Ikan Bandeng'],
-                ['value' => '107', 'label' => 'Garam Konsumsi'],
-                ['value' => '149', 'label' => 'Daging Kerbau Beku (Impor Luar Negeri)'],
-                ['value' => '152', 'label' => 'Daging Kerbau Segar (Lokal)'],
-            ],
-        ])->name('ipoleksosbudkam.harga-sembako');
+    Route::inertia('ipoleksosbudkam/ekonomi/ekonomi-harga-sembako', 'KetahanPangan/Index', [
+        'komoditas' => fn() => [
+            ['value' => '27', 'label' => 'Beras Premium'],
+            ['value' => '28', 'label' => 'Beras Medium'],
+            ['value' => '109', 'label' => 'Beras SPHP'],
+            ['value' => '102', 'label' => 'Jagung Tk Peternak'],
+            ['value' => '29', 'label' => 'Kedelai Biji Kering (Impor)'],
+            ['value' => '30', 'label' => 'Bawang Merah'],
+            ['value' => '31', 'label' => 'Bawang Putih Bonggol'],
+            ['value' => '32', 'label' => 'Cabai Merah Keriting'],
+            ['value' => '126', 'label' => 'Cabai Merah Besar'],
+            ['value' => '34', 'label' => 'Daging Sapi Murni'],
+            ['value' => '33', 'label' => 'Cabai Rawit Merah'],
+            ['value' => '35', 'label' => 'Daging Ayam Ras'],
+            ['value' => '36', 'label' => 'Telur Ayam Ras'],
+            ['value' => '37', 'label' => 'Gula Konsumsi'],
+            ['value' => '38', 'label' => 'Minyak Goreng Kemasan'],
+            ['value' => '101', 'label' => 'Minyak Goreng Curah'],
+            ['value' => '40', 'label' => 'Tepung Terigu (Curah)'],
+            ['value' => '127', 'label' => 'Minyakita'],
+            ['value' => '108', 'label' => 'Tepung Terigu Kemasan'],
+            ['value' => '104', 'label' => 'Ikan Kembung'],
+            ['value' => '105', 'label' => 'Ikan Tongkol'],
+            ['value' => '106', 'label' => 'Ikan Bandeng'],
+            ['value' => '107', 'label' => 'Garam Konsumsi'],
+            ['value' => '149', 'label' => 'Daging Kerbau Beku (Impor Luar Negeri)'],
+            ['value' => '152', 'label' => 'Daging Kerbau Segar (Lokal)'],
+        ],
+    ])->name('ipoleksosbudkam.harga-sembako');
 
-        Route::inertia('ipoleksosbudkam/detail/{id}', 'ipoleksosbudkam/Index', [
-            'detailId' => fn(Request $request) => (int) $request->route('id'),
-        ])->whereNumber('id')->name('ipoleksosbudkam.detail');
+    Route::inertia('ipoleksosbudkam/detail/{id}', 'ipoleksosbudkam/Index', [
+        'detailId' => fn(Request $request) => (int) $request->route('id'),
+    ])->whereNumber('id')->name('ipoleksosbudkam.detail');
 
-        Route::inertia('ipoleksosbudkam', 'ipoleksosbudkam/Index')->name('ipoleksosbudkam.index');
-        Route::inertia('ipoleksosbudkam/{category}', 'ipoleksosbudkam/Index', [
-            'category' => fn(Request $request) => $request->route('category'),
-        ])->name('ipoleksosbudkam.category');
-        Route::inertia('ipoleksosbudkam/{category}/{subcategory}', 'ipoleksosbudkam/Index', [
-            'category' => fn(Request $request) => $request->route('category'),
-            'subcategory' => fn(Request $request) => $request->route('subcategory'),
-        ])->name('ipoleksosbudkam.subcategory');
-    });
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
+    Route::inertia('ipoleksosbudkam', 'ipoleksosbudkam/Index')->name('ipoleksosbudkam.index');
+    Route::inertia('ipoleksosbudkam/{category}', 'ipoleksosbudkam/Index', [
+        'category' => fn(Request $request) => $request->route('category'),
+    ])->name('ipoleksosbudkam.category');
+    Route::inertia('ipoleksosbudkam/{category}/{subcategory}', 'ipoleksosbudkam/Index', [
+        'category' => fn(Request $request) => $request->route('category'),
+        'subcategory' => fn(Request $request) => $request->route('subcategory'),
+    ])->name('ipoleksosbudkam.subcategory');
 });
 
 require __DIR__ . '/settings.php';
