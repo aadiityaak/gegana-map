@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'crime_map' => [
+        'data_endpoint' => env('DATA_ENDPOINT'),
+        'data_token' => env('DATA_TOKEN'),
+    ],
+
 ];
