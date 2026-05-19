@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
-    Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
+    Route::redirect('settings/appearance', '/settings/profile');
     Route::inertia('settings/branding', 'settings/Branding')->name('branding.edit');
     Route::inertia('settings/about', 'settings/About')->name('about.edit');
 });
