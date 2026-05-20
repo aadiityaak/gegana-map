@@ -50,6 +50,7 @@ class WanTerorIncidentController extends Controller
                 'wti.finding_type',
                 'wti.description',
                 'wti.photos',
+                'wti.news_source',
                 'wti.province_id',
                 'wti.regency_id',
                 'wti.district_id',
@@ -116,9 +117,69 @@ class WanTerorIncidentController extends Controller
 
     public function show(WanTerorIncident $incident)
     {
+        $row = DB::table('wan_teror_incidents as wti')
+            ->leftJoin('reg_provinces as p', 'p.id', '=', 'wti.province_id')
+            ->leftJoin('reg_regencies as r', 'r.id', '=', 'wti.regency_id')
+            ->leftJoin('reg_districts as d', 'd.id', '=', 'wti.district_id')
+            ->leftJoin('reg_villages as v', 'v.id', '=', 'wti.village_id')
+            ->where('wti.id', $incident->id)
+            ->select([
+                'wti.id',
+                'wti.incident_type',
+                'wti.finding_type',
+                'wti.description',
+                'wti.photos',
+                'wti.latitude',
+                'wti.longitude',
+                'wti.news_source',
+                'wti.news_url',
+                'wti.province_id',
+                'wti.regency_id',
+                'wti.district_id',
+                'wti.village_id',
+                'wti.created_at',
+                'p.name as province_name',
+                'r.name as regency_name',
+                'd.name as district_name',
+                'v.name as village_name',
+            ])
+            ->first();
+
+        $photos = $row?->photos;
+        if (is_string($photos)) {
+            $decoded = json_decode($photos, true);
+            $photos = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($photos)) {
+            $photos = [];
+        }
+
+        $item = $row
+            ? [
+                'id' => $row->id,
+                'incident_type' => $row->incident_type,
+                'finding_type' => $row->finding_type,
+                'description' => $row->description,
+                'photos' => $photos,
+                'latitude' => $row->latitude,
+                'longitude' => $row->longitude,
+                'news_source' => $row->news_source,
+                'news_url' => $row->news_url,
+                'province_id' => $row->province_id,
+                'regency_id' => $row->regency_id,
+                'district_id' => $row->district_id,
+                'village_id' => $row->village_id,
+                'created_at' => $row->created_at,
+                'province_name' => $row->province_name,
+                'regency_name' => $row->regency_name,
+                'district_name' => $row->district_name,
+                'village_name' => $row->village_name,
+            ]
+            : $incident;
+
         return Inertia::render('wanTeror/Form', [
             'mode' => 'view',
-            'item' => $incident,
+            'item' => $item,
             'filters' => [
                 'type' => $incident->incident_type,
             ],

@@ -37,6 +37,11 @@ const props = defineProps<{
         regency_id: string;
         district_id: string;
         village_id: string;
+        created_at?: string | null;
+        province_name?: string | null;
+        regency_name?: string | null;
+        district_name?: string | null;
+        village_name?: string | null;
     } | null;
     filters?: { type?: string | null };
 }>();
@@ -65,6 +70,57 @@ const initialType = computed(() => {
 });
 
 const isView = computed(() => props.mode === 'view');
+const viewTypeLabel = computed(() => {
+    const value = String(props.item?.incident_type ?? form.incident_type ?? '');
+    return incidentTypes.find((t) => t.value === value)?.label ?? value;
+});
+
+const viewNoteLabel = computed(() => {
+    const v = props.item?.finding_type;
+    if (!v) return '';
+    return String(v);
+});
+
+const viewLocationLabel = computed(() => {
+    const parts = [
+        props.item?.village_name,
+        props.item?.district_name,
+        props.item?.regency_name,
+        props.item?.province_name,
+    ]
+        .filter(Boolean)
+        .map((v) => String(v));
+    if (parts.length > 0) return parts.join(', ');
+    const ids = [
+        props.item?.village_id,
+        props.item?.district_id,
+        props.item?.regency_id,
+        props.item?.province_id,
+    ]
+        .filter(Boolean)
+        .map((v) => String(v));
+    return ids.join(', ');
+});
+
+const formatDateTime = (value: string | null | undefined) => {
+    if (!value) return '';
+    const d = new Date(value);
+    if (!Number.isFinite(d.getTime())) return String(value);
+    return d.toLocaleString('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
+
+const viewCoords = computed(() => {
+    const lat = parseCoordNumber(form.latitude);
+    const lng = parseCoordNumber(form.longitude);
+    if (lat == null || lng == null) return null;
+    return { lat, lng };
+});
 
 const form = useForm({
     incident_type: props.item?.incident_type ?? initialType.value,
@@ -391,12 +447,20 @@ watch(
 );
 
 onMounted(async () => {
-    await loadProvinces();
-    if (form.province_id) await loadRegencies(form.province_id);
-    if (form.regency_id) await loadDistricts(form.regency_id);
-    if (form.district_id) await loadVillages(form.district_id);
+    if (!isView.value) {
+        await loadProvinces();
+        if (form.province_id) await loadRegencies(form.province_id);
+        if (form.regency_id) await loadDistricts(form.regency_id);
+        if (form.district_id) await loadVillages(form.district_id);
+        getEditor()?.commands?.setContent(String(form.description ?? ''), false);
+        await ensureMap();
+        return;
+    }
+
     getEditor()?.commands?.setContent(String(form.description ?? ''), false);
-    await ensureMap();
+    if (viewCoords.value) {
+        await ensureMap();
+    }
 });
 
 const submit = () => {
@@ -447,7 +511,88 @@ const title = computed(() => {
             </div>
         </div>
 
-        <div class="space-y-6 rounded-xl border border-green-500/15 bg-black/20 p-4">
+        <div v-if="isView" class="space-y-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
+                <div class="text-sm font-semibold text-green-100">
+                    > {{ viewTypeLabel }}
+                </div>
+                <div class="mt-2 text-xs text-green-300/60">
+                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} · {{ viewLocationLabel }}
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <Badge class="border border-green-500/25 bg-black/35 text-green-200">
+                        {{ form.incident_type }}
+                    </Badge>
+                    <Badge v-if="viewNoteLabel" class="border border-green-500/25 bg-black/30 text-green-200">
+                        {{ viewNoteLabel }}
+                    </Badge>
+                    <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                        {{ String(form.news_source || 'offline') }}
+                    </Badge>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
+                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                    <span>> MAP LOCATION</span>
+                    <span v-if="viewCoords" class="text-[11px]">
+                        > {{ viewCoords.lat.toFixed(5) }}, {{ viewCoords.lng.toFixed(5) }}
+                    </span>
+                </div>
+                <div
+                    v-if="viewCoords"
+                    ref="mapContainer"
+                    class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-green-500/15"
+                />
+                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-4 text-xs text-green-300/60">
+                    > koordinat tidak tersedia.
+                </div>
+            </div>
+
+            <div
+                v-if="props.item?.description"
+                class="rounded-xl border border-green-500/15 bg-black/20 p-4 text-sm text-green-200/85"
+                v-html="String(props.item?.description ?? '')"
+            />
+
+            <div class="grid gap-2 rounded-xl border border-green-500/15 bg-black/20 p-4 text-xs text-green-300/70">
+                <div>> wilayah: {{ viewLocationLabel }}</div>
+                <div v-if="form.news_source">> sumber_berita: {{ form.news_source }}</div>
+                <div v-if="form.news_url">
+                    > url:
+                    <a
+                        :href="String(form.news_url)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="ml-1 text-green-200 underline decoration-green-400/40 underline-offset-4 hover:text-green-100"
+                    >
+                        {{ String(form.news_url) }}
+                    </a>
+                </div>
+            </div>
+
+            <div v-if="(props.item?.photos ?? []).length" class="space-y-2">
+                <div class="text-xs tracking-widest text-green-300/60">GALLERY</div>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    <div
+                        v-for="p in (props.item?.photos ?? [])"
+                        :key="p"
+                        class="overflow-hidden rounded-md border border-green-500/15 bg-black/20"
+                    >
+                        <div class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]">
+                            <img
+                                :src="photoUrl(p)"
+                                :alt="p"
+                                class="absolute inset-0 h-full w-full object-contain p-2 opacity-95"
+                                loading="lazy"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-else class="space-y-6 rounded-xl border border-green-500/15 bg-black/20 p-4">
             <div class="grid gap-2">
                 <Label>Kategori</Label>
                 <Select v-model="form.incident_type">

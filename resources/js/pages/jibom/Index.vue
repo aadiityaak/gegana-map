@@ -10,6 +10,7 @@ type JibomItem = {
     finding_type: string | null;
     description?: string | null;
     photos?: unknown;
+    news_source?: string | null;
     province_id: string;
     regency_id: string;
     district_id: string;
@@ -57,6 +58,11 @@ const findingLabel = (value: string | null) =>
         petasan: 'Petasan & Lainnya',
         lainnya: 'Lainnya',
     })[value ?? ''] ?? value ?? '-';
+
+const newsSourceLabel = (value: string | null | undefined) => {
+    if (value === 'online') return 'online';
+    return 'offline';
+};
 
 const currentType = computed(() => props.filters.type);
 const currentProvinceId = computed(() => props.filters.province_id);
@@ -420,8 +426,9 @@ onMounted(async () => {
                     <div class="col-span-1">ID</div>
                     <div class="col-span-3">Jenis</div>
                     <div class="col-span-2">Temuan</div>
+                    <div class="col-span-1">Sumber</div>
                     <div class="col-span-4">Wilayah</div>
-                    <div class="col-span-2 text-right">Aksi</div>
+                    <div class="col-span-1 text-right">Aksi</div>
                 </div>
                 <div v-if="props.items.data.length === 0" class="p-4 text-xs text-green-300/60">
                     > belum ada data.
@@ -438,6 +445,11 @@ onMounted(async () => {
                     <div class="col-span-2">
                         {{ findingLabel(row.finding_type) }}
                     </div>
+                    <div class="col-span-1">
+                        <span class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5 text-[11px] text-green-200/85">
+                            {{ newsSourceLabel(row.news_source) }}
+                        </span>
+                    </div>
                     <div class="col-span-4">
                         {{
                             [row.village_name, row.district_name, row.regency_name, row.province_name]
@@ -453,7 +465,7 @@ onMounted(async () => {
                             </span>
                         </div>
                     </div>
-                    <div class="col-span-2 flex justify-end gap-2">
+                    <div class="col-span-1 flex justify-end gap-2">
                         <Button size="sm" variant="secondary" as-child>
                             <Link :href="`/jibom/${row.id}`">View</Link>
                         </Button>

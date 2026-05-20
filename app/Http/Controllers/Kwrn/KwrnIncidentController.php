@@ -44,6 +44,7 @@ class KwrnIncidentController extends Controller
                 'ki.finding_type',
                 'ki.description',
                 'ki.photos',
+                'ki.news_source',
                 'ki.province_id',
                 'ki.regency_id',
                 'ki.district_id',
@@ -110,9 +111,69 @@ class KwrnIncidentController extends Controller
 
     public function show(KwrnIncident $incident)
     {
+        $row = DB::table('kwrn_incidents as ki')
+            ->leftJoin('reg_provinces as p', 'p.id', '=', 'ki.province_id')
+            ->leftJoin('reg_regencies as r', 'r.id', '=', 'ki.regency_id')
+            ->leftJoin('reg_districts as d', 'd.id', '=', 'ki.district_id')
+            ->leftJoin('reg_villages as v', 'v.id', '=', 'ki.village_id')
+            ->where('ki.id', $incident->id)
+            ->select([
+                'ki.id',
+                'ki.incident_type',
+                'ki.finding_type',
+                'ki.description',
+                'ki.photos',
+                'ki.latitude',
+                'ki.longitude',
+                'ki.news_source',
+                'ki.news_url',
+                'ki.province_id',
+                'ki.regency_id',
+                'ki.district_id',
+                'ki.village_id',
+                'ki.created_at',
+                'p.name as province_name',
+                'r.name as regency_name',
+                'd.name as district_name',
+                'v.name as village_name',
+            ])
+            ->first();
+
+        $photos = $row?->photos;
+        if (is_string($photos)) {
+            $decoded = json_decode($photos, true);
+            $photos = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($photos)) {
+            $photos = [];
+        }
+
+        $item = $row
+            ? [
+                'id' => $row->id,
+                'incident_type' => $row->incident_type,
+                'finding_type' => $row->finding_type,
+                'description' => $row->description,
+                'photos' => $photos,
+                'latitude' => $row->latitude,
+                'longitude' => $row->longitude,
+                'news_source' => $row->news_source,
+                'news_url' => $row->news_url,
+                'province_id' => $row->province_id,
+                'regency_id' => $row->regency_id,
+                'district_id' => $row->district_id,
+                'village_id' => $row->village_id,
+                'created_at' => $row->created_at,
+                'province_name' => $row->province_name,
+                'regency_name' => $row->regency_name,
+                'district_name' => $row->district_name,
+                'village_name' => $row->village_name,
+            ]
+            : $incident;
+
         return Inertia::render('kwrn/Form', [
             'mode' => 'view',
-            'item' => $incident,
+            'item' => $item,
             'filters' => [
                 'type' => $incident->incident_type,
             ],
