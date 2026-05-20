@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const page = usePage();
 const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
-const defaultLogoUrl = '/branding/gegana-fav.png';
+const defaultLogoUrl = '/branding/lgo.png';
 const customName = ref<string | null>(null);
 const customLogoDataUrl = ref<string | null>(null);
 
@@ -32,18 +32,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div
-        class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
-    >
+    <div class="overflow-hidden rounded-md bg-black p-1">
         <img
             :src="brandingLogo"
             alt="Logo"
-            class="size-6 object-contain"
+            class="h-full w-full object-contain"
         />
-    </div>
-    <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >{{ brandingName }}</span
-        >
     </div>
 </template>

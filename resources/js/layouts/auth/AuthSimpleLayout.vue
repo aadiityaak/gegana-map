@@ -8,7 +8,7 @@ defineProps<{
     description?: string;
 }>();
 
-const defaultLogoUrl = '/branding/gegana-fav.png';
+const defaultLogoUrl = '/branding/lgo.png';
 const customLogoDataUrl = ref<string | null>(null);
 
 const loadBranding = () => {

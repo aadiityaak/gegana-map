@@ -300,7 +300,7 @@
 .dark [data-slot='sidebar-wrapper'] {
     background-color: color-mix(
         in oklab,
-        var(--sidebar-background) 30%,
+        var(--sidebar-background) 40%,
         transparent
     ) !important;
 }

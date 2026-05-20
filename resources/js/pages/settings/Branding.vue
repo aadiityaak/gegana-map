@@ -20,7 +20,7 @@ defineOptions({
 
 const page = usePage();
 const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
-const defaultLogoUrl = '/branding/gegana-fav.png';
+const defaultLogoUrl = '/branding/lgo.png';
 const defaultFaviconUrl = '/branding/gegana-fav.png';
 const name = ref('');
 const logoDataUrl = ref<string>('');
