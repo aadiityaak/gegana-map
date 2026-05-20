@@ -124,6 +124,8 @@
     --sidebar-border: hsl(0 0% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
+    --cursor-x: 50vw;
+    --cursor-y: 30vh;
 }
 
 .dark {
@@ -172,18 +174,62 @@
     }
 }
 
-.dark body::before {
-    content: '';
+#cursor-gradient-overlay {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background:
-        radial-gradient(900px circle at 50% -20%, rgba(34, 197, 94, 0.18), transparent 60%),
-        linear-gradient(to bottom, rgba(34, 197, 94, 0.06) 1px, transparent 1px),
-        linear-gradient(to right, rgba(34, 197, 94, 0.05) 1px, transparent 1px);
-    background-size: auto, 100% 3px, 40px 100%;
-    opacity: 0.55;
     z-index: 0;
+    opacity: 0;
+}
+
+.dark #cursor-gradient-overlay {
+    opacity: 0.75;
+    background:
+        radial-gradient(
+            650px circle at var(--cursor-x) var(--cursor-y),
+            rgba(34, 197, 94, 0.24),
+            transparent 60%
+        ),
+        radial-gradient(
+            900px circle at 50% -20%,
+            rgba(34, 197, 94, 0.18),
+            transparent 60%
+        ),
+        linear-gradient(
+            to bottom,
+            rgba(34, 197, 94, 0.06) 1px,
+            transparent 1px
+        ),
+        linear-gradient(to right, rgba(34, 197, 94, 0.05) 1px, transparent 1px);
+    background-size:
+        auto,
+        auto,
+        100% 3px,
+        40px 100%;
+}
+
+.dark .bg-background {
+    background-color: color-mix(
+        in oklab,
+        var(--background) 15%,
+        transparent
+    ) !important;
+}
+
+.dark .bg-sidebar {
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-background) 30%,
+        transparent
+    ) !important;
+}
+
+.dark [data-slot='sidebar-wrapper'] {
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-background) 30%,
+        transparent
+    ) !important;
 }
 
 .dark #app {

@@ -41,6 +41,7 @@
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">
+        <div id="cursor-gradient-overlay" aria-hidden="true"></div>
         <x-inertia::app />
     </body>
 </html>

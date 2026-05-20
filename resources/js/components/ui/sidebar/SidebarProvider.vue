@@ -3,6 +3,7 @@ import type { HTMLAttributes, Ref } from "vue"
 import { defaultDocument, useEventListener, useMediaQuery, useVModel } from "@vueuse/core"
 import { TooltipProvider } from "reka-ui"
 import { computed, ref, watch } from "vue"
+import { router } from "@inertiajs/vue3"
 import { cn } from "@/lib/utils"
 import { provideSidebarContext, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_COOKIE_NAME, SIDEBAR_KEYBOARD_SHORTCUT, SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON } from "./utils"
 
@@ -46,6 +47,8 @@ const matchesMobile = () => {
   return window.matchMedia("(max-width: 768px)").matches
 }
 
+const lastUrl = ref<string | null>(typeof window === 'undefined' ? null : `${window.location.pathname}${window.location.search}`)
+
 // Helper to toggle the sidebar.
 function toggleSidebar() {
   return matchesMobile() ? setOpenMobile(!openMobile.value) : setOpen(!open.value)
@@ -60,6 +63,20 @@ useEventListener("keydown", (event: KeyboardEvent) => {
 
 watch(isMobile, (value) => {
   if (!value && openMobile.value) {
+    openMobile.value = false
+  }
+})
+
+router.on("success", (event) => {
+  const nextUrl = (event as any)?.detail?.page?.url as string | undefined
+  if (!nextUrl) {
+    return
+  }
+
+  const prevUrl = lastUrl.value
+  lastUrl.value = nextUrl
+
+  if (prevUrl && nextUrl !== prevUrl && matchesMobile() && openMobile.value) {
     openMobile.value = false
   }
 })
