@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 
 type WilayahItem = { id: string; name: string };
-type Mode = 'create' | 'edit';
+type Mode = 'create' | 'edit' | 'view';
 
 const props = defineProps<{
     mode: Mode;
@@ -64,6 +64,8 @@ const initialType = computed(() => {
     return 'napiter';
 });
 
+const isView = computed(() => props.mode === 'view');
+
 const form = useForm({
     incident_type: props.item?.incident_type ?? initialType.value,
     finding_type: props.item?.finding_type ?? '',
@@ -107,6 +109,7 @@ const editor = useEditor({
             class: 'min-h-[140px] px-3 py-2 text-sm text-green-200/85 outline-none',
         },
     },
+    editable: props.mode !== 'view',
     onUpdate: ({ editor }) => {
         form.description = editor.getHTML();
     },
@@ -152,6 +155,7 @@ const addPhotoFiles = (files: File[]) => {
 };
 
 const onPhotosChange = (e: Event) => {
+    if (isView.value) return;
     const input = e.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
     addPhotoFiles(files);
@@ -159,10 +163,12 @@ const onPhotosChange = (e: Event) => {
 };
 
 const openPhotoPicker = () => {
+    if (isView.value) return;
     photoInputEl.value?.click();
 };
 
 const onPhotosDrop = (e: DragEvent) => {
+    if (isView.value) return;
     e.preventDefault();
     isDraggingPhotos.value = false;
     const files = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : [];
@@ -170,6 +176,7 @@ const onPhotosDrop = (e: DragEvent) => {
 };
 
 const removeNewPhoto = (key: string) => {
+    if (isView.value) return;
     const idx = newPhotoPreviews.value.findIndex((p) => p.key === key);
     if (idx < 0) return;
     const [removed] = newPhotoPreviews.value.splice(idx, 1);
@@ -178,6 +185,7 @@ const removeNewPhoto = (key: string) => {
 };
 
 const removeExistingPhoto = (path: string) => {
+    if (isView.value) return;
     form.existing_photos = (form.existing_photos ?? []).filter(
         (p: string) => p !== path,
     );
@@ -282,6 +290,7 @@ const ensureMap = async () => {
     }).addTo(map);
 
     map.on('click', async (e: any) => {
+        if (isView.value) return;
         const clickedLat = Number(e?.latlng?.lat);
         const clickedLng = Number(e?.latlng?.lng);
         if (!Number.isFinite(clickedLat) || !Number.isFinite(clickedLng)) return;
@@ -391,6 +400,7 @@ onMounted(async () => {
 });
 
 const submit = () => {
+    if (props.mode === 'view') return;
     if (props.mode === 'edit' && props.item) {
         form.put(`/wan-teror/${props.item.id}`, { forceFormData: true });
         return;
@@ -398,9 +408,14 @@ const submit = () => {
     form.post('/wan-teror', { forceFormData: true });
 };
 
-const title = computed(() =>
-    props.mode === 'edit' ? 'Edit WAN TEROR' : 'Tambah WAN TEROR',
-);
+watch(isView, (v) => {
+    getEditor()?.setEditable?.(!v);
+});
+
+const title = computed(() => {
+    if (props.mode === 'view') return 'View WAN TEROR';
+    return props.mode === 'edit' ? 'Edit WAN TEROR' : 'Tambah WAN TEROR';
+});
 </script>
 
 <template>
@@ -410,22 +425,33 @@ const title = computed(() =>
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
-                    > {{ props.mode === 'edit' ? 'EDIT WAN TEROR' : 'TAMBAH WAN TEROR' }}
+                    > {{
+                        props.mode === 'view'
+                            ? 'VIEW WAN TEROR'
+                            : props.mode === 'edit'
+                              ? 'EDIT WAN TEROR'
+                              : 'TAMBAH WAN TEROR'
+                    }}
                 </h1>
                 <Badge class="border border-green-500/25 bg-black/30 text-green-200">
                     {{ form.incident_type }}
                 </Badge>
             </div>
-            <Button variant="secondary" as-child>
-                <Link href="/wan-teror">Back</Link>
-            </Button>
+            <div class="flex items-center gap-2">
+                <Button variant="secondary" as-child>
+                    <Link href="/wan-teror">Back</Link>
+                </Button>
+                <Button v-if="props.mode === 'view' && props.item" variant="secondary" as-child>
+                    <Link :href="`/wan-teror/${props.item.id}/edit`">Edit</Link>
+                </Button>
+            </div>
         </div>
 
         <div class="space-y-6 rounded-xl border border-green-500/15 bg-black/20 p-4">
             <div class="grid gap-2">
                 <Label>Kategori</Label>
                 <Select v-model="form.incident_type">
-                    <SelectTrigger class="w-full">
+                    <SelectTrigger class="w-full" :disabled="isView">
                         <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
                     <SelectContent>
@@ -448,6 +474,7 @@ const title = computed(() =>
                     type="text"
                     class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
                     placeholder="misal: kode kasus / keterangan singkat"
+                    :disabled="isView"
                 />
                 <InputError :message="form.errors.finding_type" />
             </div>
@@ -455,7 +482,7 @@ const title = computed(() =>
             <div class="grid gap-2">
                 <Label>Deskripsi</Label>
                 <div class="rounded-lg border border-green-500/15 bg-black/30">
-                    <div class="flex flex-wrap gap-2 border-b border-green-500/15 p-2">
+                    <div v-if="!isView" class="flex flex-wrap gap-2 border-b border-green-500/15 p-2">
                         <Button
                             type="button"
                             size="sm"
@@ -520,6 +547,21 @@ const title = computed(() =>
 
             <div class="grid gap-2">
                 <Label>Gallery Foto</Label>
+                <div v-if="isView">
+                    <div v-if="(form.existing_photos ?? []).length > 0" class="grid gap-2">
+                        <div class="text-xs text-green-300/60">> foto tersimpan</div>
+                        <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+                            <div
+                                v-for="p in (form.existing_photos ?? [])"
+                                :key="p"
+                                class="overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                            >
+                                <img :src="photoUrl(p)" class="h-24 w-full object-cover" />
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-xs text-green-300/60">> tidak ada foto.</div>
+                </div>
                 <input
                     ref="photoInputEl"
                     type="file"
@@ -529,6 +571,7 @@ const title = computed(() =>
                     @change="onPhotosChange"
                 />
                 <button
+                    v-if="!isView"
                     type="button"
                     class="w-full rounded-lg border border-dashed border-green-500/25 bg-black/30 px-3 py-6 text-left text-xs text-green-200/85"
                     :class="isDraggingPhotos ? 'bg-green-500/10' : ''"
@@ -553,7 +596,7 @@ const title = computed(() =>
                 </button>
                 <InputError :message="photosError" />
 
-                <div v-if="(form.existing_photos ?? []).length > 0" class="grid gap-2">
+                <div v-if="!isView && (form.existing_photos ?? []).length > 0" class="grid gap-2">
                     <div class="text-xs text-green-300/60">> foto tersimpan</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
@@ -571,7 +614,7 @@ const title = computed(() =>
                     </div>
                 </div>
 
-                <div v-if="newPhotoPreviews.length > 0" class="grid gap-2">
+                <div v-if="!isView && newPhotoPreviews.length > 0" class="grid gap-2">
                     <div class="text-xs text-green-300/60">> preview foto baru</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
@@ -594,7 +637,7 @@ const title = computed(() =>
                 <div class="grid gap-2">
                     <Label>Provinsi</Label>
                     <Select v-model="form.province_id">
-                        <SelectTrigger class="w-full">
+                        <SelectTrigger class="w-full" :disabled="isView">
                             <SelectValue placeholder="Pilih provinsi" />
                         </SelectTrigger>
                         <SelectContent>
@@ -614,7 +657,7 @@ const title = computed(() =>
                     <Label>Kab/Kota</Label>
                     <Select
                         v-model="form.regency_id"
-                        :disabled="!form.province_id || loadingRegencies"
+                        :disabled="isView || !form.province_id || loadingRegencies"
                     >
                         <SelectTrigger class="w-full">
                             <SelectValue placeholder="Pilih kab/kota" />
@@ -636,7 +679,7 @@ const title = computed(() =>
                     <Label>Kecamatan</Label>
                     <Select
                         v-model="form.district_id"
-                        :disabled="!form.regency_id || loadingDistricts"
+                        :disabled="isView || !form.regency_id || loadingDistricts"
                     >
                         <SelectTrigger class="w-full">
                             <SelectValue placeholder="Pilih kecamatan" />
@@ -658,7 +701,7 @@ const title = computed(() =>
                     <Label>Kelurahan/Desa</Label>
                     <Select
                         v-model="form.village_id"
-                        :disabled="!form.district_id || loadingVillages"
+                        :disabled="isView || !form.district_id || loadingVillages"
                     >
                         <SelectTrigger class="w-full">
                             <SelectValue placeholder="Pilih kel/desa" />
@@ -689,6 +732,7 @@ const title = computed(() =>
                             step="0.000001"
                             class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
                             placeholder="-6.200000"
+                            :disabled="isView"
                         />
                         <InputError :message="form.errors.latitude" />
                     </div>
@@ -700,6 +744,7 @@ const title = computed(() =>
                             step="0.000001"
                             class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
                             placeholder="106.816666"
+                            :disabled="isView"
                         />
                         <InputError :message="form.errors.longitude" />
                     </div>
@@ -710,7 +755,7 @@ const title = computed(() =>
                 <div class="grid gap-2">
                     <Label>Sumber Berita</Label>
                     <Select v-model="form.news_source">
-                        <SelectTrigger class="w-full">
+                        <SelectTrigger class="w-full" :disabled="isView">
                             <SelectValue placeholder="Pilih sumber" />
                         </SelectTrigger>
                         <SelectContent>
@@ -728,12 +773,13 @@ const title = computed(() =>
                         type="url"
                         class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
                         placeholder="https://..."
+                        :disabled="isView"
                     />
                     <InputError :message="form.errors.news_url" />
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div v-if="!isView" class="flex flex-wrap items-center gap-2">
                 <Button type="button" :disabled="form.processing" @click="submit">
                     Save
                 </Button>

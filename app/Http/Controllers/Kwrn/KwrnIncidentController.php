@@ -108,6 +108,17 @@ class KwrnIncidentController extends Controller
         return redirect('/kwrn');
     }
 
+    public function show(KwrnIncident $incident)
+    {
+        return Inertia::render('kwrn/Form', [
+            'mode' => 'view',
+            'item' => $incident,
+            'filters' => [
+                'type' => $incident->incident_type,
+            ],
+        ]);
+    }
+
     public function edit(KwrnIncident $incident)
     {
         return Inertia::render('kwrn/Form', [

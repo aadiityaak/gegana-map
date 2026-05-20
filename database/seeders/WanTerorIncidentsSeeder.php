@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class WanTerorIncidentsSeeder extends Seeder
 {
@@ -49,19 +50,46 @@ class WanTerorIncidentsSeeder extends Seeder
         ];
 
         $schema = DB::getSchemaBuilder();
+        $columns = [
+            'description' => $schema->hasColumn('wan_teror_incidents', 'description'),
+            'photos' => $schema->hasColumn('wan_teror_incidents', 'photos'),
+            'latitude' => $schema->hasColumn('wan_teror_incidents', 'latitude'),
+            'longitude' => $schema->hasColumn('wan_teror_incidents', 'longitude'),
+            'news_source' => $schema->hasColumn('wan_teror_incidents', 'news_source'),
+            'news_url' => $schema->hasColumn('wan_teror_incidents', 'news_url'),
+        ];
         $now = now();
         $existingCount = DB::table('wan_teror_incidents')->count();
 
-        if ($schema->hasColumn('wan_teror_incidents', 'description')) {
+        if ($columns['description']) {
             DB::table('wan_teror_incidents')
                 ->whereNull('description')
                 ->update(['description' => $descriptionsByType['napiter'][0], 'updated_at' => $now]);
         }
 
-        if ($schema->hasColumn('wan_teror_incidents', 'photos')) {
+        if ($columns['photos']) {
             DB::table('wan_teror_incidents')
                 ->whereNull('photos')
                 ->update(['photos' => json_encode([]), 'updated_at' => $now]);
+        }
+
+        $galleryPaths = $columns['photos'] ? $this->ensureGallerySeedImages('wan-teror') : [];
+        if ($columns['photos'] && count($galleryPaths) > 0) {
+            $this->backfillGalleryPhotos('wan_teror_incidents', $galleryPaths, $now);
+        }
+
+        if ($columns['news_source']) {
+            DB::table('wan_teror_incidents')
+                ->whereNull('news_source')
+                ->orWhere('news_source', '')
+                ->update(['news_source' => 'offline', 'updated_at' => $now]);
+        }
+
+        if ($columns['news_url'] && $columns['news_source']) {
+            DB::table('wan_teror_incidents')
+                ->where('news_source', 'offline')
+                ->whereNotNull('news_url')
+                ->update(['news_url' => null, 'updated_at' => $now]);
         }
 
         $need = max(0, $desiredTotal - $existingCount);
@@ -104,6 +132,8 @@ class WanTerorIncidentsSeeder extends Seeder
                     provinceId: $provinceId,
                     types: $types,
                     descriptionsByType: $descriptionsByType,
+                    columns: $columns,
+                    galleryPaths: $galleryPaths,
                 );
 
                 if (! $row) {
@@ -135,6 +165,8 @@ class WanTerorIncidentsSeeder extends Seeder
         string $provinceId,
         array $types,
         array $descriptionsByType,
+        array $columns,
+        array $galleryPaths,
     ): ?array {
         $location = $this->pickLocationInProvince($provinceId);
         if (! $location) {
@@ -147,13 +179,40 @@ class WanTerorIncidentsSeeder extends Seeder
             ? (string) $this->randomElement($descriptionPool)
             : null;
 
+        $newsSource = 'offline';
+        $newsUrl = null;
+        if (($columns['news_source'] ?? false) || ($columns['news_url'] ?? false)) {
+            $newsRoll = $this->randomBetween(1, 100);
+            $newsSource = $newsRoll <= 25 ? 'online' : 'offline';
+            $newsUrl = $newsSource === 'online'
+                ? $this->randomNewsUrl('wan-teror', $incidentType)
+                : null;
+        }
+
+        $latitude = null;
+        $longitude = null;
+        if (($columns['latitude'] ?? false) && ($columns['longitude'] ?? false)) {
+            $coordRoll = $this->randomBetween(1, 100);
+            if ($coordRoll <= 65) {
+                $latitude = $this->randomFloat(-11.2, 6.9, 6);
+                $longitude = $this->randomFloat(95.0, 141.0, 6);
+            }
+        }
+
+        $photos = [];
+        if (($columns['photos'] ?? false) && count($galleryPaths) > 0) {
+            $photoRoll = $this->randomBetween(1, 100);
+            if ($photoRoll <= 65) {
+                $photoCount = $this->randomBetween(1, 3);
+                $photos = $this->randomUniqueSubset($galleryPaths, $photoCount);
+            }
+        }
+
         $createdAt = now()->subDays($this->randomBetween(0, 240));
 
-        return [
+        $row = [
             'incident_type' => $incidentType,
             'finding_type' => null,
-            'description' => $description,
-            'photos' => json_encode([]),
             'province_id' => $location->province_id,
             'regency_id' => $location->regency_id,
             'district_id' => $location->district_id,
@@ -161,6 +220,27 @@ class WanTerorIncidentsSeeder extends Seeder
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ];
+
+        if ($columns['description'] ?? false) {
+            $row['description'] = $description;
+        }
+        if ($columns['photos'] ?? false) {
+            $row['photos'] = json_encode($photos);
+        }
+        if ($columns['latitude'] ?? false) {
+            $row['latitude'] = $latitude;
+        }
+        if ($columns['longitude'] ?? false) {
+            $row['longitude'] = $longitude;
+        }
+        if ($columns['news_source'] ?? false) {
+            $row['news_source'] = $newsSource;
+        }
+        if ($columns['news_url'] ?? false) {
+            $row['news_url'] = $newsUrl;
+        }
+
+        return $row;
     }
 
     private function randomBetween(int $min, int $max): int
@@ -179,6 +259,102 @@ class WanTerorIncidentsSeeder extends Seeder
         }
         $index = random_int(0, $count - 1);
         return $values[$index];
+    }
+
+    private function randomFloat(float $min, float $max, int $decimals = 6): float
+    {
+        if ($min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+
+        $scale = 10 ** max(0, $decimals);
+        $minInt = (int) round($min * $scale);
+        $maxInt = (int) round($max * $scale);
+        $n = random_int($minInt, $maxInt);
+
+        return $n / $scale;
+    }
+
+    private function randomNewsUrl(string $module, string $incidentType): string
+    {
+        $id = $this->randomBetween(10000, 99999);
+        $slug = $module . '-' . $incidentType . '-' . $id;
+
+        return 'https://example.com/news/' . $slug;
+    }
+
+    private function ensureGallerySeedImages(string $module): array
+    {
+        $disk = Storage::disk('public');
+        $paths = [];
+
+        $sourcePath = base_path('public/branding/gegana-fav.png');
+        $bytes = null;
+        if (is_string($sourcePath) && $sourcePath !== '' && file_exists($sourcePath)) {
+            $read = file_get_contents($sourcePath);
+            if (is_string($read) && $read !== '') {
+                $bytes = $read;
+            }
+        }
+        if (! is_string($bytes) || $bytes === '') {
+            $bytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X8pJQAAAAASUVORK5CYII=');
+        }
+
+        for ($i = 1; $i <= 6; $i++) {
+            $path = "seed/{$module}/photo-{$i}.png";
+            if (! $disk->exists($path)) {
+                $disk->put($path, $bytes);
+            }
+            $paths[] = $path;
+        }
+
+        return $paths;
+    }
+
+    private function randomUniqueSubset(array $values, int $take): array
+    {
+        $values = array_values(array_filter($values, fn ($v) => is_string($v) && $v !== ''));
+        $count = count($values);
+        if ($count === 0 || $take <= 0) {
+            return [];
+        }
+
+        $take = min($take, $count);
+        $picked = [];
+
+        while (count($picked) < $take) {
+            $v = (string) $this->randomElement($values);
+            $picked[$v] = true;
+        }
+
+        return array_keys($picked);
+    }
+
+    private function backfillGalleryPhotos(string $table, array $galleryPaths, mixed $now): void
+    {
+        $ids = DB::table($table)
+            ->select(['id'])
+            ->whereNull('photos')
+            ->orWhere('photos', '')
+            ->orWhere('photos', '[]')
+            ->limit(160)
+            ->pluck('id')
+            ->all();
+
+        foreach ($ids as $id) {
+            $photoCount = $this->randomBetween(1, 3);
+            $photos = $this->randomUniqueSubset($galleryPaths, $photoCount);
+            if (count($photos) === 0) {
+                continue;
+            }
+
+            DB::table($table)
+                ->where('id', $id)
+                ->update([
+                    'photos' => json_encode($photos),
+                    'updated_at' => $now,
+                ]);
+        }
     }
 
     private function pickLocationInProvince(string $provinceId): ?object

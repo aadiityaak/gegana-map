@@ -108,6 +108,17 @@ class JibomIncidentController extends Controller
         return redirect('/jibom');
     }
 
+    public function show(JibomIncident $incident)
+    {
+        return Inertia::render('jibom/Form', [
+            'mode' => 'view',
+            'item' => $incident,
+            'filters' => [
+                'type' => $incident->incident_type,
+            ],
+        ]);
+    }
+
     public function edit(JibomIncident $incident)
     {
         return Inertia::render('jibom/Form', [

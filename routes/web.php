@@ -612,6 +612,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('jibom', [JibomIncidentController::class, 'index'])->name('jibom.index');
         Route::get('jibom/create', [JibomIncidentController::class, 'create'])->name('jibom.create');
         Route::post('jibom', [JibomIncidentController::class, 'store'])->name('jibom.store');
+        Route::get('jibom/{incident}', [JibomIncidentController::class, 'show'])->name('jibom.show');
         Route::get('jibom/{incident}/edit', [JibomIncidentController::class, 'edit'])->name('jibom.edit');
         Route::put('jibom/{incident}', [JibomIncidentController::class, 'update'])->name('jibom.update');
         Route::delete('jibom/{incident}', [JibomIncidentController::class, 'destroy'])->name('jibom.destroy');
@@ -644,6 +645,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('kwrn', [KwrnIncidentController::class, 'index'])->name('kwrn.index');
         Route::get('kwrn/create', [KwrnIncidentController::class, 'create'])->name('kwrn.create');
         Route::post('kwrn', [KwrnIncidentController::class, 'store'])->name('kwrn.store');
+        Route::get('kwrn/{incident}', [KwrnIncidentController::class, 'show'])->name('kwrn.show');
         Route::get('kwrn/{incident}/edit', [KwrnIncidentController::class, 'edit'])->name('kwrn.edit');
         Route::put('kwrn/{incident}', [KwrnIncidentController::class, 'update'])->name('kwrn.update');
         Route::delete('kwrn/{incident}', [KwrnIncidentController::class, 'destroy'])->name('kwrn.destroy');
@@ -682,6 +684,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('wan-teror', [WanTerorIncidentController::class, 'index'])->name('wan-teror.index');
         Route::get('wan-teror/create', [WanTerorIncidentController::class, 'create'])->name('wan-teror.create');
         Route::post('wan-teror', [WanTerorIncidentController::class, 'store'])->name('wan-teror.store');
+        Route::get('wan-teror/{incident}', [WanTerorIncidentController::class, 'show'])->name('wan-teror.show');
         Route::get('wan-teror/{incident}/edit', [WanTerorIncidentController::class, 'edit'])->name('wan-teror.edit');
         Route::put('wan-teror/{incident}', [WanTerorIncidentController::class, 'update'])->name('wan-teror.update');
         Route::delete('wan-teror/{incident}', [WanTerorIncidentController::class, 'destroy'])->name('wan-teror.destroy');

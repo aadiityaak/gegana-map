@@ -114,6 +114,17 @@ class WanTerorIncidentController extends Controller
         return redirect('/wan-teror');
     }
 
+    public function show(WanTerorIncident $incident)
+    {
+        return Inertia::render('wanTeror/Form', [
+            'mode' => 'view',
+            'item' => $incident,
+            'filters' => [
+                'type' => $incident->incident_type,
+            ],
+        ]);
+    }
+
     public function edit(WanTerorIncident $incident)
     {
         return Inertia::render('wanTeror/Form', [

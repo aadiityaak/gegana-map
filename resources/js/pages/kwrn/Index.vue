@@ -462,6 +462,9 @@ onMounted(async () => {
                     </div>
                     <div class="col-span-2 flex justify-end gap-2">
                         <Button size="sm" variant="secondary" as-child>
+                            <Link :href="`/kwrn/${row.id}`">View</Link>
+                        </Button>
+                        <Button size="sm" variant="secondary" as-child>
                             <Link :href="`/kwrn/${row.id}/edit`">Edit</Link>
                         </Button>
                         <Button size="sm" variant="destructive" @click="deleteItem(row.id)">
