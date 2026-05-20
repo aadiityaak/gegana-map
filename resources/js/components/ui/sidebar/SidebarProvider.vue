@@ -2,7 +2,7 @@
 import type { HTMLAttributes, Ref } from "vue"
 import { defaultDocument, useEventListener, useMediaQuery, useVModel } from "@vueuse/core"
 import { TooltipProvider } from "reka-ui"
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { cn } from "@/lib/utils"
 import { provideSidebarContext, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_COOKIE_NAME, SIDEBAR_KEYBOARD_SHORTCUT, SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON } from "./utils"
 
@@ -38,15 +38,29 @@ function setOpenMobile(value: boolean) {
   openMobile.value = value
 }
 
+const matchesMobile = () => {
+  if (typeof window === 'undefined') {
+    return isMobile.value
+  }
+
+  return window.matchMedia("(max-width: 768px)").matches
+}
+
 // Helper to toggle the sidebar.
 function toggleSidebar() {
-  return isMobile.value ? setOpenMobile(!openMobile.value) : setOpen(!open.value)
+  return matchesMobile() ? setOpenMobile(!openMobile.value) : setOpen(!open.value)
 }
 
 useEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
     event.preventDefault()
     toggleSidebar()
+  }
+})
+
+watch(isMobile, (value) => {
+  if (!value && openMobile.value) {
+    openMobile.value = false
   }
 })
 
