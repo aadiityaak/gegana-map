@@ -292,14 +292,6 @@ const footerNavItems: NavItem[] = [
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" class="justify-start px-2">
-                            <Users class="size-4 shrink-0" />
-                            <span class="truncate font-semibold">ADMIN</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
             </SidebarHeader>
 
             <SidebarContent class="relative z-10">
