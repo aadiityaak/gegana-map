@@ -192,12 +192,14 @@
             transparent 60%
         ),
         radial-gradient(
-            520px circle at calc(var(--cursor-x) + 26px) calc(var(--cursor-y) - 16px),
+            520px circle at calc(var(--cursor-x) + 26px)
+                calc(var(--cursor-y) - 16px),
             rgba(34, 211, 238, 0.14),
             transparent 60%
         ),
         radial-gradient(
-            480px circle at calc(var(--cursor-x) - 22px) calc(var(--cursor-y) + 18px),
+            480px circle at calc(var(--cursor-x) - 22px)
+                calc(var(--cursor-y) + 18px),
             rgba(217, 70, 239, 0.12),
             transparent 60%
         ),
@@ -215,10 +217,10 @@
     background-size:
         auto,
         auto,
+        auto,
+        auto,
         100% 3px,
         40px 100%;
-}
-
     mix-blend-mode: screen;
     filter: saturate(1.15) contrast(1.05);
     animation: cg-breathe 7.5s ease-in-out infinite;
@@ -245,7 +247,9 @@
             transparent 100%
         );
     mix-blend-mode: screen;
-    animation: cg-scan 9s linear infinite, cg-flicker 2.8s steps(8, end) infinite;
+    animation:
+        cg-scan 9s linear infinite,
+        cg-flicker 2.8s steps(8, end) infinite;
 }
 
 .dark #cursor-gradient-overlay::after {
@@ -255,27 +259,30 @@
     opacity: 0.55;
     background:
         radial-gradient(
-            720px circle at calc(var(--cursor-x) + 2px) calc(var(--cursor-y) + 1px),
+            720px circle at calc(var(--cursor-x) + 2px)
+                calc(var(--cursor-y) + 1px),
             rgba(34, 197, 94, 0.22),
             transparent 62%
         ),
         radial-gradient(
-            720px circle at calc(var(--cursor-x) - 3px) calc(var(--cursor-y) - 1px),
+            720px circle at calc(var(--cursor-x) - 3px)
+                calc(var(--cursor-y) - 1px),
             rgba(34, 211, 238, 0.14),
             transparent 62%
         ),
         radial-gradient(
-            720px circle at calc(var(--cursor-x) + 4px) calc(var(--cursor-y) - 2px),
+            720px circle at calc(var(--cursor-x) + 4px)
+                calc(var(--cursor-y) - 2px),
             rgba(217, 70, 239, 0.12),
             transparent 62%
         );
     filter: blur(1.2px);
     mix-blend-mode: screen;
     animation: cg-glitch 3.6s steps(12, end) infinite;
+}
+
 .dark .bg-background {
     background-color: color-mix(
-        in oklab,
-        var(--background) 15%,
         in oklab,
         var(--background) 15%,
         transparent
