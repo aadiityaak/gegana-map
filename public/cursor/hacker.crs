@@ -1,0 +1,51 @@
+﻿[Arrow]
+Path=[HC] Normal.ani
+
+[Help]
+Path=[HC] Help.ani
+
+[AppStarting]
+Path=[HC] Working.ani
+
+[Wait]
+Path=[HC] Busy.ani
+
+[Crosshair]
+Path=[HC] Precision.ani
+
+[IBeam]
+Path=[HC] Text.ani
+
+[No]
+Path=[HC] Unavailable.ani
+
+[SizeNS]
+Path=[HC] VerticalRes.cur
+
+[SizeWE]
+Path=[HC] HorizontalRes.cur
+
+[SizeAll]
+Path=[HC] Move.cur
+
+[UpArrow]
+Path=[HC] Alternate.ani
+
+[Hand]
+Path=[HC] Link Select.cur
+
+[Pin]
+Path=[HC] Location Select.cur
+
+[Person]
+Path=[HC] Person Select.cur
+
+[SizeNWSE]
+Path=[HC] Diagonal1Res.cur
+
+[NWPen]
+Path=[HC] Handwriting.cur
+
+[SizeNESW]
+Path=[HC] Diagonal2Res.cur
+

@@ -172,6 +172,26 @@
     body {
         @apply bg-background text-foreground;
     }
+    html,
+    body {
+        cursor:
+            url('/cursor/%5BHC%5D%20Location%20Select.cur') 0 0,
+            auto;
+    }
+    a,
+    button,
+    [role='button'],
+    summary,
+    label,
+    select,
+    option,
+    [type='button'],
+    [type='submit'],
+    [type='reset'] {
+        cursor:
+            url('/cursor/%5BHC%5D%20Link%20Select.cur') 0 0,
+            pointer;
+    }
 }
 
 #cursor-gradient-overlay {
