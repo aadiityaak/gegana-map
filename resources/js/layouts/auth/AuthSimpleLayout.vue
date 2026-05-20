@@ -32,7 +32,7 @@ onUnmounted(() => {
 
 <template>
     <div
-        class="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden bg-[#05070A] p-6 text-green-200 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden bg-[rgba(0,0,0,0.6)] p-6 text-green-200 md:p-10"
     >
         <div class="pointer-events-none absolute inset-0">
             <div
