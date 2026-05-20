@@ -180,6 +180,7 @@
     pointer-events: none;
     z-index: 0;
     opacity: 0;
+    isolation: isolate;
 }
 
 .dark #cursor-gradient-overlay {
@@ -188,6 +189,16 @@
         radial-gradient(
             650px circle at var(--cursor-x) var(--cursor-y),
             rgba(34, 197, 94, 0.24),
+            transparent 60%
+        ),
+        radial-gradient(
+            520px circle at calc(var(--cursor-x) + 26px) calc(var(--cursor-y) - 16px),
+            rgba(34, 211, 238, 0.14),
+            transparent 60%
+        ),
+        radial-gradient(
+            480px circle at calc(var(--cursor-x) - 22px) calc(var(--cursor-y) + 18px),
+            rgba(217, 70, 239, 0.12),
             transparent 60%
         ),
         radial-gradient(
@@ -208,8 +219,63 @@
         40px 100%;
 }
 
+    mix-blend-mode: screen;
+    filter: saturate(1.15) contrast(1.05);
+    animation: cg-breathe 7.5s ease-in-out infinite;
+}
+
+.dark #cursor-gradient-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.28;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(34, 197, 94, 0.06) 0px,
+            rgba(34, 197, 94, 0.06) 1px,
+            transparent 2px,
+            transparent 5px
+        ),
+        linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(34, 211, 238, 0.06) 34%,
+            rgba(217, 70, 239, 0.06) 66%,
+            transparent 100%
+        );
+    mix-blend-mode: screen;
+    animation: cg-scan 9s linear infinite, cg-flicker 2.8s steps(8, end) infinite;
+}
+
+.dark #cursor-gradient-overlay::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    opacity: 0.55;
+    background:
+        radial-gradient(
+            720px circle at calc(var(--cursor-x) + 2px) calc(var(--cursor-y) + 1px),
+            rgba(34, 197, 94, 0.22),
+            transparent 62%
+        ),
+        radial-gradient(
+            720px circle at calc(var(--cursor-x) - 3px) calc(var(--cursor-y) - 1px),
+            rgba(34, 211, 238, 0.14),
+            transparent 62%
+        ),
+        radial-gradient(
+            720px circle at calc(var(--cursor-x) + 4px) calc(var(--cursor-y) - 2px),
+            rgba(217, 70, 239, 0.12),
+            transparent 62%
+        );
+    filter: blur(1.2px);
+    mix-blend-mode: screen;
+    animation: cg-glitch 3.6s steps(12, end) infinite;
 .dark .bg-background {
     background-color: color-mix(
+        in oklab,
+        var(--background) 15%,
         in oklab,
         var(--background) 15%,
         transparent
@@ -282,4 +348,87 @@
 
 .dark .leaflet-control-attribution a {
     color: rgba(164, 255, 186, 0.7);
+}
+
+@keyframes cg-breathe {
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.9;
+    }
+}
+
+@keyframes cg-scan {
+    0% {
+        transform: translateY(-8%);
+    }
+    100% {
+        transform: translateY(8%);
+    }
+}
+
+@keyframes cg-flicker {
+    0%,
+    100% {
+        opacity: 0.22;
+    }
+    20% {
+        opacity: 0.32;
+    }
+    55% {
+        opacity: 0.18;
+    }
+    80% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes cg-glitch {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+    10% {
+        transform: translate3d(-2px, 0, 0);
+    }
+    12% {
+        transform: translate3d(3px, -1px, 0);
+    }
+    14% {
+        transform: translate3d(-1px, 1px, 0);
+    }
+    30% {
+        transform: translate3d(0, 0, 0);
+    }
+    31% {
+        transform: translate3d(2px, 0, 0);
+    }
+    32% {
+        transform: translate3d(-3px, 1px, 0);
+    }
+    33% {
+        transform: translate3d(1px, -1px, 0);
+    }
+    60% {
+        transform: translate3d(0, 0, 0);
+    }
+    61% {
+        transform: translate3d(-2px, 0, 0);
+    }
+    62% {
+        transform: translate3d(3px, 1px, 0);
+    }
+    63% {
+        transform: translate3d(-1px, -1px, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dark #cursor-gradient-overlay,
+    .dark #cursor-gradient-overlay::before,
+    .dark #cursor-gradient-overlay::after {
+        animation: none !important;
+    }
 }
