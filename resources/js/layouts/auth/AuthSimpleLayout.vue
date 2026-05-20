@@ -54,13 +54,11 @@ onUnmounted(() => {
                         :href="home()"
                         class="flex flex-col items-center gap-2 font-mono text-sm font-medium tracking-wider text-green-300"
                     >
-                        <div
-                            class="mb-1 flex h-10 w-10 items-center justify-center rounded-md border border-green-500/25 bg-black/40"
-                        >
+                        <div class="mb-1 h-12 w-full max-w-[340px] overflow-hidden rounded-md bg-black p-1">
                             <img
                                 :src="brandingLogo"
                                 alt="Logo"
-                                class="size-9 object-contain"
+                                class="h-full w-full object-contain"
                             />
                         </div>
                         <span class="sr-only">{{ title }}</span>
