@@ -56,14 +56,14 @@ type MonitoringResponse = {
 
 const props = defineProps<{
     dashboard: {
-        totals: { jibom: number; kwrn: number; wanTeror: number; all: number };
+        totals: { jibom: number; kbrn: number; wanTeror: number; all: number };
         modules: ModuleSummary[];
         topProvincesAll: TopProvince[];
         monthly: {
             months: string[];
             series: {
                 jibom: number[];
-                kwrn: number[];
+                kbrn: number[];
                 wanTeror: number[];
             };
         };
@@ -93,7 +93,7 @@ const monthLabels = computed(() =>
     }),
 );
 
-const series = computed(() => props.dashboard.monthly?.series ?? { jibom: [], kwrn: [], wanTeror: [] });
+const series = computed(() => props.dashboard.monthly?.series ?? { jibom: [], kbrn: [], wanTeror: [] });
 const chartWidth = 720;
 const chartHeight = 240;
 const padLeft = 44;
@@ -106,7 +106,7 @@ const plotH = computed(() => chartHeight - padTop - padBottom);
 
 const allValues = computed(() => [
     ...(series.value.jibom ?? []),
-    ...(series.value.kwrn ?? []),
+    ...(series.value.kbrn ?? []),
     ...(series.value.wanTeror ?? []),
 ]);
 const maxValue = computed(() => Math.max(1, ...allValues.value.map((n) => (Number.isFinite(n) ? n : 0))));
@@ -130,7 +130,7 @@ const pathFor = (values: number[]) => {
 };
 
 const pathJibom = computed(() => pathFor(series.value.jibom ?? []));
-const pathKwrn = computed(() => pathFor(series.value.kwrn ?? []));
+const pathKBRN = computed(() => pathFor(series.value.kbrn ?? []));
 const pathWanTeror = computed(() => pathFor(series.value.wanTeror ?? []));
 
 const hoverIndex = ref<number | null>(null);
@@ -164,7 +164,7 @@ const hoverValues = computed(() => {
     const i = hoverIndex.value;
     return {
         jibom: series.value.jibom?.[i] ?? 0,
-        kwrn: series.value.kwrn?.[i] ?? 0,
+        kbrn: series.value.kbrn?.[i] ?? 0,
         wanTeror: series.value.wanTeror?.[i] ?? 0,
     };
 });
@@ -208,7 +208,7 @@ const colorForCount = (count: number, max: number) => {
     return '#22c55e';
 };
 
-type SvgTab = 'jibom' | 'kwrn' | 'wan-teror';
+type SvgTab = 'jibom' | 'kbrn' | 'wan-teror';
 
 const svgTab = ref<SvgTab>('jibom');
 const svgTabRoot = ref<HTMLDivElement | null>(null);
@@ -218,9 +218,9 @@ const jibomMapSvg = ref<string>('');
 const jibomMapError = ref<string | null>(null);
 const jibomCounts = ref<ProvinceCount[]>([]);
 
-const kwrnMapSvg = ref<string>('');
-const kwrnMapError = ref<string | null>(null);
-const kwrnCounts = ref<ProvinceCount[]>([]);
+const kbrnMapSvg = ref<string>('');
+const kbrnMapError = ref<string | null>(null);
+const kbrnCounts = ref<ProvinceCount[]>([]);
 
 const wanTerorMapSvg = ref<string>('');
 const wanTerorMapError = ref<string | null>(null);
@@ -228,31 +228,31 @@ const wanTerorCounts = ref<ProvinceCount[]>([]);
 
 const activeSvg = computed(() => {
     if (svgTab.value === 'jibom') return jibomMapSvg.value;
-    if (svgTab.value === 'kwrn') return kwrnMapSvg.value;
+    if (svgTab.value === 'kbrn') return kbrnMapSvg.value;
     return wanTerorMapSvg.value;
 });
 
 const activeError = computed(() => {
     if (svgTab.value === 'jibom') return jibomMapError.value;
-    if (svgTab.value === 'kwrn') return kwrnMapError.value;
+    if (svgTab.value === 'kbrn') return kbrnMapError.value;
     return wanTerorMapError.value;
 });
 
 const activeCounts = computed(() => {
     if (svgTab.value === 'jibom') return jibomCounts.value;
-    if (svgTab.value === 'kwrn') return kwrnCounts.value;
+    if (svgTab.value === 'kbrn') return kbrnCounts.value;
     return wanTerorCounts.value;
 });
 
 const activeListBaseHref = computed(() => {
     if (svgTab.value === 'jibom') return '/jibom';
-    if (svgTab.value === 'kwrn') return '/kwrn';
+    if (svgTab.value === 'kbrn') return '/kbrn';
     return '/wan-teror';
 });
 
 const activeTabLabel = computed(() => {
     if (svgTab.value === 'jibom') return 'JIBOM';
-    if (svgTab.value === 'kwrn') return 'KWRN';
+    if (svgTab.value === 'kbrn') return 'KBRN';
     return 'WAN TEROR';
 });
 
@@ -568,26 +568,26 @@ onMounted(async () => {
     await updateMapMarkers();
 
     try {
-        const [svgJibom, svgKwrn, svgWan, countsJibom, countsKwrn, countsWan] = await Promise.all([
+        const [svgJibom, svgKBRN, svgWan, countsJibom, countsKBRN, countsWan] = await Promise.all([
             loadSvgMap('/api/jibom/indonesia-map-svg'),
-            loadSvgMap('/api/kwrn/indonesia-map-svg'),
+            loadSvgMap('/api/kbrn/indonesia-map-svg'),
             loadSvgMap('/api/wan-teror/indonesia-map-svg'),
             loadCountsByProvince('/api/jibom/counts-by-province'),
-            loadCountsByProvince('/api/kwrn/counts-by-province'),
+            loadCountsByProvince('/api/kbrn/counts-by-province'),
             loadCountsByProvince('/api/wan-teror/counts-by-province'),
         ]);
 
         jibomMapSvg.value = svgJibom;
-        kwrnMapSvg.value = svgKwrn;
+        kbrnMapSvg.value = svgKBRN;
         wanTerorMapSvg.value = svgWan;
 
         jibomCounts.value = countsJibom;
-        kwrnCounts.value = countsKwrn;
+        kbrnCounts.value = countsKBRN;
         wanTerorCounts.value = countsWan;
     } catch (e) {
         const msg = e instanceof Error ? e.message : 'Gagal memuat peta provinsi.';
         jibomMapError.value = msg;
-        kwrnMapError.value = msg;
+        kbrnMapError.value = msg;
         wanTerorMapError.value = msg;
     }
 });
@@ -676,9 +676,9 @@ watch(
                 <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
             </div>
             <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-green-300/60">> KWRN</div>
+                <div class="text-xs text-green-300/60">> KBRN</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
-                    {{ fmt(props.dashboard.totals.kwrn) }}
+                    {{ fmt(props.dashboard.totals.kbrn) }}
                 </div>
                 <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
             </div>
@@ -695,7 +695,7 @@ watch(
             <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs font-semibold tracking-widest text-green-300/60">
-                        > GRAFIK 12 BULAN (JIBOM / KWRN / WAN TEROR)
+                        > GRAFIK 12 BULAN (JIBOM / KBRN / WAN TEROR)
                     </div>
                     <div class="flex items-center gap-3 text-[11px] text-green-200/80">
                         <div class="flex items-center gap-2">
@@ -704,7 +704,7 @@ watch(
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="h-2 w-2 rounded-full bg-sky-400"></span>
-                            <span>> KWRN</span>
+                            <span>> KBRN</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="h-2 w-2 rounded-full bg-amber-400"></span>
@@ -765,8 +765,8 @@ watch(
                             class="dash-draw dash-draw-1"
                         />
                         <path
-                            v-if="pathKwrn"
-                            :d="pathKwrn"
+                            v-if="pathKBRN"
+                            :d="pathKBRN"
                             fill="none"
                             stroke="#38bdf8"
                             stroke-width="2.2"
@@ -804,9 +804,9 @@ watch(
                                 stroke-width="1"
                             />
                             <circle
-                                v-if="series.kwrn?.length"
+                                v-if="series.kbrn?.length"
                                 :cx="hoverX"
-                                :cy="pointXY(hoverIndex, series.kwrn[hoverIndex] ?? 0).y"
+                                :cy="pointXY(hoverIndex, series.kbrn[hoverIndex] ?? 0).y"
                                 r="3.2"
                                 fill="#38bdf8"
                                 stroke="rgba(0,0,0,0.7)"
@@ -866,7 +866,7 @@ watch(
                         <div>> {{ hoverLabel }} ({{ hoverMonthShort }})</div>
                         <div class="mt-1 grid gap-0.5 text-green-200/85">
                             <div>> JIBOM: {{ fmt(hoverValues.jibom) }}</div>
-                            <div>> KWRN: {{ fmt(hoverValues.kwrn) }}</div>
+                            <div>> KBRN: {{ fmt(hoverValues.kbrn) }}</div>
                             <div>> WAN TEROR: {{ fmt(hoverValues.wanTeror) }}</div>
                         </div>
                     </div>
@@ -885,7 +885,7 @@ watch(
                         as-child
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
                     >
-                        <Link href="/kwrn">> KWRN</Link>
+                        <Link href="/kbrn">> KBRN</Link>
                     </Button>
                     <Button
                         variant="secondary"
@@ -958,10 +958,10 @@ watch(
                         variant="secondary"
                         size="sm"
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="svgTab === 'kwrn' ? 'border-green-500/25 bg-green-500/10' : ''"
-                        @click="svgTab = 'kwrn'"
+                        :class="svgTab === 'kbrn' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="svgTab = 'kbrn'"
                     >
-                        KWRN
+                        KBRN
                     </Button>
                     <Button
                         variant="secondary"

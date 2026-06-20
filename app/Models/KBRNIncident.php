@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class KwrnIncident extends Model
+class KBRNIncident extends Model
 {
     protected $fillable = [
         'incident_type',

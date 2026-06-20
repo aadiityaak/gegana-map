@@ -4,7 +4,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-type KwrnItem = {
+type KBRNItem = {
     id: number;
     incident_type: string;
     finding_type: string | null;
@@ -39,15 +39,15 @@ type Paginated<T> = {
 };
 
 const props = defineProps<{
-    items: Paginated<KwrnItem>;
+    items: Paginated<KBRNItem>;
     filters: { type: string | null; province_id: string | null };
 }>();
 
 const typeLabel = (value: string) =>
     ({
-        ancaman: 'Ancaman KWRN',
-        temuan: 'Temuan KWRN',
-        ledakan: 'Ledakan KWRN',
+        ancaman: 'Ancaman KBRN',
+        temuan: 'Temuan KBRN',
+        ledakan: 'Ledakan KBRN',
     })[value] ?? value;
 
 const findingLabel = (value: string | null) =>
@@ -68,8 +68,8 @@ const currentType = computed(() => props.filters.type);
 const currentProvinceId = computed(() => props.filters.province_id);
 
 const createHref = computed(() => {
-    if (!currentType.value) return '/kwrn/create';
-    return `/kwrn/create?type=${encodeURIComponent(currentType.value)}`;
+    if (!currentType.value) return '/kbrn/create';
+    return `/kbrn/create?type=${encodeURIComponent(currentType.value)}`;
 });
 
 const listHref = (type: string | null) => {
@@ -77,11 +77,11 @@ const listHref = (type: string | null) => {
     if (type) qs.set('type', type);
     if (currentProvinceId.value) qs.set('province_id', currentProvinceId.value);
     const s = qs.toString();
-    return s ? `/kwrn?${s}` : '/kwrn';
+    return s ? `/kbrn?${s}` : '/kbrn';
 };
 
 const deleteItem = (id: number) => {
-    router.delete(`/kwrn/${id}`);
+    router.delete(`/kbrn/${id}`);
 };
 
 const stripHtml = (value: string) =>
@@ -192,14 +192,14 @@ const applyCountsToSvg = async () => {
         ),
     );
 
-    const oldLabels = svg.querySelector('#kwrn-count-labels');
+    const oldLabels = svg.querySelector('#kbrn-count-labels');
     oldLabels?.remove();
 
     const labelsGroup = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'g',
     );
-    labelsGroup.setAttribute('id', 'kwrn-count-labels');
+    labelsGroup.setAttribute('id', 'kbrn-count-labels');
     svg.appendChild(labelsGroup);
 
     const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
@@ -241,7 +241,7 @@ const applyCountsToSvg = async () => {
             const nextProvinceId =
                 currentProvinceId.value === provinceId ? null : provinceId;
             router.get(
-                '/kwrn',
+                '/kbrn',
                 {
                     type: currentType.value ?? undefined,
                     province_id: nextProvinceId ?? undefined,
@@ -277,7 +277,7 @@ const applyCountsToSvg = async () => {
 const loadCounts = async () => {
     const type = currentType.value;
     const qs = type ? `?type=${encodeURIComponent(type)}` : '';
-    const res = await fetch(`/api/kwrn/counts-by-province${qs}`, {
+    const res = await fetch(`/api/kbrn/counts-by-province${qs}`, {
         headers: { Accept: 'application/json' },
     });
     if (!res.ok) {
@@ -317,7 +317,7 @@ watch(
 
 onMounted(async () => {
     try {
-        const res = await fetch('/api/kwrn/indonesia-map-svg', {
+        const res = await fetch('/api/kbrn/indonesia-map-svg', {
             headers: { Accept: 'image/svg+xml' },
         });
         if (!res.ok) {
@@ -335,13 +335,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <Head title="KWRN" />
+    <Head title="KBRN" />
 
     <div class="p-4 font-mono sm:p-6">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
-                    > KWRN
+                    > KBRN
                 </h1>
                 <Badge class="border border-green-500/25 bg-black/30 text-green-200">
                     {{ currentType ? typeLabel(currentType) : 'Semua' }}
@@ -474,10 +474,10 @@ onMounted(async () => {
                     </div>
                     <div class="col-span-1 flex justify-end gap-2">
                         <Button size="sm" variant="secondary" as-child>
-                            <Link :href="`/kwrn/${row.id}`">View</Link>
+                            <Link :href="`/kbrn/${row.id}`">View</Link>
                         </Button>
                         <Button size="sm" variant="secondary" as-child>
-                            <Link :href="`/kwrn/${row.id}/edit`">Edit</Link>
+                            <Link :href="`/kbrn/${row.id}/edit`">Edit</Link>
                         </Button>
                         <Button size="sm" variant="destructive" @click="deleteItem(row.id)">
                             Hapus

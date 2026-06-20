@@ -6,11 +6,11 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class KwrnIncidentsSeeder extends Seeder
+class KBRNIncidentsSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! DB::getSchemaBuilder()->hasTable('kwrn_incidents')) {
+        if (! DB::getSchemaBuilder()->hasTable('kbrn_incidents')) {
             return;
         }
 
@@ -23,12 +23,12 @@ class KwrnIncidentsSeeder extends Seeder
         $types = ['ancaman', 'temuan', 'ledakan'];
         $descriptionsByType = [
             'ancaman' => [
-                '<p>Laporan ancaman KWRN diterima.</p><ul><li>Verifikasi awal</li><li>Koordinasi pengamanan</li></ul>',
-                '<p>Informasi ancaman KWRN masuk dari masyarakat.</p><p>Tindakan: penilaian risiko dan pengamanan area.</p>',
+                '<p>Laporan ancaman KBRN diterima.</p><ul><li>Verifikasi awal</li><li>Koordinasi pengamanan</li></ul>',
+                '<p>Informasi ancaman KBRN masuk dari masyarakat.</p><p>Tindakan: penilaian risiko dan pengamanan area.</p>',
             ],
             'temuan' => [
                 '<p>Temuan material diduga berbahaya.</p><p>Tindakan: isolasi lokasi dan pemeriksaan awal.</p>',
-                '<p>Temuan KWRN di lokasi publik.</p><ul><li>Sterilisasi area</li><li>Koordinasi tim terkait</li></ul>',
+                '<p>Temuan KBRN di lokasi publik.</p><ul><li>Sterilisasi area</li><li>Koordinasi tim terkait</li></ul>',
             ],
             'ledakan' => [
                 '<p>Ledakan dilaporkan di sekitar lokasi.</p><p>Tindakan: penyisiran dan pengamanan TKP.</p>',
@@ -38,18 +38,18 @@ class KwrnIncidentsSeeder extends Seeder
 
         $schema = DB::getSchemaBuilder();
         $columns = [
-            'description' => $schema->hasColumn('kwrn_incidents', 'description'),
-            'photos' => $schema->hasColumn('kwrn_incidents', 'photos'),
-            'latitude' => $schema->hasColumn('kwrn_incidents', 'latitude'),
-            'longitude' => $schema->hasColumn('kwrn_incidents', 'longitude'),
-            'news_source' => $schema->hasColumn('kwrn_incidents', 'news_source'),
-            'news_url' => $schema->hasColumn('kwrn_incidents', 'news_url'),
+            'description' => $schema->hasColumn('kbrn_incidents', 'description'),
+            'photos' => $schema->hasColumn('kbrn_incidents', 'photos'),
+            'latitude' => $schema->hasColumn('kbrn_incidents', 'latitude'),
+            'longitude' => $schema->hasColumn('kbrn_incidents', 'longitude'),
+            'news_source' => $schema->hasColumn('kbrn_incidents', 'news_source'),
+            'news_url' => $schema->hasColumn('kbrn_incidents', 'news_url'),
         ];
         $now = now();
-        $existingCount = DB::table('kwrn_incidents')->count();
+        $existingCount = DB::table('kbrn_incidents')->count();
 
         if ($columns['description']) {
-            DB::table('kwrn_incidents')
+            DB::table('kbrn_incidents')
                 ->whereNull('description')
                 ->update([
                     'description' => $descriptionsByType['ancaman'][0],
@@ -58,25 +58,25 @@ class KwrnIncidentsSeeder extends Seeder
         }
 
         if ($columns['photos']) {
-            DB::table('kwrn_incidents')
+            DB::table('kbrn_incidents')
                 ->whereNull('photos')
                 ->update(['photos' => json_encode([]), 'updated_at' => $now]);
         }
 
-        $galleryPaths = $columns['photos'] ? $this->ensureGallerySeedImages('kwrn') : [];
+        $galleryPaths = $columns['photos'] ? $this->ensureGallerySeedImages('kbrn') : [];
         if ($columns['photos'] && count($galleryPaths) > 0) {
-            $this->backfillGalleryPhotos('kwrn_incidents', $galleryPaths, $now);
+            $this->backfillGalleryPhotos('kbrn_incidents', $galleryPaths, $now);
         }
 
         if ($columns['news_source']) {
-            DB::table('kwrn_incidents')
+            DB::table('kbrn_incidents')
                 ->whereNull('news_source')
                 ->orWhere('news_source', '')
                 ->update(['news_source' => 'offline', 'updated_at' => $now]);
         }
 
         if ($columns['news_url'] && $columns['news_source']) {
-            DB::table('kwrn_incidents')
+            DB::table('kbrn_incidents')
                 ->where('news_source', 'offline')
                 ->whereNotNull('news_url')
                 ->update(['news_url' => null, 'updated_at' => $now]);
@@ -94,7 +94,7 @@ class KwrnIncidentsSeeder extends Seeder
 
         $rows = [];
 
-        $currentCounts = DB::table('kwrn_incidents')
+        $currentCounts = DB::table('kbrn_incidents')
             ->select(['province_id', DB::raw('count(*) as c')])
             ->groupBy('province_id')
             ->pluck('c', 'province_id')
@@ -137,7 +137,7 @@ class KwrnIncidentsSeeder extends Seeder
             }
         }
 
-        DB::table('kwrn_incidents')->insert($rows);
+        DB::table('kbrn_incidents')->insert($rows);
     }
 
     private function wilayahReady(): bool
@@ -190,7 +190,7 @@ class KwrnIncidentsSeeder extends Seeder
             $newsRoll = $this->randomBetween(1, 100);
             $newsSource = $newsRoll <= 20 ? 'online' : 'offline';
             $newsUrl = $newsSource === 'online'
-                ? $this->randomNewsUrl('kwrn', $incidentType)
+                ? $this->randomNewsUrl('kbrn', $incidentType)
                 : null;
         }
 

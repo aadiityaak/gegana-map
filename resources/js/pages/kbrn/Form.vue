@@ -48,9 +48,9 @@ const props = defineProps<{
 }>();
 
 const incidentTypes = [
-    { value: 'ancaman', label: 'Ancaman KWRN' },
-    { value: 'temuan', label: 'Temuan KWRN' },
-    { value: 'ledakan', label: 'Ledakan KWRN' },
+    { value: 'ancaman', label: 'Ancaman KBRN' },
+    { value: 'temuan', label: 'Temuan KBRN' },
+    { value: 'ledakan', label: 'Ledakan KBRN' },
 ];
 
 const findingTypes = [
@@ -473,10 +473,10 @@ onMounted(async () => {
 const submit = () => {
     if (props.mode === 'view') return;
     if (props.mode === 'edit' && props.item) {
-        form.put(`/kwrn/${props.item.id}`, { forceFormData: true });
+        form.put(`/kbrn/${props.item.id}`, { forceFormData: true });
         return;
     }
-    form.post('/kwrn', { forceFormData: true });
+    form.post('/kbrn', { forceFormData: true });
 };
 
 watch(isView, (v) => {
@@ -484,8 +484,8 @@ watch(isView, (v) => {
 });
 
 const title = computed(() => {
-    if (props.mode === 'view') return 'View KWRN';
-    return props.mode === 'edit' ? 'Edit KWRN' : 'Tambah KWRN';
+    if (props.mode === 'view') return 'View KBRN';
+    return props.mode === 'edit' ? 'Edit KBRN' : 'Tambah KBRN';
 });
 </script>
 
@@ -498,10 +498,10 @@ const title = computed(() => {
                 <h1 class="text-lg font-semibold tracking-widest text-green-200">
                     > {{
                         props.mode === 'view'
-                            ? 'VIEW KWRN'
+                            ? 'VIEW KBRN'
                             : props.mode === 'edit'
-                              ? 'EDIT KWRN'
-                              : 'TAMBAH KWRN'
+                              ? 'EDIT KBRN'
+                              : 'TAMBAH KBRN'
                     }}
                 </h1>
                 <Badge class="border border-green-500/25 bg-black/30 text-green-200">
@@ -510,10 +510,10 @@ const title = computed(() => {
             </div>
             <div class="flex items-center gap-2">
                 <Button variant="secondary" as-child>
-                    <Link href="/kwrn">Back</Link>
+                    <Link href="/kbrn">Back</Link>
                 </Button>
                 <Button v-if="props.mode === 'view' && props.item" variant="secondary" as-child>
-                    <Link :href="`/kwrn/${props.item.id}/edit`">Edit</Link>
+                    <Link :href="`/kbrn/${props.item.id}/edit`">Edit</Link>
                 </Button>
             </div>
         </div>
@@ -620,7 +620,7 @@ const title = computed(() => {
             </div>
 
             <div v-if="isTemuan" class="grid gap-2">
-                <Label>Temuan KWRN</Label>
+                <Label>Temuan KBRN</Label>
                 <Select v-model="form.finding_type">
                     <SelectTrigger class="w-full" :disabled="isView">
                         <SelectValue placeholder="Pilih jenis temuan" />
@@ -948,7 +948,7 @@ const title = computed(() => {
                     :disabled="form.processing"
                     as-child
                 >
-                    <Link href="/kwrn">Cancel</Link>
+                    <Link href="/kbrn">Cancel</Link>
                 </Button>
             </div>
         </div>

@@ -34,7 +34,7 @@ const dashboardUrl = computed(() => '/dashboard');
 const ipoleksosbudkamBaseUrl = computed(() => '/ipoleksosbudkam');
 const ipoleksosbudkamUrl = (path: string) => `/ipoleksosbudkam/${path}`;
 const jibomUrl = (path?: string) => (path ? `/jibom${path}` : '/jibom');
-const kwrnUrl = (path?: string) => (path ? `/kwrn${path}` : '/kwrn');
+const kbrnUrl = (path?: string) => (path ? `/kbrn${path}` : '/kbrn');
 const wanTerorUrl = (path?: string) =>
     path ? `/wan-teror${path}` : '/wan-teror';
 const worldMonitoringUrl = computed(() => '/world-monitoring');
@@ -211,21 +211,21 @@ const mainNavItems = computed<NavItem[]>(() => [
         ],
     },
     {
-        title: 'KWRN',
-        href: kwrnUrl(),
+        title: 'KBRN',
+        href: kbrnUrl(),
         icon: Shield,
         children: [
             {
-                title: 'Ancaman KWRN',
-                href: kwrnUrl('?type=ancaman'),
+                title: 'Ancaman KBRN',
+                href: kbrnUrl('?type=ancaman'),
             },
             {
-                title: 'Temuan KWRN',
-                href: kwrnUrl('?type=temuan'),
+                title: 'Temuan KBRN',
+                href: kbrnUrl('?type=temuan'),
             },
             {
-                title: 'Ledakan KWRN',
-                href: kwrnUrl('?type=ledakan'),
+                title: 'Ledakan KBRN',
+                href: kbrnUrl('?type=ledakan'),
             },
         ],
     },

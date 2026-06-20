@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Jibom\JibomIncidentController;
-use App\Http\Controllers\Kwrn\KwrnIncidentController;
+use App\Http\Controllers\KBRN\KBRNIncidentController;
 use App\Http\Controllers\WanTeror\WanTerorIncidentController;
 use App\Http\Controllers\WilayahController;
 
@@ -260,7 +260,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $tables = [
                 'jibom' => 'jibom_incidents',
-                'kwrn' => 'kwrn_incidents',
+                'kbrn' => 'kbrn_incidents',
                 'wan_teror' => 'wan_teror_incidents',
             ];
 
@@ -340,7 +340,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             };
 
             $jibomTypes = ['ancaman', 'temuan', 'ledakan'];
-            $kwrnTypes = ['ancaman', 'temuan', 'ledakan'];
+            $kbrnTypes = ['ancaman', 'temuan', 'ledakan'];
             $wanTerorTypes = [
                 'napiter',
                 'ex-napiter',
@@ -351,7 +351,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $totals = [
                 'jibom' => $safeCount($tables['jibom']),
-                'kwrn' => $safeCount($tables['kwrn']),
+                'kbrn' => $safeCount($tables['kbrn']),
                 'wanTeror' => $safeCount($tables['wan_teror']),
             ];
             $totals['all'] = array_sum($totals);
@@ -372,18 +372,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'href' => '/jibom',
                 ],
                 [
-                    'key' => 'kwrn',
-                    'title' => 'KWRN',
-                    'total' => $totals['kwrn'],
+                    'key' => 'kbrn',
+                    'title' => 'KBRN',
+                    'total' => $totals['kbrn'],
                     'types' => [
-                        ['value' => 'ancaman', 'label' => 'Ancaman KWRN'],
-                        ['value' => 'temuan', 'label' => 'Temuan KWRN'],
-                        ['value' => 'ledakan', 'label' => 'Ledakan KWRN'],
+                        ['value' => 'ancaman', 'label' => 'Ancaman KBRN'],
+                        ['value' => 'temuan', 'label' => 'Temuan KBRN'],
+                        ['value' => 'ledakan', 'label' => 'Ledakan KBRN'],
                     ],
-                    'countsByType' => $safeCountsByType($tables['kwrn'], $kwrnTypes),
-                    'topProvinces' => $safeTopProvinces($tables['kwrn'], $kwrnTypes),
-                    'lastCreatedAt' => $safeMaxCreatedAt($tables['kwrn']),
-                    'href' => '/kwrn',
+                    'countsByType' => $safeCountsByType($tables['kbrn'], $kbrnTypes),
+                    'topProvinces' => $safeTopProvinces($tables['kbrn'], $kbrnTypes),
+                    'lastCreatedAt' => $safeMaxCreatedAt($tables['kbrn']),
+                    'href' => '/kbrn',
                 ],
                 [
                     'key' => 'wanTeror',
@@ -463,14 +463,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             };
 
             $mJibom = $safeMonthlyCounts($tables['jibom']);
-            $mKwrn = $safeMonthlyCounts($tables['kwrn']);
+            $mKBRN = $safeMonthlyCounts($tables['kbrn']);
             $mWanTeror = $safeMonthlyCounts($tables['wan_teror']);
 
             $monthly = [
                 'months' => $monthKeys,
                 'series' => [
                     'jibom' => array_map(fn($k) => (int) ($mJibom[$k] ?? 0), $monthKeys),
-                    'kwrn' => array_map(fn($k) => (int) ($mKwrn[$k] ?? 0), $monthKeys),
+                    'kbrn' => array_map(fn($k) => (int) ($mKBRN[$k] ?? 0), $monthKeys),
                     'wanTeror' => array_map(fn($k) => (int) ($mWanTeror[$k] ?? 0), $monthKeys),
                 ],
             ];
@@ -553,8 +553,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
     })->name('api.jibom.indonesia-map-svg');
 
-    Route::get('api/kwrn/indonesia-map-svg', function () {
-        $path = resolveIndonesiaMapSvgPath(env('KWRN_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH')));
+    Route::get('api/kbrn/indonesia-map-svg', function () {
+        $path = resolveIndonesiaMapSvgPath(env('KBRN_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH')));
         if (! is_string($path) || trim($path) === '') {
             return response()->json(['message' => 'Map file not found.'], 404);
         }
@@ -566,7 +566,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return response($svg, 200)
             ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
-    })->name('api.kwrn.indonesia-map-svg');
+    })->name('api.kbrn.indonesia-map-svg');
 
     Route::get('api/wan-teror/indonesia-map-svg', function () {
         $path = resolveIndonesiaMapSvgPath(env('WAN_TEROR_MAP_SVG_PATH', env('JIBOM_MAP_SVG_PATH')));
@@ -617,14 +617,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('jibom/{incident}', [JibomIncidentController::class, 'update'])->name('jibom.update');
         Route::delete('jibom/{incident}', [JibomIncidentController::class, 'destroy'])->name('jibom.destroy');
 
-        Route::get('api/kwrn/counts-by-province', function (Request $request) {
+        Route::get('api/kbrn/counts-by-province', function (Request $request) {
             $type = $request->query('type');
             $allowedTypes = ['ancaman', 'temuan', 'ledakan'];
             if (is_string($type) && $type !== '' && ! in_array($type, $allowedTypes, true)) {
                 return response()->json(['message' => 'Invalid type.'], 422);
             }
 
-            $query = DB::table('kwrn_incidents as ki')
+            $query = DB::table('kbrn_incidents as ki')
                 ->join('reg_provinces as p', 'p.id', '=', 'ki.province_id')
                 ->select([
                     'p.id',
@@ -640,15 +640,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $rows = $query->orderByDesc('count')->get();
 
             return response()->json(['data' => $rows]);
-        })->name('api.kwrn.counts-by-province');
+        })->name('api.kbrn.counts-by-province');
 
-        Route::get('kwrn', [KwrnIncidentController::class, 'index'])->name('kwrn.index');
-        Route::get('kwrn/create', [KwrnIncidentController::class, 'create'])->name('kwrn.create');
-        Route::post('kwrn', [KwrnIncidentController::class, 'store'])->name('kwrn.store');
-        Route::get('kwrn/{incident}', [KwrnIncidentController::class, 'show'])->name('kwrn.show');
-        Route::get('kwrn/{incident}/edit', [KwrnIncidentController::class, 'edit'])->name('kwrn.edit');
-        Route::put('kwrn/{incident}', [KwrnIncidentController::class, 'update'])->name('kwrn.update');
-        Route::delete('kwrn/{incident}', [KwrnIncidentController::class, 'destroy'])->name('kwrn.destroy');
+        Route::get('kbrn', [KBRNIncidentController::class, 'index'])->name('kbrn.index');
+        Route::get('kbrn/create', [KBRNIncidentController::class, 'create'])->name('kbrn.create');
+        Route::post('kbrn', [KBRNIncidentController::class, 'store'])->name('kbrn.store');
+        Route::get('kbrn/{incident}', [KBRNIncidentController::class, 'show'])->name('kbrn.show');
+        Route::get('kbrn/{incident}/edit', [KBRNIncidentController::class, 'edit'])->name('kbrn.edit');
+        Route::put('kbrn/{incident}', [KBRNIncidentController::class, 'update'])->name('kbrn.update');
+        Route::delete('kbrn/{incident}', [KBRNIncidentController::class, 'destroy'])->name('kbrn.destroy');
 
         Route::get('api/wan-teror/counts-by-province', function (Request $request) {
             $type = $request->query('type');

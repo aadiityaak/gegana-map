@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('news_url', 2048)->nullable();
         });
 
-        Schema::table('kwrn_incidents', function (Blueprint $table) {
+        Schema::table('kbrn_incidents', function (Blueprint $table) {
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->string('news_source', 10)->default('offline');
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->dropColumn(['latitude', 'longitude', 'news_source', 'news_url']);
         });
 
-        Schema::table('kwrn_incidents', function (Blueprint $table) {
+        Schema::table('kbrn_incidents', function (Blueprint $table) {
             $table->dropColumn(['latitude', 'longitude', 'news_source', 'news_url']);
         });
 

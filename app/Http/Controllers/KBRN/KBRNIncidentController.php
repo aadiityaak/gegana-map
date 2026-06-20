@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Kwrn;
+namespace App\Http\Controllers\KBRN;
 
 use App\Http\Controllers\Controller;
-use App\Models\KwrnIncident;
+use App\Models\KBRNIncident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
-class KwrnIncidentController extends Controller
+class KBRNIncidentController extends Controller
 {
     public function index(Request $request)
     {
@@ -33,7 +33,7 @@ class KwrnIncidentController extends Controller
             }
         }
 
-        $query = DB::table('kwrn_incidents as ki')
+        $query = DB::table('kbrn_incidents as ki')
             ->leftJoin('reg_provinces as p', 'p.id', '=', 'ki.province_id')
             ->leftJoin('reg_regencies as r', 'r.id', '=', 'ki.regency_id')
             ->leftJoin('reg_districts as d', 'd.id', '=', 'ki.district_id')
@@ -66,7 +66,7 @@ class KwrnIncidentController extends Controller
 
         $items = $query->orderByDesc('ki.id')->paginate(20)->withQueryString();
 
-        return Inertia::render('kwrn/Index', [
+        return Inertia::render('kbrn/Index', [
             'items' => $items,
             'filters' => [
                 'type' => $type,
@@ -77,7 +77,7 @@ class KwrnIncidentController extends Controller
 
     public function create(Request $request)
     {
-        return Inertia::render('kwrn/Form', [
+        return Inertia::render('kbrn/Form', [
             'mode' => 'create',
             'item' => null,
             'filters' => [
@@ -104,14 +104,14 @@ class KwrnIncidentController extends Controller
         $data['description'] = $this->sanitizeDescription($validated['description'] ?? null);
         $data['photos'] = $this->storePhotos($request, []);
 
-        KwrnIncident::create($data);
+        KBRNIncident::create($data);
 
-        return redirect('/kwrn');
+        return redirect('/kbrn');
     }
 
-    public function show(KwrnIncident $incident)
+    public function show(KBRNIncident $incident)
     {
-        $row = DB::table('kwrn_incidents as ki')
+        $row = DB::table('kbrn_incidents as ki')
             ->leftJoin('reg_provinces as p', 'p.id', '=', 'ki.province_id')
             ->leftJoin('reg_regencies as r', 'r.id', '=', 'ki.regency_id')
             ->leftJoin('reg_districts as d', 'd.id', '=', 'ki.district_id')
@@ -171,7 +171,7 @@ class KwrnIncidentController extends Controller
             ]
             : $incident;
 
-        return Inertia::render('kwrn/Form', [
+        return Inertia::render('kbrn/Form', [
             'mode' => 'view',
             'item' => $item,
             'filters' => [
@@ -180,9 +180,9 @@ class KwrnIncidentController extends Controller
         ]);
     }
 
-    public function edit(KwrnIncident $incident)
+    public function edit(KBRNIncident $incident)
     {
-        return Inertia::render('kwrn/Form', [
+        return Inertia::render('kbrn/Form', [
             'mode' => 'edit',
             'item' => $incident,
             'filters' => [
@@ -191,7 +191,7 @@ class KwrnIncidentController extends Controller
         ]);
     }
 
-    public function update(Request $request, KwrnIncident $incident)
+    public function update(Request $request, KBRNIncident $incident)
     {
         $validated = $this->validatePayload($request);
         $data = Arr::only($validated, [
@@ -222,14 +222,14 @@ class KwrnIncidentController extends Controller
 
         $incident->update($data);
 
-        return redirect('/kwrn');
+        return redirect('/kbrn');
     }
 
-    public function destroy(KwrnIncident $incident)
+    public function destroy(KBRNIncident $incident)
     {
         $incident->delete();
 
-        return redirect('/kwrn');
+        return redirect('/kbrn');
     }
 
     private function validatePayload(Request $request): array
@@ -278,7 +278,7 @@ class KwrnIncidentController extends Controller
             if (! $file) {
                 continue;
             }
-            $uploaded[] = $file->store('kwrn', 'public');
+            $uploaded[] = $file->store('kbrn', 'public');
         }
 
         return array_values(array_filter(array_merge($keep, $uploaded)));
