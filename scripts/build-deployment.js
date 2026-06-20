@@ -52,6 +52,7 @@ const includeFiles = [
     '.env.example',
     'composer.json',
     'composer.lock',
+    'package.json',
 ];
 
 const includePublicFiles = [
