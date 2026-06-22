@@ -19,7 +19,6 @@ const props = defineProps<{
         name: string;
         version: string;
         environment: string;
-        url: string;
     };
     backend: {
         php: string;
@@ -80,7 +79,7 @@ const frontendDevDepsLines = computed(() =>
                 <div>> nama: {{ props.app.name }}</div>
                 <div>> versi: v{{ props.app.version }}</div>
                 <div>> env: {{ props.app.environment }}</div>
-                <div>> url: {{ props.app.url }}</div>
+
             </div>
         </div>
 

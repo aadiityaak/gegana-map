@@ -31,7 +31,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'name' => config('app.name'),
             'version' => env('APP_VERSION', '1.0.0'),
             'environment' => config('app.env'),
-            'url' => config('app.url'),
         ],
         'backend' => fn () => [
             'php' => PHP_VERSION,
