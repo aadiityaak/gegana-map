@@ -58,6 +58,16 @@ const findingTypes = [
     { value: 'biologi', label: 'Biologi' },
     { value: 'radioaktif', label: 'Radioaktif' },
     { value: 'nuklir', label: 'Nuklir' },
+    { value: 'amoniak', label: 'Amoniak' },
+    { value: 'gas-beracun', label: 'Gas Beracun' },
+    { value: 'klorin', label: 'Klorin' },
+    { value: 'asam-sulfat', label: 'Asam Sulfat' },
+    { value: 'asam-nitrat', label: 'Asam Nitrat' },
+    { value: 'racun-tikus', label: 'Racun Tikus' },
+    { value: 'senyawa-organik', label: 'Senyawa Organik' },
+    { value: 'sianida', label: 'Sianida' },
+    { value: 'logam-berat', label: 'Logam Berat' },
+    { value: 'bahan-radiasi', label: 'Bahan Radiasi' },
     { value: 'lainnya', label: 'Lainnya' },
 ];
 

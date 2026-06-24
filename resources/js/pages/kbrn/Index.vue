@@ -40,7 +40,7 @@ type Paginated<T> = {
 
 const props = defineProps<{
     items: Paginated<KBRNItem>;
-    filters: { type: string | null; province_id: string | null };
+    filters: { type: string | null; finding_type: string | null; province_id: string | null };
 }>();
 
 const typeLabel = (value: string) =>
@@ -56,6 +56,16 @@ const findingLabel = (value: string | null) =>
         biologi: 'Biologi',
         radioaktif: 'Radioaktif',
         nuklir: 'Nuklir',
+        amoniak: 'Amoniak',
+        'gas-beracun': 'Gas Beracun',
+        klorin: 'Klorin',
+        'asam-sulfat': 'Asam Sulfat',
+        'asam-nitrat': 'Asam Nitrat',
+        'racun-tikus': 'Racun Tikus',
+        'senyawa-organik': 'Senyawa Organik',
+        sianida: 'Sianida',
+        'logam-berat': 'Logam Berat',
+        'bahan-radiasi': 'Bahan Radiasi',
         lainnya: 'Lainnya',
     })[value ?? ''] ?? value ?? '-';
 
@@ -65,6 +75,7 @@ const newsSourceLabel = (value: string | null | undefined) => {
 };
 
 const currentType = computed(() => props.filters.type);
+const currentFindingType = computed(() => props.filters.finding_type);
 const currentProvinceId = computed(() => props.filters.province_id);
 
 const createHref = computed(() => {
@@ -72,9 +83,10 @@ const createHref = computed(() => {
     return `/kbrn/create?type=${encodeURIComponent(currentType.value)}`;
 });
 
-const listHref = (type: string | null) => {
+const listHref = (type: string | null, findingType: string | null = null) => {
     const qs = new URLSearchParams();
     if (type) qs.set('type', type);
+    if (findingType) qs.set('finding_type', findingType);
     if (currentProvinceId.value) qs.set('province_id', currentProvinceId.value);
     const s = qs.toString();
     return s ? `/kbrn?${s}` : '/kbrn';
@@ -366,29 +378,148 @@ onMounted(async () => {
                 :class="currentType ? '' : 'border-green-500/25 bg-green-500/10 text-green-200'"
                 as-child
             >
-                <Link :href="listHref(null)">Semua</Link>
+                <Link :href="listHref(null, null)">Semua</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'ancaman' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link :href="listHref('ancaman')">Ancaman</Link>
+                <Link :href="listHref('ancaman', null)">Ancaman</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'temuan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link :href="listHref('temuan')">Temuan</Link>
+                <Link :href="listHref('temuan', null)">Temuan</Link>
             </Button>
             <Button
                 variant="secondary"
                 :class="currentType === 'ledakan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
                 as-child
             >
-                <Link :href="listHref('ledakan')">Ledakan</Link>
+                <Link :href="listHref('ledakan', null)">Ledakan</Link>
             </Button>
+        </div>
+
+        <div v-if="currentType === 'temuan'" class="mb-4">
+            <div class="rounded-xl border border-green-500/15 bg-black/20 p-2">
+                <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                    <Button
+                        variant="secondary"
+                        :class="!currentFindingType ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', null)">Semua Kategori</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'kimia' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'kimia')">Kimia</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'biologi' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'biologi')">Biologi</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'amoniak' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'amoniak')">Amoniak</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'gas-beracun' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'gas-beracun')">Gas Beracun</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'klorin' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'klorin')">Klorin</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'asam-sulfat' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'asam-sulfat')">Asam Sulfat</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'asam-nitrat' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'asam-nitrat')">Asam Nitrat</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'racun-tikus' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'racun-tikus')">Racun Tikus</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'senyawa-organik' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'senyawa-organik')">Senyawa Organik</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'sianida' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'sianida')">Sianida</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'logam-berat' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'logam-berat')">Logam Berat</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'radioaktif' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'radioaktif')">Radioaktif</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'nuklir' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'nuklir')">Nuklir</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'bahan-radiasi' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'bahan-radiasi')">Bahan Radiasi</Link>
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        :class="currentFindingType === 'lainnya' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                        as-child
+                    >
+                        <Link :href="listHref('temuan', 'lainnya')">Lainnya</Link>
+                    </Button>
+                </div>
+            </div>
         </div>
 
         <div class="mb-4 rounded-xl border border-green-500/15 bg-black/20 p-3">

@@ -20,6 +20,28 @@ class KBRNIncidentController extends Controller
             $type = null;
         }
 
+        $findingType = $request->query('finding_type');
+        $allowedFindingTypes = [
+            'kimia',
+            'biologi',
+            'radioaktif',
+            'nuklir',
+            'amoniak',
+            'gas-beracun',
+            'klorin',
+            'asam-sulfat',
+            'asam-nitrat',
+            'racun-tikus',
+            'senyawa-organik',
+            'sianida',
+            'logam-berat',
+            'bahan-radiasi',
+            'lainnya'
+        ];
+        if (is_string($findingType) && $findingType !== '' && ! in_array($findingType, $allowedFindingTypes, true)) {
+            $findingType = null;
+        }
+
         $provinceId = $request->query('province_id');
         if (is_string($provinceId)) {
             $provinceId = trim($provinceId);
@@ -60,6 +82,10 @@ class KBRNIncidentController extends Controller
             $query->where('ki.incident_type', $type);
         }
 
+        if (is_string($findingType) && $findingType !== '') {
+            $query->where('ki.finding_type', $findingType);
+        }
+
         if (is_string($provinceId) && $provinceId !== '') {
             $query->where('ki.province_id', $provinceId);
         }
@@ -70,6 +96,7 @@ class KBRNIncidentController extends Controller
             'items' => $items,
             'filters' => [
                 'type' => $type,
+                'finding_type' => $findingType,
                 'province_id' => $provinceId,
             ],
         ]);
@@ -234,7 +261,23 @@ class KBRNIncidentController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        $findingTypes = ['kimia', 'biologi', 'radioaktif', 'nuklir', 'lainnya'];
+        $findingTypes = [
+            'kimia',
+            'biologi',
+            'radioaktif',
+            'nuklir',
+            'amoniak',
+            'gas-beracun',
+            'klorin',
+            'asam-sulfat',
+            'asam-nitrat',
+            'racun-tikus',
+            'senyawa-organik',
+            'sianida',
+            'logam-berat',
+            'bahan-radiasi',
+            'lainnya'
+        ];
 
         return $request->validate([
             'incident_type' => ['required', 'string', Rule::in(['ancaman', 'temuan', 'ledakan'])],
