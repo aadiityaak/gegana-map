@@ -1233,9 +1233,8 @@ watchEffect(() => {
                     </Badge>
                 </div>
                 <div class="text-xs tracking-wide text-green-300/60">
-                    > data_source: crime-map / endpoint_proxy
                     <span v-if="meta">
-                        · total: {{ meta.total }}
+                        total: {{ meta.total }}
                         · range: {{ meta.start_date }} → {{ meta.end_date }}
                     </span>
                 </div>

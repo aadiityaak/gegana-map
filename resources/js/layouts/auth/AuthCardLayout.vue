@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import AppLogo from '@/components/AppLogo.vue';
 import {
     Card,
     CardContent,
@@ -14,27 +14,6 @@ defineProps<{
     title?: string;
     description?: string;
 }>();
-
-const defaultLogoUrl = '/branding/lgo.png';
-const customLogoDataUrl = ref<string | null>(null);
-
-const loadBranding = () => {
-    if (typeof window === 'undefined') return;
-    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
-};
-
-const brandingLogo = computed(() =>
-    customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : defaultLogoUrl,
-);
-
-onMounted(() => {
-    loadBranding();
-    window.addEventListener('branding:update', loadBranding as EventListener);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('branding:update', loadBranding as EventListener);
-});
 </script>
 
 <template>
@@ -47,11 +26,7 @@ onUnmounted(() => {
                 class="flex items-center gap-2 self-center font-medium"
             >
                 <div class="flex h-9 w-9 items-center justify-center">
-                    <img
-                        :src="brandingLogo"
-                        alt="Logo"
-                        class="size-9 object-contain"
-                    />
+                    <AppLogo />
                 </div>
             </Link>
 

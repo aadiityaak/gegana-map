@@ -1,33 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import AppLogo from '@/components/AppLogo.vue';
 import { home } from '@/routes';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
-
-const defaultLogoUrl = '/branding/lgo.png';
-const customLogoDataUrl = ref<string | null>(null);
-
-const loadBranding = () => {
-    if (typeof window === 'undefined') return;
-    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
-};
-
-const brandingLogo = computed(() =>
-    customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : defaultLogoUrl,
-);
-
-onMounted(() => {
-    loadBranding();
-    window.addEventListener('branding:update', loadBranding as EventListener);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('branding:update', loadBranding as EventListener);
-});
 </script>
 
 <template>
@@ -54,12 +33,8 @@ onUnmounted(() => {
                         :href="home()"
                         class="flex flex-col items-center gap-2 font-mono text-sm font-medium tracking-wider text-green-300"
                     >
-                        <div class="mb-1 h-12 w-full max-w-[340px] overflow-hidden rounded-md bg-black p-1">
-                            <img
-                                :src="brandingLogo"
-                                alt="Logo"
-                                class="h-full w-full object-contain"
-                            />
+                        <div class="mb-1 h-12 w-full max-w-[340px]">
+                            <AppLogo />
                         </div>
                         <span class="sr-only">{{ title }}</span>
                     </Link>

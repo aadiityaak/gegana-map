@@ -22,7 +22,7 @@ const src = 'https://world.pemetaankerawanan.my.id/';
         <div class="rounded-xl border border-green-500/15 bg-black/20 p-4">
             <div class="mb-3 flex items-center justify-between text-xs text-green-300/60">
                 <div>> WORLD MONITORING</div>
-                <div class="text-[11px]">> iframe</div>
+                <div class="text-[11px]">></div>
             </div>
 
             <div class="overflow-hidden rounded-lg border border-green-500/15 bg-black/30">

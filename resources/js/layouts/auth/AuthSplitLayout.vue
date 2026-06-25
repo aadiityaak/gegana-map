@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
+import AppLogo from '@/components/AppLogo.vue';
 import { home } from '@/routes';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const page = usePage();
 const name = page.props.name;
@@ -10,27 +10,6 @@ defineProps<{
     title?: string;
     description?: string;
 }>();
-
-const defaultLogoUrl = '/branding/lgo.png';
-const customLogoDataUrl = ref<string | null>(null);
-
-const loadBranding = () => {
-    if (typeof window === 'undefined') return;
-    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
-};
-
-const brandingLogo = computed(() =>
-    customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : defaultLogoUrl,
-);
-
-onMounted(() => {
-    loadBranding();
-    window.addEventListener('branding:update', loadBranding as EventListener);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('branding:update', loadBranding as EventListener);
-});
 </script>
 
 <template>
@@ -45,11 +24,7 @@ onUnmounted(() => {
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"
             >
-                <img
-                    :src="brandingLogo"
-                    alt="Logo"
-                    class="mr-2 size-8 object-contain"
-                />
+                <AppLogo class="mr-2 size-8" />
                 {{ name }}
             </Link>
         </div>
