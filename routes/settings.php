@@ -28,7 +28,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('settings/branding', 'settings/Branding')->name('branding.edit');
     Route::inertia('settings/about', 'settings/About', [
         'app' => fn () => [
-            'name' => config('app.name'),
             'version' => env('APP_VERSION', '1.0.0'),
             'environment' => config('app.env'),
         ],

@@ -32,7 +32,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-md bg-black p-1">
+    <div class="overflow-hidden rounded-md bg-black p-1 max-w-[300px] max-h-[100px]">
         <img
             :src="brandingLogo"
             alt="Logo"

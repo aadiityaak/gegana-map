@@ -140,7 +140,7 @@ onMounted(load);
                     <img
                         :src="resolvedLogoSrc"
                         alt="Logo preview"
-                        class="h-10 w-10 rounded-md object-contain"
+                        class="max-h-[300px] max-w-[300px] rounded-md object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
                         {{ logoDataUrl ? 'Custom logo (tersimpan lokal)' : 'Default logo' }}
@@ -162,7 +162,7 @@ onMounted(load);
                     <img
                         :src="resolvedFaviconSrc"
                         alt="Favicon preview"
-                        class="h-8 w-8 rounded object-contain"
+                        class="max-h-[300px] max-w-[300px] rounded object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
                         {{

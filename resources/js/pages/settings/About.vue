@@ -16,7 +16,6 @@ defineOptions({
 
 const props = defineProps<{
     app: {
-        name: string;
         version: string;
         environment: string;
     };
@@ -76,7 +75,6 @@ const frontendDevDepsLines = computed(() =>
                 > APP
             </div>
             <div class="mt-3 grid gap-2 text-sm text-green-200/85">
-                <div>> nama: {{ props.app.name }}</div>
                 <div>> versi: v{{ props.app.version }}</div>
                 <div>> env: {{ props.app.environment }}</div>
 
@@ -88,15 +86,19 @@ const frontendDevDepsLines = computed(() =>
                 > BACKEND
             </div>
             <div class="mt-3 grid gap-2 text-sm text-green-200/85">
-                <div>> php: {{ props.backend.php }}</div>
-                <div>> laravel: {{ props.backend.laravel }}</div>
+                <div class="flex items-baseline"><span class="shrink-0">> php: {{ props.backend.php }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
+                <div class="flex items-baseline"><span class="shrink-0">> laravel: {{ props.backend.laravel }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
             </div>
 
             <div class="mt-4 grid gap-3">
                 <div class="text-xs text-green-300/60">> composer require</div>
-                <pre class="max-h-[260px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">{{ backendRequireLines.join('\n') }}</pre>
+                <div class="grid gap-1 max-h-[260px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">
+                    <div v-for="line in backendRequireLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
+                </div>
                 <div class="text-xs text-green-300/60">> composer require-dev</div>
-                <pre class="max-h-[220px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">{{ backendRequireDevLines.join('\n') }}</pre>
+                <div class="grid gap-1 max-h-[220px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">
+                    <div v-for="line in backendRequireDevLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
+                </div>
             </div>
         </div>
 
@@ -106,9 +108,13 @@ const frontendDevDepsLines = computed(() =>
             </div>
             <div class="mt-4 grid gap-3">
                 <div class="text-xs text-green-300/60">> npm dependencies</div>
-                <pre class="max-h-[260px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">{{ frontendDepsLines.join('\n') }}</pre>
+                <div class="grid gap-1 max-h-[260px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">
+                    <div v-for="line in frontendDepsLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
+                </div>
                 <div class="text-xs text-green-300/60">> npm devDependencies</div>
-                <pre class="max-h-[220px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">{{ frontendDevDepsLines.join('\n') }}</pre>
+                <div class="grid gap-1 max-h-[220px] overflow-auto rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-200/85">
+                    <div v-for="line in frontendDevDepsLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-green-200/30"></span><span class="shrink-0"> installed</span></div>
+                </div>
             </div>
         </div>
     </div>
