@@ -953,6 +953,16 @@ const riskSummary = computed<RiskRow[]>(() => {
     ];
 });
 
+const riskColor = (key: string): string => {
+    const colors: Record<string, string> = {
+        critical: '#ef4444',
+        high: '#f97316',
+        medium: '#eab308',
+        low: '#22c55e',
+    };
+    return colors[key] ?? '#6b7280';
+};
+
 const formatNumber = (value: number) => new Intl.NumberFormat('id-ID').format(value);
 
 const ensureListMap = async () => {
@@ -1449,8 +1459,12 @@ watchEffect(() => {
                                     </div>
                                     <div class="h-2 w-full overflow-hidden rounded bg-black/40">
                                         <div
-                                            class="h-full rounded bg-green-500/40"
-                                            :style="{ width: `${Math.max(0, Math.min(100, row.percent))}%` }"
+                                            class="h-full rounded"
+                                            :style="{
+                                                width: `${Math.max(0, Math.min(100, row.percent))}%`,
+                                                backgroundColor: riskColor(row.key),
+                                                opacity: 0.6,
+                                            }"
                                         />
                                     </div>
                                 </div>
