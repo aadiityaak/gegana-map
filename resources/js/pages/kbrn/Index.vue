@@ -562,11 +562,11 @@ onMounted(async () => {
             <div class="min-w-[860px]">
                 <div class="grid grid-cols-12 gap-2 border-b border-green-500/15 p-3 text-xs text-green-300/70">
                     <div class="col-span-1">ID</div>
-                    <div class="col-span-3">Jenis</div>
+                    <div class="col-span-2">Jenis</div>
                     <div class="col-span-2">Temuan</div>
                     <div class="col-span-1">Sumber</div>
                     <div class="col-span-4">Wilayah</div>
-                    <div class="col-span-1 text-right">Aksi</div>
+                    <div class="col-span-2 text-right">Aksi</div>
                 </div>
                 <div v-if="props.items.data.length === 0" class="p-4 text-xs text-green-300/60">
                     > belum ada data.
@@ -577,7 +577,7 @@ onMounted(async () => {
                     class="grid grid-cols-12 gap-2 border-b border-green-500/10 p-3 text-xs text-green-200/85 last:border-b-0"
                 >
                     <div class="col-span-1">{{ row.id }}</div>
-                    <div class="col-span-3">
+                    <div class="col-span-2">
                         {{ typeLabel(row.incident_type) }}
                     </div>
                     <div class="col-span-2">
@@ -603,7 +603,7 @@ onMounted(async () => {
                             </span>
                         </div>
                     </div>
-                    <div class="col-span-1 flex justify-end gap-2">
+                    <div class="col-span-2 flex justify-end gap-2">
                         <Button size="sm" variant="secondary" as-child>
                             <Link :href="`/kbrn/${row.id}`">View</Link>
                         </Button>

@@ -440,8 +440,8 @@ onMounted(async () => {
                     <div class="col-span-1">ID</div>
                     <div class="col-span-4">Kategori</div>
                     <div class="col-span-1">Sumber</div>
-                    <div class="col-span-5">Wilayah</div>
-                    <div class="col-span-1 text-right">Aksi</div>
+                    <div class="col-span-4">Wilayah</div>
+                    <div class="col-span-2 text-right">Aksi</div>
                 </div>
                 <div
                     v-if="props.items.data.length === 0"
@@ -469,7 +469,7 @@ onMounted(async () => {
                             {{ newsSourceLabel(row.news_source) }}
                         </span>
                     </div>
-                    <div class="col-span-5">
+                    <div class="col-span-4">
                         {{
                             [row.village_name, row.district_name, row.regency_name, row.province_name]
                                 .filter(Boolean)
@@ -491,18 +491,14 @@ onMounted(async () => {
                             </span>
                         </div>
                     </div>
-                    <div class="col-span-1 flex justify-end gap-2">
+                    <div class="col-span-2 flex justify-end gap-2">
                         <Button size="sm" variant="secondary" as-child>
                             <Link :href="`/wan-teror/${row.id}`">View</Link>
                         </Button>
                         <Button size="sm" variant="secondary" as-child>
                             <Link :href="`/wan-teror/${row.id}/edit`">Edit</Link>
                         </Button>
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            @click="deleteItem(row.id)"
-                        >
+                        <Button size="sm" variant="destructive" @click="deleteItem(row.id)">
                             Hapus
                         </Button>
                     </div>
