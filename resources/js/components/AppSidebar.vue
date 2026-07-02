@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
+    Activity,
     AlertTriangle,
     Bomb,
     Brain,
@@ -260,6 +261,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: 'WORLD MONITORING',
         href: worldMonitoringUrl.value,
         icon: Globe,
+    },
+    {
+        title: 'HERMES LOGS',
+        href: '/hermes-logs',
+        icon: Activity,
     },
 ]);
 

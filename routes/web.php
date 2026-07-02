@@ -584,6 +584,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('api.wan-teror.indonesia-map-svg');
 
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
+        Route::inertia('hermes-logs', 'hermes/Logs')->name('hermes.logs');
+
+        Route::get('api/hermes/logs', function (Request $request) {
+            $since = $request->query('since');
+            $query = DB::table('hermes_agent_logs')->orderByDesc('id');
+            if (is_string($since) && ctype_digit($since)) {
+                $query->where('id', '>', (int) $since);
+            }
+            $logs = $query->limit(100)->get();
+            return response()->json(['logs' => $logs]);
+        })->name('api.hermes.logs');
+
         Route::get('api/jibom/counts-by-province', function (Request $request) {
             $type = $request->query('type');
             $allowedTypes = ['ancaman', 'temuan', 'ledakan'];
