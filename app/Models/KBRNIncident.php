@@ -26,4 +26,11 @@ class KBRNIncident extends Model
         'latitude' => 'float',
         'longitude' => 'float',
     ];
+
+    public function developments(): HasMany
+    {
+        return $this->hasMany(CaseDevelopment::class, 'incident_id')
+            ->where('incident_type', 'kbrn')
+            ->orderByDesc('reported_at');
+    }
 }

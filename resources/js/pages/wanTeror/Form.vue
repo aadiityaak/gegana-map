@@ -44,6 +44,14 @@ const props = defineProps<{
         village_name?: string | null;
     } | null;
     filters?: { type?: string | null };
+    developments?: {
+        id: number;
+        title: string;
+        description?: string | null;
+        source_url?: string | null;
+        reported_at?: string | null;
+        created_at?: string | null;
+    }[];
 }>();
 
 const incidentTypes = [
@@ -571,6 +579,36 @@ const title = computed(() => {
                 </div>
             </div>
 
+            <div v-if="isView && props.developments && props.developments.length" class="space-y-2">
+                <div class="text-xs tracking-widest text-green-300/60">PERKEMBANGAN KASUS</div>
+                <div class="space-y-2">
+                    <div
+                        v-for="dev in props.developments"
+                        :key="dev.id"
+                        class="rounded-lg border border-green-500/12 bg-black/25 p-3"
+                    >
+                        <div class="mb-1 flex items-center justify-between gap-2">
+                            <span class="text-sm font-medium text-green-200">{{ dev.title }}</span>
+                            <span class="shrink-0 text-[11px] text-green-300/50">
+                                {{ new Date(String(dev.reported_at ?? dev.created_at)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                            </span>
+                        </div>
+                        <p v-if="dev.description" class="text-xs leading-relaxed text-green-300/80">
+                            {{ dev.description }}
+                        </p>
+                        <a
+                            v-if="dev.source_url"
+                            :href="String(dev.source_url)"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="mt-1 inline-block text-[11px] text-green-400/60 underline underline-offset-4 hover:text-green-300"
+                        >
+                            {{ String(dev.source_url) }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div v-if="(props.item?.photos ?? []).length" class="space-y-2">
                 <div class="text-xs tracking-widest text-green-300/60">GALLERY</div>
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -906,6 +944,7 @@ const title = computed(() => {
                         <SelectContent>
                             <SelectItem value="offline">Offline</SelectItem>
                             <SelectItem value="online">Online</SelectItem>
+                            <SelectItem value="ai_agent">AI Agent</SelectItem>
                         </SelectContent>
                     </Select>
                     <InputError :message="form.errors.news_source" />

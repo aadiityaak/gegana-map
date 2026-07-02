@@ -26,4 +26,11 @@ class JibomIncident extends Model
         'latitude' => 'float',
         'longitude' => 'float',
     ];
+
+    public function developments(): HasMany
+    {
+        return $this->hasMany(CaseDevelopment::class, 'incident_id')
+            ->where('incident_type', 'jibom')
+            ->orderByDesc('reported_at');
+    }
 }

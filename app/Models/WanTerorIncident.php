@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WanTerorIncident extends Model
 {
@@ -26,4 +27,11 @@ class WanTerorIncident extends Model
         'latitude' => 'float',
         'longitude' => 'float',
     ];
+
+    public function developments(): HasMany
+    {
+        return $this->hasMany(CaseDevelopment::class, 'incident_id')
+            ->where('incident_type', 'wan_teror')
+            ->orderByDesc('reported_at');
+    }
 }

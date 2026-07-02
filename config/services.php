@@ -40,4 +40,8 @@ return [
         'data_token' => env('DATA_TOKEN'),
     ],
 
+    'hermes' => [
+        'api_token' => env('HERMES_API_TOKEN'),
+    ],
+
 ];

@@ -201,6 +201,7 @@ class KBRNIncidentController extends Controller
         return Inertia::render('kbrn/Form', [
             'mode' => 'view',
             'item' => $item,
+            'developments' => $incident->developments()->get()->toArray(),
             'filters' => [
                 'type' => $incident->incident_type,
             ],
@@ -290,7 +291,7 @@ class KBRNIncidentController extends Controller
             'description' => ['nullable', 'string', 'max:50000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
-            'news_source' => ['required', 'string', Rule::in(['offline', 'online'])],
+            'news_source' => ['required', 'string', Rule::in(['offline', 'online', 'ai_agent'])],
             'news_url' => [
                 'nullable',
                 'string',

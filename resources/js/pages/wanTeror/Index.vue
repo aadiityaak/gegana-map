@@ -54,6 +54,7 @@ const typeLabel = (value: string) =>
 
 const newsSourceLabel = (value: string | null | undefined) => {
     if (value === 'online') return 'online';
+    if (value === 'ai_agent') return 'ai agent';
     return 'offline';
 };
 
