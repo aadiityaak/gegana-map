@@ -475,7 +475,7 @@ onMounted(async () => {
                             [row.village_name, row.district_name, row.regency_name, row.province_name]
                                 .filter(Boolean)
                                 .join(', ') ||
-                                `${row.village_id}, ${row.district_id}, ${row.regency_id}, ${row.province_id}`
+                                '-'
                         }}
                         <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
                             <span

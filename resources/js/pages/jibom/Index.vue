@@ -455,7 +455,7 @@ onMounted(async () => {
                         {{
                             [row.village_name, row.district_name, row.regency_name, row.province_name]
                                 .filter(Boolean)
-                                .join(', ') || `${row.village_id}, ${row.district_id}, ${row.regency_id}, ${row.province_id}`
+                                .join(', ') || '-'
                         }}
                         <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
                             <span v-if="photosCount(row.photos) > 0" class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5">
