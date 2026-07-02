@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { Activity, Search, FileText, AlertCircle, Info, PlusCircle, InfoIcon, ArrowUpRight, RefreshCw, MapPin } from 'lucide-vue-next';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import { Activity, Search, FileText, AlertCircle, Info, PlusCircle, InfoIcon, ArrowUpRight, RefreshCw } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Heading from '@/components/Heading.vue';
@@ -14,14 +13,6 @@ type LogEntry = {
     message: string | null;
     metadata: string | null;
     created_at: string;
-};
-
-type MapMarker = {
-    id: number;
-    lat: number;
-    lng: number;
-    title: string;
-    type: string;
 };
 
 const logs = ref<LogEntry[]>([]);
@@ -71,113 +62,13 @@ const togglePause = () => {
     }
 };
 
-// --- Map ---
-const mapContainer = ref<HTMLDivElement | null>(null);
-let map: LeafletMap | null = null;
-let markersLayer: CircleMarker[] = [];
-
-const mapMarkers = computed<MapMarker[]>(() => {
-    const result: MapMarker[] = [];
-    for (const log of logs.value) {
-        if (result.length >= 20) break;
-        const meta = parseMeta(log.metadata);
-        const lat = parseFloat(meta.latitude ?? meta.lat);
-        const lng = parseFloat(meta.longitude ?? meta.lng ?? meta.lon);
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            result.push({ id: log.id, lat, lng, title: log.title, type: log.type });
-        }
-    }
-    return result;
-});
-
-const getLeaflet = async () => {
-    const mod = await import('leaflet');
-    return mod.default;
-};
-
-const initMap = async () => {
-    if (!mapContainer.value) return;
-    const L = await getLeaflet();
-
-    map = L.map(mapContainer.value, {
-        center: [-2.5, 118],
-        zoom: 5,
-        zoomControl: false,
-        attributionControl: false,
-    });
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-    }).addTo(map);
-
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    updateMapMarkers(L);
-};
-
-const updateMapMarkers = async (L?: any) => {
-    if (!map) return;
-    const leaflet = L ?? (await getLeaflet());
-
-    // Clear existing
-    markersLayer.forEach((m) => m.remove());
-    markersLayer = [];
-
-    const markers = mapMarkers.value;
-    if (markers.length === 0) return;
-
-    markers.forEach((m) => {
-        const c = leaflet.circleMarker([m.lat, m.lng], {
-            radius: 6,
-            color: markerColor(m.type),
-            fillColor: markerColor(m.type),
-            fillOpacity: 0.6,
-            weight: 2,
-        }).addTo(map!);
-
-        c.bindTooltip(m.title, {
-            direction: 'top',
-            offset: [0, -8],
-            className: 'ai-log-tooltip',
-        });
-
-        markersLayer.push(c);
-    });
-
-    // Fit bounds
-    const group = leaflet.featureGroup(markersLayer);
-    const bounds = group.getBounds();
-    if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
-    }
-};
-
-const markerColor = (type: string): string => {
-    if (type === 'insert') return '#22c55e';
-    if (type === 'update') return '#f59e0b';
-    if (type === 'error') return '#f87171';
-    if (type.startsWith('search') || type.startsWith('scan')) return '#60a5fa';
-    if (type.startsWith('summary')) return '#a78bfa';
-    return '#22c55e';
-};
-
-onMounted(async () => {
+onMounted(() => {
     fetchLogs();
-    await nextTick();
-    await initMap();
     startPolling();
 });
 
 onBeforeUnmount(() => {
     stopPolling();
-    if (map) {
-        map.remove();
-        map = null;
-    }
-});
-
-// Update map when markers change
-watch(mapMarkers, async () => {
-    await updateMapMarkers();
 });
 
 const typeIcon = (t: string) => {
@@ -232,15 +123,6 @@ const parseMeta = (meta: string | null): Record<string, any> => {
     if (!meta) return {};
     try { return JSON.parse(meta); } catch { return {}; }
 };
-
-const parseFloat = (v: unknown): number => {
-    if (typeof v === 'number') return v;
-    if (typeof v === 'string') {
-        const n = Number.parseFloat(v);
-        return Number.isFinite(n) ? n : NaN;
-    }
-    return NaN;
-};
 </script>
 
 <template>
@@ -263,20 +145,6 @@ const parseFloat = (v: unknown): number => {
             </div>
         </div>
 
-        <!-- Map -->
-        <div class="rounded-xl border border-green-500/15 bg-black/30 overflow-hidden">
-            <div class="flex items-center gap-2 border-b border-green-500/10 px-4 py-2">
-                <MapPin class="size-3.5 text-green-300/50" />
-                <span class="text-xs text-green-300/50">
-                    LIVE MAP / {{ mapMarkers.length }} marker dari {{ mapMarkers.length > 0 ? '20' : '0' }} log terakhir
-                </span>
-            </div>
-            <div
-                ref="mapContainer"
-                class="h-[320px] w-full"
-            />
-        </div>
-
         <!-- Log table -->
         <div class="relative overflow-hidden rounded-xl border border-green-500/15 bg-black/30">
             <div class="flex items-center justify-between border-b border-green-500/10 px-4 py-2">
@@ -287,7 +155,7 @@ const parseFloat = (v: unknown): number => {
                 <span class="text-[10px] text-green-300/30 font-mono">polling 3s</span>
             </div>
 
-            <div class="max-h-[45vh] overflow-y-auto">
+            <div class="max-h-[65vh] overflow-y-auto">
                 <div v-if="logs.length === 0" class="flex flex-col items-center gap-2 px-4 py-12 text-green-300/40">
                     <InfoIcon class="size-8" />
                     <span class="text-sm">Belum ada log. Menunggu AI Agent...</span>
@@ -339,16 +207,3 @@ const parseFloat = (v: unknown): number => {
         </div>
     </div>
 </template>
-
-<style scoped>
-:deep(.ai-log-tooltip) {
-    background: rgba(5, 7, 10, 0.92) !important;
-    border: 1px solid rgba(34, 197, 94, 0.25) !important;
-    border-radius: 4px !important;
-    color: rgba(226, 255, 232, 0.9) !important;
-    font-family: monospace !important;
-    font-size: 11px !important;
-    padding: 4px 8px !important;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.1) !important;
-}
-</style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -180,187 +181,122 @@ type ProvinceCount = {
     count: number;
 };
 
-const normalizeName = (value: string) =>
-    value
-        .toUpperCase()
-        .replace(/\s+/g, ' ')
-        .trim();
+// --- Province Leaflet Map ---
+const provinceTab = ref<'jibom' | 'kbrn' | 'wan-teror'>('jibom');
+const provinceMapContainer = ref<HTMLDivElement | null>(null);
+let provinceMap: LeafletMap | null = null;
+const provinceMarkers: CircleMarker[] = [];
+const provinceCounts = ref<ProvinceCount[]>([]);
 
-const provinceAliases: Record<string, string> = {
-    'JAKARTA RAYA': 'DKI JAKARTA',
-    JAKARTA: 'DKI JAKARTA',
-    YOGYAKARTA: 'DI YOGYAKARTA',
-    'DAERAH ISTIMEWA YOGYAKARTA': 'DI YOGYAKARTA',
+const provinceCentroids: Record<string, [number, number]> = {
+    '11': [4.6951, 96.7494],   '12': [2.1154, 99.5451],
+    '13': [-0.7399, 100.8000], '14': [0.2933, 101.7068],
+    '15': [-1.6100, 103.6130], '16': [-2.9761, 104.7754],
+    '17': [-3.7931, 102.2717], '18': [-5.3971, 105.2668],
+    '19': [-2.1650, 106.1397], '21': [0.9544, 104.4548],
+    '31': [-6.2088, 106.8456], '32': [-6.9034, 107.6186],
+    '33': [-7.0051, 110.4381], '34': [-7.7956, 110.3695],
+    '35': [-7.5361, 112.2384], '36': [-6.2661, 106.2052],
+    '51': [-8.6705, 115.2126], '52': [-8.5890, 116.5691],
+    '53': [-8.6574, 121.0796], '61': [-0.0263, 109.3425],
+    '62': [-2.1940, 113.9232], '63': [-3.4412, 114.8762],
+    '64': [-0.5022, 117.1536], '65': [3.3052, 117.6351],
+    '71': [1.4930, 124.8413],  '72': [-0.8795, 119.8510],
+    '73': [-5.1354, 119.4237], '74': [-3.9791, 122.5184],
+    '75': [0.5332, 123.0601],  '76': [-2.6780, 118.8935],
+    '81': [-3.6539, 128.1750], '82': [0.7342, 127.5559],
+    '91': [-4.2699, 138.0804], '92': [0.5063, 134.0627],
+    '93': [-0.8680, 134.0750], '94': [-4.4720, 137.1000],
+    '95': [-2.6000, 140.6667], '96': [-6.4333, 140.3167],
 };
-
-const provinceKey = (value: string) => {
-    const k = normalizeName(value);
-    return provinceAliases[k] ?? k;
-};
-
-const colorForCount = (count: number, max: number) => {
-    if (count <= 0) return '#052e16';
-    if (max <= 0) return '#14532d';
-    const ratio = count / max;
-    if (ratio <= 0.25) return '#14532d';
-    if (ratio <= 0.5) return '#166534';
-    if (ratio <= 0.75) return '#16a34a';
-    return '#22c55e';
-};
-
-type SvgTab = 'jibom' | 'kbrn' | 'wan-teror';
-
-const svgTab = ref<SvgTab>('jibom');
-const svgTabRoot = ref<HTMLDivElement | null>(null);
-const svgHovered = ref<{ name: string; count: number } | null>(null);
-
-const jibomMapSvg = ref<string>('');
-const jibomMapError = ref<string | null>(null);
-const jibomCounts = ref<ProvinceCount[]>([]);
-
-const kbrnMapSvg = ref<string>('');
-const kbrnMapError = ref<string | null>(null);
-const kbrnCounts = ref<ProvinceCount[]>([]);
-
-const wanTerorMapSvg = ref<string>('');
-const wanTerorMapError = ref<string | null>(null);
-const wanTerorCounts = ref<ProvinceCount[]>([]);
-
-const activeSvg = computed(() => {
-    if (svgTab.value === 'jibom') return jibomMapSvg.value;
-    if (svgTab.value === 'kbrn') return kbrnMapSvg.value;
-    return wanTerorMapSvg.value;
-});
-
-const activeError = computed(() => {
-    if (svgTab.value === 'jibom') return jibomMapError.value;
-    if (svgTab.value === 'kbrn') return kbrnMapError.value;
-    return wanTerorMapError.value;
-});
-
-const activeCounts = computed(() => {
-    if (svgTab.value === 'jibom') return jibomCounts.value;
-    if (svgTab.value === 'kbrn') return kbrnCounts.value;
-    return wanTerorCounts.value;
-});
-
-const activeListBaseHref = computed(() => {
-    if (svgTab.value === 'jibom') return '/jibom';
-    if (svgTab.value === 'kbrn') return '/kbrn';
-    return '/wan-teror';
-});
 
 const activeTabLabel = computed(() => {
-    if (svgTab.value === 'jibom') return 'JIBOM';
-    if (svgTab.value === 'kbrn') return 'KBRN';
+    if (provinceTab.value === 'jibom') return 'JIBOM';
+    if (provinceTab.value === 'kbrn') return 'KBRN';
     return 'WAN TEROR';
 });
 
-const applyCountsToSvg = async (options: {
-    root: HTMLDivElement | null;
-    counts: ProvinceCount[];
-    hovered: typeof svgHovered;
-    labelsId: string;
-    listBaseHref: string;
-}) => {
+const loadProvinceCounts = async (type: string) => {
+    const module = type === 'wan-teror' ? 'wan-teror' : type;
+    const res = await fetch(`/api/${module}/counts-by-province`, {
+        headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as { data?: ProvinceCount[] };
+    provinceCounts.value = Array.isArray(json.data) ? json.data : [];
+};
+
+const clearProvinceMarkers = () => {
+    for (const m of provinceMarkers) m.remove();
+    provinceMarkers.length = 0;
+};
+
+const renderProvinceMarkers = async () => {
+    if (!provinceMap) return;
+    clearProvinceMarkers();
+    const L = await getLeaflet();
+
+    for (const row of provinceCounts.value) {
+        const centroid = provinceCentroids[row.id];
+        if (!centroid) continue;
+        const count = Number(row.count) || 0;
+        const fg = count > 0 ? '#22c55e' : '#52525b';
+        const glow = count > 0 ? '0 0 4px rgba(34,197,94,0.45)' : 'none';
+        const size = count > 0 ? 28 + Math.min(count, 40) * 0.6 : 20;
+
+        const svgPin = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fg}" stroke="${fg}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(${glow})"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
+        const labelSvg = count > 0
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" style="position:absolute;top:0;left:0;pointer-events:none"><text x="12" y="16" text-anchor="middle" fill="#0a0a0a" font-size="9" font-weight="700" font-family="monospace">${count}</text></svg>`
+            : '';
+
+        const icon = L.divIcon({
+            className: 'dashboard-province-pin',
+            html: `<div style="position:relative;width:${size}px;height:${size}px">${svgPin}${labelSvg}</div>`,
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size],
+            popupAnchor: [0, -(size + 4)],
+        });
+
+        const marker = L.marker(centroid, { icon }).addTo(provinceMap!);
+        marker.bindTooltip(`${row.name}: ${count}`, {
+            direction: 'top',
+            offset: [0, -(size + 4)],
+            className: 'leaflet-tooltip-dark',
+        });
+
+        const href = provinceTab.value === 'jibom' ? '/jibom' : provinceTab.value === 'kbrn' ? '/kbrn' : '/wan-teror';
+        marker.on('click', () => {
+            router.visit(`${href}?province_id=${encodeURIComponent(row.id)}`);
+        });
+
+        provinceMarkers.push(marker);
+    }
+};
+
+const ensureProvinceMap = async () => {
+    if (typeof window === 'undefined') return;
     await nextTick();
+    if (!provinceMapContainer.value) return;
 
-    const root = options.root;
-    if (!root) return;
-    const svg = root.querySelector('svg') as SVGSVGElement | null;
-    if (!svg) return;
-
-    const countsByProvinceName: Record<string, number> = {};
-    const provinceIdByName: Record<string, string> = {};
-    for (const row of options.counts) {
-        const mapped = provinceKey(row.name);
-        countsByProvinceName[mapped] = Number(row.count) || 0;
-        provinceIdByName[mapped] = row.id;
+    if (provinceMap) {
+        provinceMap.invalidateSize?.();
+        await renderProvinceMarkers();
+        return;
     }
 
-    const max = Math.max(
-        0,
-        ...Object.values(countsByProvinceName).map((v) => (Number.isFinite(v) ? v : 0)),
-    );
+    const L = await getLeaflet();
+    provinceMap = L.map(provinceMapContainer.value, {
+        zoomControl: true,
+        attributionControl: false,
+    }).setView([-2.5489, 118.0149], 5);
 
-    const labelsGroupId = `dashboard-count-labels-${options.labelsId}`;
-    const oldLabels = svg.querySelector(`#${labelsGroupId}`);
-    oldLabels?.remove();
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB',
+        maxZoom: 19,
+    }).addTo(provinceMap);
 
-    const labelsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    labelsGroup.setAttribute('id', labelsGroupId);
-    svg.appendChild(labelsGroup);
-
-    const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
-    for (const el of Array.from(paths)) {
-        const rawName = (el.getAttribute('data-name') ?? el.getAttribute('title') ?? '').trim();
-        if (!rawName) continue;
-
-        const originalName = (el.getAttribute('data-title-original') ?? '').trim() || rawName;
-        if (!el.getAttribute('data-title-original') && originalName) {
-            el.setAttribute('data-title-original', originalName);
-        }
-
-        const rawTitle = originalName;
-        if (!rawTitle) continue;
-        const mappedTitle = provinceKey(rawTitle);
-        const count = countsByProvinceName[mappedTitle] ?? 0;
-        const provinceId = provinceIdByName[mappedTitle] ?? null;
-
-        el.style.fill = colorForCount(count, max);
-        el.style.stroke = 'rgba(34,197,94,0.25)';
-        el.style.strokeWidth = '0.7';
-        el.style.cursor = provinceId ? 'pointer' : 'default';
-        el.setAttribute('data-count', String(count));
-        el.setAttribute('title', `${rawTitle} (${count})`);
-
-        el.onmouseenter = () => {
-            options.hovered.value = { name: rawTitle, count };
-        };
-        el.onmouseleave = () => {
-            options.hovered.value = null;
-        };
-        el.onclick = () => {
-            if (!provinceId) return;
-            router.visit(`${options.listBaseHref}?province_id=${encodeURIComponent(provinceId)}`);
-        };
-
-        if (count > 0) {
-            try {
-                const bbox = el.getBBox();
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.textContent = String(count);
-                text.setAttribute('x', String(bbox.x + bbox.width / 2));
-                text.setAttribute('y', String(bbox.y + bbox.height / 2));
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('dominant-baseline', 'middle');
-                text.setAttribute(
-                    'style',
-                    'font-size: 10px; font-weight: 700; fill: rgba(236, 253, 245, 0.95); paint-order: stroke; stroke: rgba(0,0,0,0.65); stroke-width: 2px; pointer-events: none;',
-                );
-                labelsGroup.appendChild(text);
-            } catch {
-                //
-            }
-        }
-    }
-};
-
-const loadSvgMap = async (url: string): Promise<string> => {
-    const res = await fetch(url, { headers: { Accept: 'image/svg+xml' } });
-    if (!res.ok) {
-        throw new Error(`Gagal memuat map (${res.status})`);
-    }
-    return await res.text();
-};
-
-const loadCountsByProvince = async (url: string): Promise<ProvinceCount[]> => {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    const json = (await res.json().catch(() => null)) as { data?: Array<{ id: string; name: string; count: number }> } | { message?: string } | null;
-    if (!res.ok) {
-        throw new Error((json as any)?.message ?? `Gagal memuat counts (${res.status})`);
-    }
-    return (json as any)?.data ?? [];
+    L.control.attribution({ prefix: false }).addTo(provinceMap);
+    await renderProvinceMarkers();
 };
 
 const mapContainer = ref<HTMLDivElement | null>(null);
@@ -456,8 +392,9 @@ const ensureMap = async () => {
         zoomControl: true,
     }).setView([-2.5489, 118.0149], 5);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB',
+        maxZoom: 19,
     }).addTo(map);
 
     markerLayer = L.featureGroup().addTo(map);
@@ -567,29 +504,8 @@ onMounted(async () => {
     await ensureMap();
     await updateMapMarkers();
 
-    try {
-        const [svgJibom, svgKBRN, svgWan, countsJibom, countsKBRN, countsWan] = await Promise.all([
-            loadSvgMap('/api/jibom/indonesia-map-svg'),
-            loadSvgMap('/api/kbrn/indonesia-map-svg'),
-            loadSvgMap('/api/wan-teror/indonesia-map-svg'),
-            loadCountsByProvince('/api/jibom/counts-by-province'),
-            loadCountsByProvince('/api/kbrn/counts-by-province'),
-            loadCountsByProvince('/api/wan-teror/counts-by-province'),
-        ]);
-
-        jibomMapSvg.value = svgJibom;
-        kbrnMapSvg.value = svgKBRN;
-        wanTerorMapSvg.value = svgWan;
-
-        jibomCounts.value = countsJibom;
-        kbrnCounts.value = countsKBRN;
-        wanTerorCounts.value = countsWan;
-    } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Gagal memuat peta provinsi.';
-        jibomMapError.value = msg;
-        kbrnMapError.value = msg;
-        wanTerorMapError.value = msg;
-    }
+    await loadProvinceCounts('jibom');
+    await ensureProvinceMap();
 });
 
 onBeforeUnmount(() => {
@@ -599,6 +515,11 @@ onBeforeUnmount(() => {
         markerLayer = null;
         mapReady = false;
     }
+    if (provinceMap) {
+        provinceMap.remove();
+        provinceMap = null;
+    }
+    clearProvinceMarkers();
 });
 
 watch(
@@ -611,25 +532,11 @@ watch(
 );
 
 watch(
-    () => svgTab.value,
-    () => {
-        svgHovered.value = null;
+    () => provinceTab.value,
+    async (tab) => {
+        await loadProvinceCounts(tab);
+        await renderProvinceMarkers();
     },
-);
-
-watch(
-    [activeSvg, activeCounts, svgTabRoot, svgTab],
-    () => {
-        if (!activeSvg.value) return;
-        void applyCountsToSvg({
-            root: svgTabRoot.value,
-            counts: activeCounts.value,
-            hovered: svgHovered,
-            labelsId: svgTab.value,
-            listBaseHref: activeListBaseHref.value,
-        });
-    },
-    { deep: true, flush: 'post', immediate: true },
 );
 </script>
 
@@ -949,8 +856,8 @@ watch(
                         variant="secondary"
                         size="sm"
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="svgTab === 'jibom' ? 'border-green-500/25 bg-green-500/10' : ''"
-                        @click="svgTab = 'jibom'"
+                        :class="provinceTab === 'jibom' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="provinceTab = 'jibom'"
                     >
                         JIBOM
                     </Button>
@@ -958,8 +865,8 @@ watch(
                         variant="secondary"
                         size="sm"
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="svgTab === 'kbrn' ? 'border-green-500/25 bg-green-500/10' : ''"
-                        @click="svgTab = 'kbrn'"
+                        :class="provinceTab === 'kbrn' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="provinceTab = 'kbrn'"
                     >
                         KBRN
                     </Button>
@@ -967,38 +874,18 @@ watch(
                         variant="secondary"
                         size="sm"
                         class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="svgTab === 'wan-teror' ? 'border-green-500/25 bg-green-500/10' : ''"
-                        @click="svgTab = 'wan-teror'"
+                        :class="provinceTab === 'wan-teror' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        @click="provinceTab = 'wan-teror'"
                     >
                         WAN TEROR
                     </Button>
                 </div>
             </div>
 
-            <div v-if="activeError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
-                > {{ activeError }}
-            </div>
-
             <div
-                v-else-if="activeSvg"
-                class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-            >
-                <div
-                    v-if="svgHovered"
-                    class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
-                >
-                    <span>> {{ svgHovered.name }}</span>
-                    <span class="text-[11px]">> kejadian: {{ fmt(svgHovered.count) }}</span>
-                </div>
-                <div
-                    ref="svgTabRoot"
-                    class="mx-auto h-[320px] w-full max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-full [&_svg]:w-full [&_svg]:rounded-lg sm:h-[420px]"
-                    v-html="activeSvg"
-                />
-            </div>
-            <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
-                loading_map...
-            </div>
+                ref="provinceMapContainer"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 sm:h-[420px]"
+            />
         </div>
 
         <div class="mt-6 grid gap-4 xl:grid-cols-3">
