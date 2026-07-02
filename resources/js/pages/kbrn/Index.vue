@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -123,168 +124,73 @@ const photosCount = (value: unknown) => {
     return 0;
 };
 
-type ProvinceCount = {
-    id: string;
-    name: string;
-    count: number;
-};
-
 type ProvinceRef = {
     id: string;
     name: string;
 };
 
-const mapSvg = ref<string>('');
-const mapError = ref<string | null>(null);
-const mapRoot = ref<HTMLDivElement | null>(null);
-const counts = ref<ProvinceCount[]>([]);
-const hovered = ref<{ name: string; count: number } | null>(null);
+const mapContainer = ref<HTMLDivElement | null>(null);
+let map: LeafletMap | null = null;
+const markers: CircleMarker[] = [];
+const counts = ref<{ id: string; name: string; count: number }[]>([]);
+
+const provinceCentroids: Record<string, [number, number]> = {
+    '11': [4.6951, 96.7494],
+    '12': [2.1154, 99.5451],
+    '13': [-0.7399, 100.8000],
+    '14': [0.2933, 101.7068],
+    '15': [-1.6100, 103.6130],
+    '16': [-2.9761, 104.7754],
+    '17': [-3.7931, 102.2717],
+    '18': [-5.3971, 105.2668],
+    '19': [-2.1650, 106.1397],
+    '21': [0.9544, 104.4548],
+    '31': [-6.2088, 106.8456],
+    '32': [-6.9034, 107.6186],
+    '33': [-7.0051, 110.4381],
+    '34': [-7.7956, 110.3695],
+    '35': [-7.5361, 112.2384],
+    '36': [-6.2661, 106.2052],
+    '51': [-8.6705, 115.2126],
+    '52': [-8.5890, 116.5691],
+    '53': [-8.6574, 121.0796],
+    '61': [-0.0263, 109.3425],
+    '62': [-2.1940, 113.9232],
+    '63': [-3.4412, 114.8762],
+    '64': [-0.5022, 117.1536],
+    '65': [3.3052, 117.6351],
+    '71': [1.4930, 124.8413],
+    '72': [-0.8795, 119.8510],
+    '73': [-5.1354, 119.4237],
+    '74': [-3.9791, 122.5184],
+    '75': [0.5332, 123.0601],
+    '76': [-2.6780, 118.8935],
+    '81': [-3.6539, 128.1750],
+    '82': [0.7342, 127.5559],
+    '91': [-4.2699, 138.0804],
+    '92': [0.5063, 134.0627],
+    '93': [-0.8680, 134.0750],
+    '94': [-4.4720, 137.1000],
+    '95': [-2.6000, 140.6667],
+    '96': [-6.4333, 140.3167],
+};
+
 const provinces = ref<ProvinceRef[]>([]);
-const provinceIdByName = computed(() => {
-    const map: Record<string, string> = {};
-    for (const row of provinces.value) {
-        map[provinceKey(row.name)] = row.id;
-    }
-    return map;
-});
 const provinceNameById = computed(() => {
-    const map: Record<string, string> = {};
+    const mapR: Record<string, string> = {};
     for (const row of provinces.value) {
-        map[row.id] = row.name;
+        mapR[row.id] = row.name;
     }
-    return map;
+    return mapR;
 });
 
-const normalizeName = (value: string) =>
-    value
-        .toUpperCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-
-const provinceAliases: Record<string, string> = {
-    'JAKARTA RAYA': 'DKI JAKARTA',
-    JAKARTA: 'DKI JAKARTA',
-    YOGYAKARTA: 'DI YOGYAKARTA',
-    'DAERAH ISTIMEWA YOGYAKARTA': 'DI YOGYAKARTA',
-};
-
-const provinceKey = (value: string) => {
-    const k = normalizeName(value);
-    return provinceAliases[k] ?? k;
-};
-
-const countsByProvinceName = computed(() => {
-    const map: Record<string, number> = {};
-    for (const row of counts.value) {
-        map[provinceKey(row.name)] = Number(row.count) || 0;
-    }
-    return map;
-});
-
-const colorForCount = (count: number, max: number) => {
-    if (count <= 0) return '#052e16';
-    if (max <= 0) return '#14532d';
-    const ratio = count / max;
-    if (ratio <= 0.25) return '#14532d';
-    if (ratio <= 0.5) return '#166534';
-    if (ratio <= 0.75) return '#16a34a';
-    return '#22c55e';
-};
-
-const applyCountsToSvg = async () => {
-    await nextTick();
-    const root = mapRoot.value;
-    if (!root) return;
-    const svg = root.querySelector('svg') as SVGSVGElement | null;
-    if (!svg) return;
-
-    const max = Math.max(
-        0,
-        ...Object.values(countsByProvinceName.value).map((v) =>
-            Number.isFinite(v) ? v : 0,
-        ),
-    );
-
-    const oldLabels = svg.querySelector('#kbrn-count-labels');
-    oldLabels?.remove();
-
-    const labelsGroup = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'g',
-    );
-    labelsGroup.setAttribute('id', 'kbrn-count-labels');
-    svg.appendChild(labelsGroup);
-
-    const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
-    for (const el of Array.from(paths)) {
-        const rawName = (el.getAttribute('data-name') ?? el.getAttribute('title') ?? '').trim();
-        if (!rawName) continue;
-
-        const originalTitle = (el.getAttribute('data-title-original') ?? '').trim() || rawName;
-        if (!el.getAttribute('data-title-original') && originalTitle) {
-            el.setAttribute('data-title-original', originalTitle);
-        }
-        const rawTitle = originalTitle;
-        if (!rawTitle) continue;
-        const mappedTitle = provinceKey(rawTitle);
-        const count = countsByProvinceName.value[mappedTitle] ?? 0;
-        const provinceId = provinceIdByName.value[mappedTitle] ?? null;
-
-        el.style.fill = colorForCount(count, max);
-        el.style.stroke =
-            currentProvinceId.value && provinceId === currentProvinceId.value
-                ? 'rgba(34,197,94,0.8)'
-                : 'rgba(34,197,94,0.25)';
-        el.style.strokeWidth =
-            currentProvinceId.value && provinceId === currentProvinceId.value
-                ? '1.4'
-                : '0.7';
-        el.style.cursor = provinceId ? 'pointer' : 'default';
-        el.setAttribute('data-count', String(count));
-        el.setAttribute('title', `${rawTitle} (${count})`);
-
-        el.onmouseenter = () => {
-            hovered.value = { name: rawTitle, count };
-        };
-        el.onmouseleave = () => {
-            hovered.value = null;
-        };
-        el.onclick = () => {
-            if (!provinceId) return;
-            const nextProvinceId =
-                currentProvinceId.value === provinceId ? null : provinceId;
-            router.get(
-                '/kbrn',
-                {
-                    type: currentType.value ?? undefined,
-                    province_id: nextProvinceId ?? undefined,
-                },
-                { preserveScroll: true, preserveState: true, replace: true },
-            );
-        };
-
-        if (count > 0) {
-            try {
-                const bbox = el.getBBox();
-                const text = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'text',
-                );
-                text.textContent = String(count);
-                text.setAttribute('x', String(bbox.x + bbox.width / 2));
-                text.setAttribute('y', String(bbox.y + bbox.height / 2));
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('dominant-baseline', 'middle');
-                text.setAttribute(
-                    'style',
-                    'font-size: 10px; font-weight: 700; fill: rgba(236, 253, 245, 0.95); paint-order: stroke; stroke: rgba(0,0,0,0.65); stroke-width: 2px; pointer-events: none;',
-                );
-                labelsGroup.appendChild(text);
-            } catch {
-                //
-            }
-        }
-    }
+const loadProvinces = async () => {
+    const res = await fetch('/api/wilayah/provinces', {
+        headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as ProvinceRef[];
+    provinces.value = Array.isArray(json) ? json : [];
 };
 
 const loadCounts = async () => {
@@ -293,57 +199,131 @@ const loadCounts = async () => {
     const res = await fetch(`/api/kbrn/counts-by-province${qs}`, {
         headers: { Accept: 'application/json' },
     });
-    if (!res.ok) {
-        return;
-    }
-    const json = (await res.json()) as { data?: ProvinceCount[] };
+    if (!res.ok) return;
+    const json = (await res.json()) as { data?: { id: string; name: string; count: number }[] };
     counts.value = Array.isArray(json.data) ? json.data : [];
 };
 
-const loadProvinces = async () => {
-    const res = await fetch('/api/wilayah/provinces', {
-        headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
+const getLeaflet = async () => {
+    const mod = await import('leaflet');
+    return mod.default;
+};
+
+const clearMarkers = () => {
+    for (const m of markers) {
+        m.remove();
+    }
+    markers.length = 0;
+};
+
+const renderMarkers = async () => {
+    if (!map) return;
+    clearMarkers();
+
+    const L = await getLeaflet();
+    for (const row of counts.value) {
+        const centroid = provinceCentroids[row.id];
+        if (!centroid) continue;
+
+        const count = Number(row.count) || 0;
+        const isActive = currentProvinceId.value === row.id;
+        const fg = isActive ? '#22c55e' : count > 0 ? '#a3e635' : '#52525b';
+        const glow = isActive
+            ? '0 0 8px rgba(34,197,94,0.6)'
+            : count > 0
+                ? '0 0 4px rgba(163,230,53,0.4)'
+                : 'none';
+        const size = count > 0 ? 28 + Math.min(count, 40) * 0.6 : 20;
+
+        const svgPin = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fg}" stroke="${fg}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(${glow})"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
+        const labelSvg = count > 0
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" style="position:absolute;top:0;left:0;pointer-events:none"><text x="12" y="16" text-anchor="middle" fill="#0a0a0a" font-size="9" font-weight="700" font-family="monospace">${count}</text></svg>`
+            : '';
+
+        const icon = L.divIcon({
+            className: 'kbrn-map-pin',
+            html: `<div style="position:relative;width:${size}px;height:${size}px">${svgPin}${labelSvg}</div>`,
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size],
+            popupAnchor: [0, -(size + 4)],
+        });
+
+        const marker = L.marker(centroid, { icon }).addTo(map!);
+
+        marker.bindTooltip(`${row.name}: ${count}`, {
+            direction: 'top',
+            offset: [0, -(size + 4)],
+            className: 'leaflet-tooltip-dark',
+        });
+
+        marker.on('click', () => {
+            const nextProvinceId = currentProvinceId.value === row.id ? null : row.id;
+            router.get(
+                '/kbrn',
+                {
+                    type: currentType.value ?? undefined,
+                    province_id: nextProvinceId ?? undefined,
+                },
+                { preserveScroll: true, preserveState: true, replace: true },
+            );
+        });
+
+        markers.push(marker);
+    }
+};
+
+const ensureMap = async () => {
+    if (typeof window === 'undefined') return;
+    await nextTick();
+    if (!mapContainer.value) return;
+
+    if (map) {
+        map.invalidateSize?.();
+        await renderMarkers();
         return;
     }
-    const json = (await res.json()) as ProvinceRef[];
-    provinces.value = Array.isArray(json) ? json : [];
+
+    const L = await getLeaflet();
+    map = L.map(mapContainer.value, {
+        zoomControl: true,
+        attributionControl: false,
+    }).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB',
+        maxZoom: 19,
+    }).addTo(map);
+
+    L.control.attribution({ prefix: false }).addTo(map);
+
+    await renderMarkers();
 };
+
+onBeforeUnmount(() => {
+    clearMarkers();
+    map?.remove();
+    map = null;
+});
 
 watch(
     () => props.filters.type,
-    async (value, oldValue) => {
-        if (value === oldValue) return;
+    async () => {
         await loadCounts();
-        await applyCountsToSvg();
+        await renderMarkers();
     },
 );
 
 watch(
     () => props.filters.province_id,
-    async (value, oldValue) => {
-        if (value === oldValue) return;
-        await applyCountsToSvg();
+    async () => {
+        await renderMarkers();
     },
 );
 
 onMounted(async () => {
-    try {
-        const res = await fetch('/api/kbrn/indonesia-map-svg', {
-            headers: { Accept: 'image/svg+xml' },
-        });
-        if (!res.ok) {
-            mapError.value = `Gagal memuat map (${res.status})`;
-            return;
-        }
-        await loadProvinces();
-        await loadCounts();
-        mapSvg.value = await res.text();
-        await applyCountsToSvg();
-    } catch {
-        mapError.value = 'Gagal memuat map';
-    }
+    await loadProvinces();
+    await loadCounts();
+    await ensureMap();
 });
 </script>
 
@@ -526,37 +506,12 @@ onMounted(async () => {
         <div class="mb-4 rounded-xl border border-green-500/15 bg-black/20 p-3">
             <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
                 <span>> MAP INDONESIA</span>
-                <span class="text-[11px]">> indonesiaLow.svg</span>
+                <span class="text-[11px]">> leaflet · cartodb dark</span>
             </div>
             <div
-                v-if="mapError"
-                class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200"
-            >
-                > {{ mapError }}
-            </div>
-            <div
-                v-else-if="mapSvg"
-                class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-            >
-                <div
-                    v-if="hovered"
-                    class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
-                >
-                    <span>> {{ hovered.name }}</span>
-                    <span class="text-[11px]">> kejadian: {{ hovered.count }}</span>
-                </div>
-                <div
-                    ref="mapRoot"
-                    class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
-                    v-html="mapSvg"
-                />
-            </div>
-            <div
-                v-else
-                class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60"
-            >
-                loading_map...
-            </div>
+                ref="mapContainer"
+                class="h-[500px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+            />
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-green-500/15 bg-black/20">
@@ -635,3 +590,43 @@ onMounted(async () => {
         </div>
     </div>
 </template>
+
+<style>
+.kbrn-map-pin {
+    background: transparent !important;
+    border: none !important;
+}
+.leaflet-tooltip-dark {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #bbf7d0 !important;
+    font-family: monospace !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+}
+.leaflet-tooltip-dark::before {
+    border-top-color: rgba(34, 197, 94, 0.3) !important;
+}
+.leaflet-container {
+    background: #0a0a0a !important;
+    font-family: monospace !important;
+}
+.leaflet-control-zoom a {
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: #bbf7d0 !important;
+    border: 1px solid rgba(34, 197, 94, 0.2) !important;
+}
+.leaflet-control-zoom a:hover {
+    background: rgba(34, 197, 94, 0.15) !important;
+}
+.leaflet-control-attribution {
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: rgba(34, 197, 94, 0.5) !important;
+    font-size: 9px !important;
+}
+.leaflet-control-attribution a {
+    color: rgba(34, 197, 94, 0.5) !important;
+}
+</style>

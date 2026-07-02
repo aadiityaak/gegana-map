@@ -122,15 +122,48 @@ type ProvinceRef = {
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: LeafletMap | null = null;
 const markers: CircleMarker[] = [];
-const parseCoord = (v: unknown): number | null => {
-    if (v == null) return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-};
+const counts = ref<{ id: string; name: string; count: number }[]>([]);
 
-const itemsWithCoords = computed(() =>
-    props.items.data.filter((it) => parseCoord(it.latitude) !== null && parseCoord(it.longitude) !== null),
-);
+const provinceCentroids: Record<string, [number, number]> = {
+    '11': [4.6951, 96.7494],   // ACEH
+    '12': [2.1154, 99.5451],   // SUMATERA UTARA
+    '13': [-0.7399, 100.8000], // SUMATERA BARAT
+    '14': [0.2933, 101.7068],  // RIAU
+    '15': [-1.6100, 103.6130], // JAMBI
+    '16': [-2.9761, 104.7754], // SUMATERA SELATAN
+    '17': [-3.7931, 102.2717], // BENGKULU
+    '18': [-5.3971, 105.2668], // LAMPUNG
+    '19': [-2.1650, 106.1397], // KEPULAUAN BANGKA BELITUNG
+    '21': [0.9544, 104.4548],  // KEPULAUAN RIAU
+    '31': [-6.2088, 106.8456], // DKI JAKARTA
+    '32': [-6.9034, 107.6186], // JAWA BARAT
+    '33': [-7.0051, 110.4381], // JAWA TENGAH
+    '34': [-7.7956, 110.3695], // DI YOGYAKARTA
+    '35': [-7.5361, 112.2384], // JAWA TIMUR
+    '36': [-6.2661, 106.2052], // BANTEN
+    '51': [-8.6705, 115.2126], // BALI
+    '52': [-8.5890, 116.5691], // NUSA TENGGARA BARAT
+    '53': [-8.6574, 121.0796], // NUSA TENGGARA TIMUR
+    '61': [-0.0263, 109.3425], // KALIMANTAN BARAT
+    '62': [-2.1940, 113.9232], // KALIMANTAN TENGAH
+    '63': [-3.4412, 114.8762], // KALIMANTAN SELATAN
+    '64': [-0.5022, 117.1536], // KALIMANTAN TIMUR
+    '65': [3.3052, 117.6351],  // KALIMANTAN UTARA
+    '71': [1.4930, 124.8413],  // SULAWESI UTARA
+    '72': [-0.8795, 119.8510], // SULAWESI TENGAH
+    '73': [-5.1354, 119.4237], // SULAWESI SELATAN
+    '74': [-3.9791, 122.5184], // SULAWESI TENGGARA
+    '75': [0.5332, 123.0601],  // GORONTALO
+    '76': [-2.6780, 118.8935], // SULAWESI BARAT
+    '81': [-3.6539, 128.1750], // MALUKU
+    '82': [0.7342, 127.5559],  // MALUKU UTARA
+    '91': [-4.2699, 138.0804], // PAPUA
+    '92': [0.5063, 134.0627],  // PAPUA BARAT
+    '93': [-0.8680, 134.0750], // PAPUA BARAT DAYA
+    '94': [-4.4720, 137.1000], // PAPUA TENGAH
+    '95': [-2.6000, 140.6667], // PAPUA PEGUNUNGAN
+    '96': [-6.4333, 140.3167], // PAPUA SELATAN
+};
 
 const provinces = ref<ProvinceRef[]>([]);
 const provinceNameById = computed(() => {
@@ -152,6 +185,17 @@ const loadProvinces = async () => {
     provinces.value = Array.isArray(json) ? json : [];
 };
 
+const loadCounts = async () => {
+    const type = currentType.value;
+    const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+    const res = await fetch(`/api/jibom/counts-by-province${qs}`, {
+        headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return;
+    const json = (await res.json()) as { data?: { id: string; name: string; count: number }[] };
+    counts.value = Array.isArray(json.data) ? json.data : [];
+};
+
 const getLeaflet = async () => {
     const mod = await import('leaflet');
     return mod.default;
@@ -169,30 +213,43 @@ const renderMarkers = async () => {
     clearMarkers();
 
     const L = await getLeaflet();
-    for (const item of itemsWithCoords.value) {
-        const lat = parseCoord(item.latitude)!;
-        const lng = parseCoord(item.longitude)!;
-        const color = currentProvinceId.value && item.province_id === currentProvinceId.value
-            ? '#22c55e'
-            : '#a3e635';
-        const marker = L.circleMarker([lat, lng], {
-            radius: 7,
-            color,
-            fillColor: color,
-            fillOpacity: 0.6,
-            weight: 2,
-        }).addTo(map!);
+    for (const row of counts.value) {
+        const centroid = provinceCentroids[row.id];
+        if (!centroid) continue;
 
-        const province = provinceNameById.value[item.province_id] ?? item.province_id;
-        const tooltip = `${province}: ${typeLabel(item.incident_type)}`;
-        marker.bindTooltip(tooltip, {
+        const count = Number(row.count) || 0;
+        const isActive = currentProvinceId.value === row.id;
+        const fg = isActive ? '#22c55e' : count > 0 ? '#a3e635' : '#52525b';
+        const glow = isActive
+            ? '0 0 8px rgba(34,197,94,0.6)'
+            : count > 0
+              ? '0 0 4px rgba(163,230,53,0.4)'
+              : 'none';
+        const size = count > 0 ? 28 + Math.min(count, 40) * 0.6 : 20;
+
+        const svgPin = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fg}" stroke="${fg}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(${glow})"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
+        const labelSvg = count > 0
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" style="position:absolute;top:0;left:0;pointer-events:none"><text x="12" y="16" text-anchor="middle" fill="#0a0a0a" font-size="9" font-weight="700" font-family="monospace">${count}</text></svg>`
+            : '';
+
+        const icon = L.divIcon({
+            className: 'jibom-map-pin',
+            html: `<div style="position:relative;width:${size}px;height:${size}px">${svgPin}${labelSvg}</div>`,
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size],
+            popupAnchor: [0, -(size + 4)],
+        });
+
+        const marker = L.marker(centroid, { icon }).addTo(map!);
+
+        marker.bindTooltip(`${row.name}: ${count}`, {
             direction: 'top',
-            offset: [0, -8],
+            offset: [0, -(size + 4)],
             className: 'leaflet-tooltip-dark',
         });
 
         marker.on('click', () => {
-            const nextProvinceId = currentProvinceId.value === item.province_id ? null : item.province_id;
+            const nextProvinceId = currentProvinceId.value === row.id ? null : row.id;
             router.get(
                 '/jibom',
                 {
@@ -241,15 +298,23 @@ onBeforeUnmount(() => {
 });
 
 watch(
-    () => [props.filters.type, props.filters.province_id, props.items.data] as const,
+    () => props.filters.type,
     async () => {
-        await nextTick();
+        await loadCounts();
+        await renderMarkers();
+    },
+);
+
+watch(
+    () => props.filters.province_id,
+    async () => {
         await renderMarkers();
     },
 );
 
 onMounted(async () => {
     await loadProvinces();
+    await loadCounts();
     await ensureMap();
 });
 </script>
@@ -400,6 +465,10 @@ onMounted(async () => {
 </template>
 
 <style>
+.jibom-map-pin {
+    background: transparent !important;
+    border: none !important;
+}
 .leaflet-tooltip-dark {
     background: rgba(0, 0, 0, 0.8) !important;
     border: 1px solid rgba(34, 197, 94, 0.3) !important;
