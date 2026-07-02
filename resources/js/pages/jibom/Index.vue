@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +12,8 @@ type JibomItem = {
     description?: string | null;
     photos?: unknown;
     news_source?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     province_id: string;
     regency_id: string;
     district_id: string;
@@ -111,181 +114,32 @@ const photosCount = (value: unknown) => {
     return 0;
 };
 
-type ProvinceCount = {
-    id: string;
-    name: string;
-    count: number;
-};
-
 type ProvinceRef = {
     id: string;
     name: string;
 };
 
-const mapSvg = ref<string>('');
-const mapError = ref<string | null>(null);
-const mapRoot = ref<HTMLDivElement | null>(null);
-const counts = ref<ProvinceCount[]>([]);
-const hovered = ref<{ name: string; count: number } | null>(null);
+const mapContainer = ref<HTMLDivElement | null>(null);
+let map: LeafletMap | null = null;
+const markers: CircleMarker[] = [];
+const parseCoord = (v: unknown): number | null => {
+    if (v == null) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+};
+
+const itemsWithCoords = computed(() =>
+    props.items.data.filter((it) => parseCoord(it.latitude) !== null && parseCoord(it.longitude) !== null),
+);
+
 const provinces = ref<ProvinceRef[]>([]);
-const provinceIdByName = computed(() => {
-    const map: Record<string, string> = {};
-    for (const row of provinces.value) {
-        map[provinceKey(row.name)] = row.id;
-    }
-    return map;
-});
 const provinceNameById = computed(() => {
-    const map: Record<string, string> = {};
+    const mapR: Record<string, string> = {};
     for (const row of provinces.value) {
-        map[row.id] = row.name;
+        mapR[row.id] = row.name;
     }
-    return map;
+    return mapR;
 });
-
-const normalizeName = (value: string) =>
-    value
-        .toUpperCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-
-const provinceAliases: Record<string, string> = {
-    'JAKARTA RAYA': 'DKI JAKARTA',
-    JAKARTA: 'DKI JAKARTA',
-    YOGYAKARTA: 'DI YOGYAKARTA',
-    'DAERAH ISTIMEWA YOGYAKARTA': 'DI YOGYAKARTA',
-};
-
-const provinceKey = (value: string) => {
-    const k = normalizeName(value);
-    return provinceAliases[k] ?? k;
-};
-
-const countsByProvinceName = computed(() => {
-    const map: Record<string, number> = {};
-    for (const row of counts.value) {
-        map[provinceKey(row.name)] = Number(row.count) || 0;
-    }
-    return map;
-});
-
-const colorForCount = (count: number, max: number) => {
-    if (count <= 0) return '#052e16';
-    if (max <= 0) return '#14532d';
-    const ratio = count / max;
-    if (ratio <= 0.25) return '#14532d';
-    if (ratio <= 0.5) return '#166534';
-    if (ratio <= 0.75) return '#16a34a';
-    return '#22c55e';
-};
-
-const applyCountsToSvg = async () => {
-    await nextTick();
-    const root = mapRoot.value;
-    if (!root) return;
-    const svg = root.querySelector('svg') as SVGSVGElement | null;
-    if (!svg) return;
-
-    const max = Math.max(
-        0,
-        ...Object.values(countsByProvinceName.value).map((v) =>
-            Number.isFinite(v) ? v : 0,
-        ),
-    );
-
-    const oldLabels = svg.querySelector('#jibom-count-labels');
-    oldLabels?.remove();
-
-    const labelsGroup = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'g',
-    );
-    labelsGroup.setAttribute('id', 'jibom-count-labels');
-    svg.appendChild(labelsGroup);
-
-    const paths = svg.querySelectorAll<SVGPathElement>('path[data-name], path[title]');
-    for (const el of Array.from(paths)) {
-        const rawName = (el.getAttribute('data-name') ?? el.getAttribute('title') ?? '').trim();
-        if (!rawName) continue;
-
-        const originalTitle = (el.getAttribute('data-title-original') ?? '').trim() || rawName;
-        if (!el.getAttribute('data-title-original') && originalTitle) {
-            el.setAttribute('data-title-original', originalTitle);
-        }
-        const rawTitle = originalTitle;
-        if (!rawTitle) continue;
-        const mappedTitle = provinceKey(rawTitle);
-        const count = countsByProvinceName.value[mappedTitle] ?? 0;
-        const provinceId = provinceIdByName.value[mappedTitle] ?? null;
-
-        el.style.fill = colorForCount(count, max);
-        el.style.stroke =
-            currentProvinceId.value && provinceId === currentProvinceId.value
-                ? 'rgba(34,197,94,0.8)'
-                : 'rgba(34,197,94,0.25)';
-        el.style.strokeWidth =
-            currentProvinceId.value && provinceId === currentProvinceId.value
-                ? '1.4'
-                : '0.7';
-        el.style.cursor = provinceId ? 'pointer' : 'default';
-        el.setAttribute('data-count', String(count));
-        el.setAttribute('title', `${rawTitle} (${count})`);
-
-        el.onmouseenter = () => {
-            hovered.value = { name: rawTitle, count };
-        };
-        el.onmouseleave = () => {
-            hovered.value = null;
-        };
-        el.onclick = () => {
-            if (!provinceId) return;
-            const nextProvinceId = currentProvinceId.value === provinceId ? null : provinceId;
-            router.get(
-                '/jibom',
-                {
-                    type: currentType.value ?? undefined,
-                    province_id: nextProvinceId ?? undefined,
-                },
-                { preserveScroll: true, preserveState: true, replace: true },
-            );
-        };
-
-        if (count > 0) {
-            try {
-                const bbox = el.getBBox();
-                const text = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'text',
-                );
-                text.textContent = String(count);
-                text.setAttribute('x', String(bbox.x + bbox.width / 2));
-                text.setAttribute('y', String(bbox.y + bbox.height / 2));
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('dominant-baseline', 'middle');
-                text.setAttribute(
-                    'style',
-                    'font-size: 10px; font-weight: 700; fill: rgba(236, 253, 245, 0.95); paint-order: stroke; stroke: rgba(0,0,0,0.65); stroke-width: 2px; pointer-events: none;',
-                );
-                labelsGroup.appendChild(text);
-            } catch {
-                //
-            }
-        }
-    }
-};
-
-const loadCounts = async () => {
-    const type = currentType.value;
-    const qs = type ? `?type=${encodeURIComponent(type)}` : '';
-    const res = await fetch(`/api/jibom/counts-by-province${qs}`, {
-        headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) {
-        return;
-    }
-    const json = (await res.json()) as { data?: ProvinceCount[] };
-    counts.value = Array.isArray(json.data) ? json.data : [];
-};
 
 const loadProvinces = async () => {
     const res = await fetch('/api/wilayah/provinces', {
@@ -298,39 +152,105 @@ const loadProvinces = async () => {
     provinces.value = Array.isArray(json) ? json : [];
 };
 
-watch(
-    () => props.filters.type,
-    async (value, oldValue) => {
-        if (value === oldValue) return;
-        await loadCounts();
-        await applyCountsToSvg();
-    },
-);
+const getLeaflet = async () => {
+    const mod = await import('leaflet');
+    return mod.default;
+};
+
+const clearMarkers = () => {
+    for (const m of markers) {
+        m.remove();
+    }
+    markers.length = 0;
+};
+
+const renderMarkers = async () => {
+    if (!map) return;
+    clearMarkers();
+
+    const L = await getLeaflet();
+    for (const item of itemsWithCoords.value) {
+        const lat = parseCoord(item.latitude)!;
+        const lng = parseCoord(item.longitude)!;
+        const color = currentProvinceId.value && item.province_id === currentProvinceId.value
+            ? '#22c55e'
+            : '#a3e635';
+        const marker = L.circleMarker([lat, lng], {
+            radius: 7,
+            color,
+            fillColor: color,
+            fillOpacity: 0.6,
+            weight: 2,
+        }).addTo(map!);
+
+        const province = provinceNameById.value[item.province_id] ?? item.province_id;
+        const tooltip = `${province}: ${typeLabel(item.incident_type)}`;
+        marker.bindTooltip(tooltip, {
+            direction: 'top',
+            offset: [0, -8],
+            className: 'leaflet-tooltip-dark',
+        });
+
+        marker.on('click', () => {
+            const nextProvinceId = currentProvinceId.value === item.province_id ? null : item.province_id;
+            router.get(
+                '/jibom',
+                {
+                    type: currentType.value ?? undefined,
+                    province_id: nextProvinceId ?? undefined,
+                },
+                { preserveScroll: true, preserveState: true, replace: true },
+            );
+        });
+
+        markers.push(marker);
+    }
+};
+
+const ensureMap = async () => {
+    if (typeof window === 'undefined') return;
+    await nextTick();
+    if (!mapContainer.value) return;
+
+    if (map) {
+        map.invalidateSize?.();
+        await renderMarkers();
+        return;
+    }
+
+    const L = await getLeaflet();
+    map = L.map(mapContainer.value, {
+        zoomControl: true,
+        attributionControl: false,
+    }).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© CartoDB',
+        maxZoom: 19,
+    }).addTo(map);
+
+    L.control.attribution({ prefix: false }).addTo(map);
+
+    await renderMarkers();
+};
+
+onBeforeUnmount(() => {
+    clearMarkers();
+    map?.remove();
+    map = null;
+});
 
 watch(
-    () => props.filters.province_id,
-    async (value, oldValue) => {
-        if (value === oldValue) return;
-        await applyCountsToSvg();
+    () => [props.filters.type, props.filters.province_id, props.items.data] as const,
+    async () => {
+        await nextTick();
+        await renderMarkers();
     },
 );
 
 onMounted(async () => {
-    try {
-        const res = await fetch('/api/jibom/indonesia-map-svg', {
-            headers: { Accept: 'image/svg+xml' },
-        });
-        if (!res.ok) {
-            mapError.value = `Gagal memuat map (${res.status})`;
-            return;
-        }
-        await loadProvinces();
-        await loadCounts();
-        mapSvg.value = await res.text();
-        await applyCountsToSvg();
-    } catch {
-        mapError.value = 'Gagal memuat map';
-    }
+    await loadProvinces();
+    await ensureMap();
 });
 </script>
 
@@ -394,31 +314,12 @@ onMounted(async () => {
         <div class="mb-4 rounded-xl border border-green-500/15 bg-black/20 p-3">
             <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
                 <span>> MAP INDONESIA</span>
-                <span class="text-[11px]">> indonesiaLow.svg</span>
-            </div>
-            <div v-if="mapError" class="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
-                > {{ mapError }}
+                <span class="text-[11px]">> leaflet · cartodb dark</span>
             </div>
             <div
-                v-else-if="mapSvg"
-                class="relative w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-2"
-            >
-                <div
-                    v-if="hovered"
-                    class="pointer-events-none absolute left-2 right-2 top-2 z-10 flex items-center justify-between rounded-lg border border-green-500/15 bg-black/50 px-3 py-2 text-xs text-green-200/90 backdrop-blur"
-                >
-                    <span>> {{ hovered.name }}</span>
-                    <span class="text-[11px]">> kejadian: {{ hovered.count }}</span>
-                </div>
-                <div
-                    ref="mapRoot"
-                    class="mx-auto max-w-[1210px] overflow-hidden rounded-lg [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-lg"
-                    v-html="mapSvg"
-                />
-            </div>
-            <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-3 text-xs text-green-300/60">
-                loading_map...
-            </div>
+                ref="mapContainer"
+                class="h-[500px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+            />
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-green-500/15 bg-black/20">
@@ -497,3 +398,39 @@ onMounted(async () => {
         </div>
     </div>
 </template>
+
+<style>
+.leaflet-tooltip-dark {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #bbf7d0 !important;
+    font-family: monospace !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+}
+.leaflet-tooltip-dark::before {
+    border-top-color: rgba(34, 197, 94, 0.3) !important;
+}
+.leaflet-container {
+    background: #0a0a0a !important;
+    font-family: monospace !important;
+}
+.leaflet-control-zoom a {
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: #bbf7d0 !important;
+    border: 1px solid rgba(34, 197, 94, 0.2) !important;
+}
+.leaflet-control-zoom a:hover {
+    background: rgba(34, 197, 94, 0.15) !important;
+}
+.leaflet-control-attribution {
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: rgba(34, 197, 94, 0.5) !important;
+    font-size: 9px !important;
+}
+.leaflet-control-attribution a {
+    color: rgba(34, 197, 94, 0.5) !important;
+}
+</style>

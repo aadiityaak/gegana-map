@@ -45,6 +45,8 @@ class JibomIncidentController extends Controller
                 'ji.description',
                 'ji.photos',
                 'ji.news_source',
+                'ji.latitude',
+                'ji.longitude',
                 'ji.province_id',
                 'ji.regency_id',
                 'ji.district_id',

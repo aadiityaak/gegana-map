@@ -592,7 +592,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
             if (is_string($since) && ctype_digit($since)) {
                 $query->where('id', '>', (int) $since);
             }
-            $logs = $query->limit(100)->get();
+            $logs = $query->limit(100)->get()
+                ->map(function ($log) {
+                    $meta = json_decode($log->metadata ?? '{}', true) ?: [];
+
+                    // Enrich: jika ada incident_id tapi metadata belum ada koordinat,
+                    // cari dari tabel insiden terkait
+                    if (
+                        !isset($meta['latitude'], $meta['longitude'])
+                        && !isset($meta['lat'], $meta['lng'])
+                        && isset($meta['incident_id'])
+                    ) {
+                        $incidentId = (int) $meta['incident_id'];
+                        $tables = [
+                            ['table' => 'jibom_incidents', 'type' => 'jibom'],
+                            ['table' => 'kbrn_incidents', 'type' => 'kbrn'],
+                            ['table' => 'wan_teror_incidents', 'type' => 'wan_teror'],
+                        ];
+                        $incidentType = $meta['incident_type'] ?? null;
+                        foreach ($tables as $t) {
+                            if ($incidentType && $t['type'] !== $incidentType) continue;
+                            $incident = DB::table($t['table'])
+                                ->where('id', $incidentId)
+                                ->select(['latitude', 'longitude'])
+                                ->first();
+                            if ($incident && $incident->latitude && $incident->longitude) {
+                                $meta['latitude'] = $incident->latitude;
+                                $meta['longitude'] = $incident->longitude;
+                                $log->metadata = json_encode($meta);
+                                break;
+                            }
+                        }
+                    }
+
+                    return $log;
+                });
             return response()->json(['logs' => $logs]);
         })->name('api.hermes.logs');
 
