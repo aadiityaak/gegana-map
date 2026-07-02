@@ -1,8 +1,8 @@
-# Dokumentasi: Integrasi Hermes AI Agent ↔ gegana-map
+# Dokumentasi: Integrasi AI Agent ↔ gegana-map
 
 ## Ringkasan
 
-Hermes Agent adalah AI agent yang berjalan via cron setiap jam, mencari berita terkait JIBOM, KBRN, dan WAN Teror, lalu mengirim data ke gegana-map melalui REST API.
+AI Agent berjalan via cron setiap jam, mencari berita terkait JIBOM, KBRN, dan WAN Teror, lalu mengirim data ke gegana-map melalui REST API.
 
 ---
 
@@ -208,7 +208,7 @@ curl -X POST https://dev.pusdatagegana.my.id/api/hermes/incidents/42/development
 
 ### 3.4 Kirim Log Aktivitas
 
-Hermes Agent mengirim log aktivitas realtime ke gegana-map. Log ditampilkan di halaman `/hermes-logs` pada aplikasi.
+AI Agent mengirim log aktivitas realtime ke gegana-map. Log ditampilkan di halaman `/hermes-logs` pada aplikasi.
 
 ```
 POST /api/hermes/logs
@@ -227,7 +227,7 @@ POST /api/hermes/logs
 
 | Type           | Keterangan                                               |
 | -------------- | -------------------------------------------------------- |
-| `scan_start`   | Hermes mulai scanning cycle                              |
+| `scan_start`   | AI Agent mulai scanning cycle                            |
 | `scan_done`    | Scanning cycle selesai                                   |
 | `search_start` | Mulai mencari berita                                     |
 | `search_done`  | Pencarian selesai (sertakan `results_count` di metadata) |
@@ -242,7 +242,7 @@ POST /api/hermes/logs
 **Contoh Request:**
 
 ```bash
-# Hermes mulai scanning
+# AI Agent mulai scanning
 curl -X POST https://dev.pusdatagegana.my.id/api/hermes/logs \
   -H "Authorization: Bearer xxx-token-xxx" \
   -H "Content-Type: application/json" \
@@ -450,6 +450,6 @@ def scan_news():
 ## 9. Catatan
 
 - `news_url` adalah primary deduplication key. Dua artikel dengan URL yang sama dianggap berita yang sama.
-- `case_developments` bersifat append-only via API. Tidak bisa edit/delete melalui Hermes.
-- Semua koordinat, wilayah, dan foto bersifat opsional — Hermes bisa input partial data.
-- `news_source` akan otomatis diset ke `ai_agent` untuk semua insiden dari Hermes.
+- `case_developments` bersifat append-only via API. Tidak bisa edit/delete oleh AI Agent.
+- Semua koordinat, wilayah, dan foto bersifat opsional — AI Agent bisa input partial data.
+- `news_source` akan otomatis diset ke `ai_agent` untuk semua insiden dari AI Agent.
