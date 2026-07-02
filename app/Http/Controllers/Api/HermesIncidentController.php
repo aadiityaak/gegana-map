@@ -81,10 +81,10 @@ class HermesIncidentController extends Controller
             'longitude' => $validated['longitude'] ?? null,
             'news_source' => 'ai_agent',
             'news_url' => $newsUrl,
-            'province_id' => $validated['province_id'] ?? '00',
-            'regency_id' => $validated['regency_id'] ?? '0000',
-            'district_id' => $validated['district_id'] ?? '000000',
-            'village_id' => $validated['village_id'] ?? '0000000000',
+            'province_id' => $validated['province_id'] ?? null,
+            'regency_id' => $validated['regency_id'] ?? null,
+            'district_id' => $validated['district_id'] ?? null,
+            'village_id' => $validated['village_id'] ?? null,
         ]);
 
         return response()->json([
