@@ -13,7 +13,7 @@ class WilayahIndonesiaSeeder extends Seeder
             return;
         }
 
-        $path = env('WILAYAH_SQL_PATH', 'C:\Users\ASUS\Downloads\wilayah_indonesia (1).sql');
+        $path = env('WILAYAH_SQL_PATH', database_path('wilayah/wilayah_indonesia.sql'));
         $hasSqlFile = is_string($path) && $path !== '' && file_exists($path);
 
         if (! $hasSqlFile) {
