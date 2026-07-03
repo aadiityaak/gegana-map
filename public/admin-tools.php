@@ -470,6 +470,12 @@ $toolGroups = [
                 'variant' => 'success',
                 'commands' => ['php artisan db:seed --force'],
             ],
+            'seed_wilayah' => [
+                'label' => 'Seed Wilayah Indonesia',
+                'description' => 'Seed wilayah Indonesia (provinsi, kota, kecamatan, desa)',
+                'variant' => 'success',
+                'commands' => ['php artisan db:seed --class=WilayahIndonesiaSeeder --vv'],
+            ],
             'migrate_fresh' => [
                 'label' => 'Fresh Migration',
                 'description' => 'Drop all tables and re-migrate',
