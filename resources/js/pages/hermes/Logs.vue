@@ -173,7 +173,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
 
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm font-medium text-green-200/90">{{ log.title }}</span>
+                            <span class="text-sm font-medium text-green-200/90 break-all">{{ log.title }}</span>
                             <Badge :class="typeBadgeClass(log.type)" class="px-1.5 py-0 text-[10px]">
                                 {{ typeBadge(log.type) }}
                             </Badge>
@@ -192,7 +192,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
                                 :key="k"
                                 class="inline-flex items-center gap-1 rounded border border-green-500/10 bg-black/20 px-1.5 py-0 text-[10px] font-mono text-green-300/50"
                             >
-                                {{ k }}: <span class="text-green-300/80">{{ v }}</span>
+                                {{ k }}: <span class="text-green-300/80 break-all">{{ v }}</span>
                             </span>
                         </div>
 
