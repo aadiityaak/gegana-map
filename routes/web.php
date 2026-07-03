@@ -253,9 +253,6 @@ Route::middleware(['auth', 'verified'])->get('/api/ketahanan-pangan/indonesia-pr
         ->header('Content-Type', $upstream->header('Content-Type', 'text/plain; charset=UTF-8'));
 })->name('api.ketahanan-pangan.indonesia-provinces-ts');
 
-// Public wilayah match — used by Hermes Agent cron (no auth)
-Route::get('api/wilayah/match', [WilayahController::class, 'match'])->name('api.wilayah.match');
-
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard', [
         'dashboard' => function () {
