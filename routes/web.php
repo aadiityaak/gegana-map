@@ -536,6 +536,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('regencies', [WilayahController::class, 'regencies'])->name('api.wilayah.regencies');
         Route::get('districts', [WilayahController::class, 'districts'])->name('api.wilayah.districts');
         Route::get('villages', [WilayahController::class, 'villages'])->name('api.wilayah.villages');
+        Route::get('match', [WilayahController::class, 'match'])->name('api.wilayah.match');
     });
 
     Route::get('api/jibom/indonesia-map-svg', function () {

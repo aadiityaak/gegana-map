@@ -48,5 +48,66 @@ class WilayahController extends Controller
             ->limit(500)
             ->get();
     }
+
+    /**
+     * Match wilayah name to ID via LIKE search.
+     * Used by Hermes Agent cron to resolve Nominatim place names
+     * into numeric wilayah IDs (province_id, regency_id, etc.).
+     *
+     * Query params:
+     *   type  = province | regency | district | village
+     *   name  = partial name (e.g. "Jawa Barat", "Bogor")
+     *   parent_id = optional — scope search within parent
+     *               (province_id for regency, regency_id for district, etc.)
+     */
+    public function match(Request $request)
+    {
+        $type = $request->query('type', '');
+        $name = trim($request->query('name', ''));
+        $parentId = trim($request->query('parent_id', ''));
+
+        if ($name === '') {
+            return response()->json(['matches' => []]);
+        }
+
+        $table = match ($type) {
+            'province' => 'reg_provinces',
+            'regency'  => 'reg_regencies',
+            'district' => 'reg_districts',
+            'village'  => 'reg_villages',
+            default    => null,
+        };
+
+        if ($table === null) {
+            return response()->json(['matches' => []], 422);
+        }
+
+        $query = DB::table($table)
+            ->select(['id', 'name'])
+            ->where('name', 'like', "%{$name}%");
+
+        // Scope to parent if provided
+        if ($parentId !== '') {
+            $fk = match ($type) {
+                'regency'  => 'province_id',
+                'district' => 'regency_id',
+                'village'  => 'district_id',
+                default    => null,
+            };
+            if ($fk !== null) {
+                $query->where($fk, $parentId);
+            }
+        }
+
+        // Prefer exact match first, then partial
+        $exact = (clone $query)->where('name', $name)->first();
+        if ($exact) {
+            return response()->json(['matches' => [$exact]]);
+        }
+
+        $results = $query->orderBy('name')->limit(10)->get();
+
+        return response()->json(['matches' => $results]);
+    }
 }
 
