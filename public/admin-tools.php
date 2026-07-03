@@ -474,7 +474,7 @@ $toolGroups = [
                 'label' => 'Seed Wilayah Indonesia',
                 'description' => 'Seed wilayah Indonesia (provinsi, kota, kecamatan, desa)',
                 'variant' => 'success',
-                'commands' => ['php artisan db:seed --class=WilayahIndonesiaSeeder --vv'],
+                'custom' => 'handleSeedWilayahSimple',
             ],
             'migrate_fresh' => [
                 'label' => 'Fresh Migration',
@@ -937,6 +937,52 @@ function handleDiskSpace()
     $output .= 'Free: ' . formatBytes($freeSpace) . "\n";
     $output .= 'Total: ' . formatBytes($totalSpace) . "\n";
     $output .= 'Usage: ' . round(($usedSpace / $totalSpace) * 100, 2) . "%\n";
+
+    return $output;
+}
+
+function handleSeedWilayahSimple()
+{
+    $laravelRoot = getLaravelRoot();
+    $output = '';
+    $tempScriptPath = $laravelRoot . '/temp_truncate_and_seed.php';
+
+    try {
+        // Step 1: Create temporary PHP script
+        $tempScriptContent = <<<'PHP'
+<?php
+
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+use Illuminate\Support\Facades\DB;
+
+echo "Truncating wilayah tables...\n";
+DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+DB::table('reg_villages')->truncate();
+DB::table('reg_districts')->truncate();
+DB::table('reg_regencies')->truncate();
+DB::table('reg_provinces')->truncate();
+DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+echo "✅ Tables truncated successfully.\n";
+PHP;
+        file_put_contents($tempScriptPath, $tempScriptContent);
+
+        // Step 2: Execute truncate script
+        $output .= executeCommand('php ' . escapeshellarg($tempScriptPath));
+        $output .= "\n";
+
+        // Step 3: Execute seeder
+        $output .= "Running WilayahIndonesiaSeeder...\n";
+        $output .= executeCommand('php artisan db:seed --class=WilayahIndonesiaSeeder');
+        $output .= "\n✅ Seeding process completed.\n";
+    } catch (\Throwable $e) {
+        $output = 'Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString();
+    } finally {
+        // Cleanup
+        @unlink($tempScriptPath);
+    }
 
     return $output;
 }
