@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 
 class BrandingSettings
 {
-  private const DEFAULT_LOGO_PATH = 'branding/lgo.png';
+  private const DEFAULT_LOGO_PATH = 'branding/pusdata.png';
   private const DEFAULT_FAVICON_PATH = 'branding/gegana-fav.png';
 
   public function shared(): array

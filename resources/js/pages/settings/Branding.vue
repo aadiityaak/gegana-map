@@ -21,7 +21,7 @@ defineOptions({
 const page = usePage();
 const branding = computed(() => (page.props as any)?.branding ?? {});
 const defaultName = computed(() => branding.value?.name ?? (page.props as any)?.name ?? 'APP');
-const defaultLogoUrl = computed(() => branding.value?.logo_url ?? '/branding/lgo.png');
+const defaultLogoUrl = computed(() => branding.value?.logo_url ?? '/branding/pusdata.png');
 const defaultFaviconUrl = computed(
     () => branding.value?.favicon_url ?? '/branding/gegana-fav.png',
 );
@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
                     {{ form.errors.logo }}
                 </div>
                 <div class="text-xs text-muted-foreground">
-                    Gunakan file PNG agar URL `branding/lgo.png` tetap konsisten.
+                    Gunakan file PNG agar URL `branding/pusdata.png` tetap konsisten.
                 </div>
             </div>
 

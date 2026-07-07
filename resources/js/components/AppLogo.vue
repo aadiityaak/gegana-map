@@ -5,7 +5,7 @@ import { computed } from 'vue';
 const page = usePage();
 const branding = computed(() => (page.props as any)?.branding ?? {});
 const brandingLogo = computed(() =>
-    branding.value?.logo_url?.trim() ? branding.value.logo_url : '/branding/lgo.png',
+    branding.value?.logo_url?.trim() ? branding.value.logo_url : '/branding/pusdata.png',
 );
 </script>
 
