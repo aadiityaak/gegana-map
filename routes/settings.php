@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\BrandingController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\File;
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::redirect('settings/appearance', '/settings/profile');
     Route::inertia('settings/branding', 'settings/Branding')->name('branding.edit');
+    Route::patch('settings/branding', [BrandingController::class, 'update'])->name('branding.update');
     Route::inertia('settings/about', 'settings/About', [
         'app' => fn () => [
             'version' => env('APP_VERSION', '1.0.0'),

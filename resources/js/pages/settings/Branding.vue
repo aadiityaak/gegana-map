@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
@@ -19,79 +19,85 @@ defineOptions({
 });
 
 const page = usePage();
-const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
-const defaultLogoUrl = '/branding/lgo.png';
-const defaultFaviconUrl = '/branding/gegana-fav.png';
-const name = ref('');
-const logoDataUrl = ref<string>('');
-const faviconDataUrl = ref<string>('');
+const branding = computed(() => (page.props as any)?.branding ?? {});
+const defaultName = computed(() => branding.value?.name ?? (page.props as any)?.name ?? 'APP');
+const defaultLogoUrl = computed(() => branding.value?.logo_url ?? '/branding/lgo.png');
+const defaultFaviconUrl = computed(
+    () => branding.value?.favicon_url ?? '/branding/gegana-fav.png',
+);
+
+const form = useForm({
+    name: '',
+    logo: null as File | null,
+    favicon: null as File | null,
+});
+
+const logoPreviewUrl = ref('');
+const faviconPreviewUrl = ref('');
 
 const resolvedLogoSrc = computed(() =>
-    logoDataUrl.value?.trim() ? logoDataUrl.value : defaultLogoUrl,
+    logoPreviewUrl.value?.trim() ? logoPreviewUrl.value : defaultLogoUrl.value,
 );
 const resolvedFaviconSrc = computed(() =>
-    faviconDataUrl.value?.trim() ? faviconDataUrl.value : defaultFaviconUrl,
+    faviconPreviewUrl.value?.trim() ? faviconPreviewUrl.value : defaultFaviconUrl.value,
 );
 
-const load = () => {
-    if (typeof window === 'undefined') return;
-    name.value = localStorage.getItem('branding.name') ?? defaultName.value;
-    logoDataUrl.value = localStorage.getItem('branding.logoDataUrl') ?? '';
-    faviconDataUrl.value =
-        localStorage.getItem('branding.faviconDataUrl') ?? '';
+watch(
+    defaultName,
+    (value) => {
+        form.name = value;
+    },
+    { immediate: true },
+);
+
+const updatePreviewUrl = (
+    currentPreview: typeof logoPreviewUrl,
+    file: File | null,
+) => {
+    if (currentPreview.value.startsWith('blob:')) {
+        URL.revokeObjectURL(currentPreview.value);
+    }
+
+    currentPreview.value = file ? URL.createObjectURL(file) : '';
 };
 
-const readFileAsDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('failed_to_read_file'));
-        reader.onload = () => resolve(String(reader.result ?? ''));
-        reader.readAsDataURL(file);
-    });
-
-const onLogoChange = async (event: Event) => {
+const onLogoChange = (event: Event) => {
     const input = event.target as HTMLInputElement | null;
     const file = input?.files?.[0];
-    if (!file) return;
-    logoDataUrl.value = await readFileAsDataUrl(file);
+    form.logo = file ?? null;
+    updatePreviewUrl(logoPreviewUrl, file ?? null);
 };
 
-const onFaviconChange = async (event: Event) => {
+const onFaviconChange = (event: Event) => {
     const input = event.target as HTMLInputElement | null;
     const file = input?.files?.[0];
-    if (!file) return;
-    faviconDataUrl.value = await readFileAsDataUrl(file);
+    form.favicon = file ?? null;
+    updatePreviewUrl(faviconPreviewUrl, file ?? null);
 };
 
 const save = () => {
-    if (typeof window === 'undefined') return;
-    const trimmed = name.value.trim();
-    localStorage.setItem('branding.name', trimmed || defaultName.value);
-    if (logoDataUrl.value) {
-        localStorage.setItem('branding.logoDataUrl', logoDataUrl.value);
-    } else {
-        localStorage.removeItem('branding.logoDataUrl');
-    }
-    if (faviconDataUrl.value) {
-        localStorage.setItem('branding.faviconDataUrl', faviconDataUrl.value);
-    } else {
-        localStorage.removeItem('branding.faviconDataUrl');
-    }
-    window.dispatchEvent(new CustomEvent('branding:update'));
+    form.patch('/settings/branding', {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.reset('logo', 'favicon');
+            updatePreviewUrl(logoPreviewUrl, null);
+            updatePreviewUrl(faviconPreviewUrl, null);
+        },
+    });
 };
 
 const reset = () => {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('branding.name');
-    localStorage.removeItem('branding.logoDataUrl');
-    localStorage.removeItem('branding.faviconDataUrl');
-    name.value = defaultName.value;
-    logoDataUrl.value = '';
-    faviconDataUrl.value = '';
-    window.dispatchEvent(new CustomEvent('branding:update'));
+    form.reset('logo', 'favicon');
+    form.name = defaultName.value;
+    updatePreviewUrl(logoPreviewUrl, null);
+    updatePreviewUrl(faviconPreviewUrl, null);
 };
 
-onMounted(load);
+onBeforeUnmount(() => {
+    updatePreviewUrl(logoPreviewUrl, null);
+    updatePreviewUrl(faviconPreviewUrl, null);
+});
 </script>
 
 <template>
@@ -120,7 +126,7 @@ onMounted(load);
                 <Label for="branding-name">Nama Brand</Label>
                 <Input
                     id="branding-name"
-                    v-model="name"
+                    v-model="form.name"
                     placeholder="Nama aplikasi"
                     autocomplete="off"
                 />
@@ -131,7 +137,7 @@ onMounted(load);
                 <Input
                     id="branding-logo"
                     type="file"
-                    accept="image/*"
+                    accept="image/png"
                     @change="onLogoChange"
                 />
                 <div
@@ -143,8 +149,14 @@ onMounted(load);
                         class="max-h-[300px] max-w-[300px] rounded-md object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
-                        {{ logoDataUrl ? 'Custom logo (tersimpan lokal)' : 'Default logo' }}
+                        {{ form.logo ? 'Logo baru siap diupload' : 'Logo aktif dari server' }}
                     </div>
+                </div>
+                <div v-if="form.errors.logo" class="text-sm text-destructive">
+                    {{ form.errors.logo }}
+                </div>
+                <div class="text-xs text-muted-foreground">
+                    Gunakan file PNG agar URL `branding/lgo.png` tetap konsisten.
                 </div>
             </div>
 
@@ -153,7 +165,7 @@ onMounted(load);
                 <Input
                     id="branding-favicon"
                     type="file"
-                    accept="image/*"
+                    accept="image/png"
                     @change="onFaviconChange"
                 />
                 <div
@@ -165,19 +177,27 @@ onMounted(load);
                         class="max-h-[300px] max-w-[300px] rounded object-contain"
                     />
                     <div class="text-xs text-muted-foreground">
-                        {{
-                            faviconDataUrl
-                                ? 'Custom favicon (tersimpan lokal)'
-                                : 'Default favicon'
-                        }}
+                        {{ form.favicon ? 'Favicon baru siap diupload' : 'Favicon aktif dari server' }}
                     </div>
+                </div>
+                <div v-if="form.errors.favicon" class="text-sm text-destructive">
+                    {{ form.errors.favicon }}
+                </div>
+                <div class="text-xs text-muted-foreground">
+                    Gunakan file PNG agar URL `branding/gegana-fav.png` tetap konsisten.
                 </div>
             </div>
 
+            <div v-if="form.errors.name" class="text-sm text-destructive">
+                {{ form.errors.name }}
+            </div>
+
             <div class="flex flex-wrap items-center gap-2">
-                <Button type="button" @click="save">Save</Button>
-                <Button type="button" variant="secondary" @click="reset">
-                    Reset
+                <Button type="button" :disabled="form.processing" @click="save">
+                    {{ form.processing ? 'Saving...' : 'Save' }}
+                </Button>
+                <Button type="button" variant="secondary" :disabled="form.processing" @click="reset">
+                    Reset form
                 </Button>
             </div>
         </div>

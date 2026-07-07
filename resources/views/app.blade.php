@@ -30,8 +30,8 @@
             }
         </style>
 
-        <link rel="icon" href="/branding/gegana-fav.png" type="image/png">
-        <link rel="apple-touch-icon" href="/branding/gegana-fav.png">
+        <link rel="icon" href="{{ app(\App\Support\BrandingSettings::class)->faviconUrl() }}" type="image/png">
+        <link rel="apple-touch-icon" href="{{ app(\App\Support\BrandingSettings::class)->faviconUrl() }}">
 
         @fonts
 

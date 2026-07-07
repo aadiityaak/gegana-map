@@ -1,34 +1,12 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed } from 'vue';
 
 const page = usePage();
-const defaultName = computed(() => (page.props as any)?.name ?? 'APP');
-const defaultLogoUrl = '/branding/lgo.png';
-const customName = ref<string | null>(null);
-const customLogoDataUrl = ref<string | null>(null);
-
-const load = () => {
-    if (typeof window === 'undefined') return;
-    customName.value = localStorage.getItem('branding.name');
-    customLogoDataUrl.value = localStorage.getItem('branding.logoDataUrl');
-};
-
-const brandingName = computed(() =>
-    customName.value?.trim() ? customName.value : defaultName.value,
-);
+const branding = computed(() => (page.props as any)?.branding ?? {});
 const brandingLogo = computed(() =>
-    customLogoDataUrl.value?.trim() ? customLogoDataUrl.value : defaultLogoUrl,
+    branding.value?.logo_url?.trim() ? branding.value.logo_url : '/branding/lgo.png',
 );
-
-onMounted(() => {
-    load();
-    window.addEventListener('branding:update', load as EventListener);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('branding:update', load as EventListener);
-});
 </script>
 
 <template>
