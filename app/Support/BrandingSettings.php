@@ -16,8 +16,8 @@ class BrandingSettings
 
     return [
       'name' => $this->resolvedName($settings),
-      'logo_url' => $this->versionedAssetUrl(self::DEFAULT_LOGO_PATH),
-      'favicon_url' => $this->versionedAssetUrl(self::DEFAULT_FAVICON_PATH),
+      'logo_url' => $this->resolvedUrl(self::DEFAULT_LOGO_PATH),
+      'favicon_url' => $this->resolvedUrl(self::DEFAULT_FAVICON_PATH),
     ];
   }
 
@@ -30,12 +30,10 @@ class BrandingSettings
 
     if ($logo instanceof UploadedFile) {
       $this->replaceUploadedAsset($logo, self::DEFAULT_LOGO_PATH);
-      $settings['logo_path'] = self::DEFAULT_LOGO_PATH;
     }
 
     if ($favicon instanceof UploadedFile) {
       $this->replaceUploadedAsset($favicon, self::DEFAULT_FAVICON_PATH);
-      $settings['favicon_path'] = self::DEFAULT_FAVICON_PATH;
     }
 
     $this->write($settings);
@@ -53,22 +51,33 @@ class BrandingSettings
     return $name !== '' ? $name : (string) config('app.name', 'Laravel');
   }
 
-  private function replaceUploadedAsset(UploadedFile $file, string $targetRelativePath): void
+  /**
+   * Simpan file upload ke public/branding/.
+   * file_put_contents lebih kompatibel di shared hosting daripada $file->move().
+   */
+  private function replaceUploadedAsset(UploadedFile $file, string $filename): void
   {
-    $normalized = $this->normalizeRelativePath($targetRelativePath);
-    if ($normalized === null) {
-      return;
-    }
+    $targetPath = public_path($filename);
+    $directory = dirname($targetPath);
 
-    $directory = dirname(public_path($normalized));
-    File::ensureDirectoryExists($directory);
-    $file->move($directory, basename($normalized));
+    File::ensureDirectoryExists($directory, 0755, true);
+
+    $contents = $file->get();
+
+    if (file_put_contents($targetPath, $contents) === false) {
+      throw new \RuntimeException(sprintf(
+        'Tidak dapat menulis ke %s. Periksa permission folder public/branding/.',
+        $targetPath,
+      ));
+    }
   }
 
-  private function versionedAssetUrl(string $relativePath): string
+  private function resolvedUrl(string $relativePath): string
   {
-    $version = File::exists(public_path($relativePath))
-      ? (string) File::lastModified(public_path($relativePath))
+    $absolutePath = public_path($relativePath);
+
+    $version = File::exists($absolutePath)
+      ? (string) File::lastModified($absolutePath)
       : (string) time();
 
     return asset($relativePath) . '?v=' . $version;
@@ -96,16 +105,5 @@ class BrandingSettings
   private function settingsPath(): string
   {
     return storage_path('app/branding/settings.json');
-  }
-
-  private function normalizeRelativePath(?string $path): ?string
-  {
-    $trimmed = trim((string) $path);
-
-    if ($trimmed === '') {
-      return null;
-    }
-
-    return ltrim(str_replace('\\', '/', $trimmed), '/');
   }
 }

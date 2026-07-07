@@ -76,13 +76,19 @@ const onFaviconChange = (event: Event) => {
 };
 
 const save = () => {
-    form.patch('/settings/branding', {
+    form.transform((data) => ({
+        ...data,
+        _method: 'patch',
+    })).post('/settings/branding', {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
             form.reset('logo', 'favicon');
             updatePreviewUrl(logoPreviewUrl, null);
             updatePreviewUrl(faviconPreviewUrl, null);
+        },
+        onFinish: () => {
+            form.transform((data) => data);
         },
     });
 };
