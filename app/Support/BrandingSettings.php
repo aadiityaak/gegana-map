@@ -12,12 +12,15 @@ class BrandingSettings
 
   /**
    * Cari public directory yang benar.
-   * Di shared hosting dengan struktur laravel-app + public_html,
-   * public_path() ngasal ke laravel-app/public/, padahal web serve dari public_html/.
+   * Di shared hosting dengan struktur:
+   *   <root>/
+   *     laravel-app/   ← base_path()
+   *     public_html/   ← doc root web server
+   * public_path() ngarah ke laravel-app/public/, bukan public_html/.
    */
   private function publicDir(): string
   {
-    $publicHtml = base_path('public_html');
+    $publicHtml = dirname(base_path()) . DIRECTORY_SEPARATOR . 'public_html';
 
     return is_dir($publicHtml) ? $publicHtml : public_path();
   }
