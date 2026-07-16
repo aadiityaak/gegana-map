@@ -76,7 +76,10 @@ const onFaviconChange = (event: Event) => {
 };
 
 const save = () => {
-    form.post('/settings/branding', {
+    form.transform((data) => ({
+        ...data,
+        _method: 'patch',
+    })).post('/settings/branding', {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {

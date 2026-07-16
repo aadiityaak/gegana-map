@@ -42,7 +42,7 @@ class BrandingTest extends TestCase
 
         $response = $this->actingAs($user)
             ->from(route('branding.edit'))
-            ->post(route('branding.update'), [
+            ->patch(route('branding.update'), [
                 'name' => 'Pusdata Gegana',
                 'logo' => UploadedFile::fake()->image('logo.png', 200, 80),
                 'favicon' => UploadedFile::fake()->image('favicon.png', 64, 64),

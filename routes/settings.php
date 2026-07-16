@@ -27,13 +27,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::redirect('settings/appearance', '/settings/profile');
     Route::inertia('settings/branding', 'settings/Branding')->name('branding.edit');
-    Route::post('settings/branding', [BrandingController::class, 'update'])->name('branding.update');
+    Route::patch('settings/branding', [BrandingController::class, 'update'])->name('branding.update');
     Route::inertia('settings/about', 'settings/About', [
-        'app' => fn () => [
+        'app' => fn() => [
             'version' => env('APP_VERSION', '1.0.0'),
             'environment' => config('app.env'),
         ],
-        'backend' => fn () => [
+        'backend' => fn() => [
             'php' => PHP_VERSION,
             'laravel' => app()->version(),
             'composer' => (function (): array {
@@ -49,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
             })(),
         ],
-        'frontend' => fn () => [
+        'frontend' => fn() => [
             'node' => null,
             'package' => (function (): array {
                 $path = base_path('package.json');

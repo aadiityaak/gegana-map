@@ -10,6 +10,18 @@ class BrandingSettings
   private const DEFAULT_LOGO_PATH = 'branding/pusdata.png';
   private const DEFAULT_FAVICON_PATH = 'branding/gegana-fav.png';
 
+  /**
+   * Cari public directory yang benar.
+   * Di shared hosting dengan struktur laravel-app + public_html,
+   * public_path() ngasal ke laravel-app/public/, padahal web serve dari public_html/.
+   */
+  private function publicDir(): string
+  {
+    $publicHtml = base_path('public_html');
+
+    return is_dir($publicHtml) ? $publicHtml : public_path();
+  }
+
   public function shared(): array
   {
     $settings = $this->read();
@@ -51,13 +63,10 @@ class BrandingSettings
     return $name !== '' ? $name : (string) config('app.name', 'Laravel');
   }
 
-  /**
-   * Simpan file upload ke public/branding/.
-   * file_put_contents lebih kompatibel di shared hosting daripada $file->move().
-   */
   private function replaceUploadedAsset(UploadedFile $file, string $filename): void
   {
-    $targetPath = public_path($filename);
+    $dir = $this->publicDir();
+    $targetPath = $dir . DIRECTORY_SEPARATOR . $filename;
     $directory = dirname($targetPath);
 
     File::ensureDirectoryExists($directory, 0755, true);
@@ -66,7 +75,7 @@ class BrandingSettings
 
     if (file_put_contents($targetPath, $contents) === false) {
       throw new \RuntimeException(sprintf(
-        'Tidak dapat menulis ke %s. Periksa permission folder public/branding/.',
+        'Tidak dapat menulis ke %s. Periksa permission folder.',
         $targetPath,
       ));
     }
@@ -74,7 +83,7 @@ class BrandingSettings
 
   private function resolvedUrl(string $relativePath): string
   {
-    $absolutePath = public_path($relativePath);
+    $absolutePath = $this->publicDir() . DIRECTORY_SEPARATOR . $relativePath;
 
     $version = File::exists($absolutePath)
       ? (string) File::lastModified($absolutePath)
