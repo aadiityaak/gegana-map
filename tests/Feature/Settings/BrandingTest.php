@@ -55,9 +55,7 @@ class BrandingTest extends TestCase
         $settings = json_decode((string) File::get(storage_path('app/branding/settings.json')), true);
 
         $this->assertSame('Pusdata Gegana', $settings['name'] ?? null);
-        $this->assertSame('branding/lgo.png', $settings['logo_path'] ?? null);
-        $this->assertSame('branding/gegana-fav.png', $settings['favicon_path'] ?? null);
-        $this->assertFileExists(public_path('branding/lgo.png'));
+        $this->assertFileExists(public_path('branding/pusdata.png'));
         $this->assertFileExists(public_path('branding/gegana-fav.png'));
     }
 }

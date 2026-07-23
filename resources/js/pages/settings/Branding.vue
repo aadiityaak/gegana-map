@@ -87,9 +87,6 @@ const save = () => {
             updatePreviewUrl(logoPreviewUrl, null);
             updatePreviewUrl(faviconPreviewUrl, null);
         },
-        onFinish: () => {
-            form.transform((data) => data);
-        },
     });
 };
 
