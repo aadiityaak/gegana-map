@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -219,12 +219,12 @@ const getLeaflet = async () => {
 
 const markerColor = (severity: string) => {
     const map: Record<string, string> = {
-        low: '#34d399',
+        low: '#8EC8DD',
         medium: '#fbbf24',
         high: '#fb7185',
         critical: '#f87171',
     };
-    return map[severity] ?? '#22c55e';
+    return map[severity] ?? '#ABD5E5';
 };
 
 const parseCoordNumber = (value: number | string | null | undefined): number | null => {
@@ -291,12 +291,12 @@ const renderTradingViewWidget = async () => {
 
         const block = document.createElement('div');
         block.style.cssText =
-            'width: 100%; border: 1px solid rgba(34,197,94,0.15); background: rgba(0,0,0,0.20); border-radius: 12px; overflow: hidden;';
+            'width: 100%; border: 1px solid rgba(171, 213, 229, 0.15); background: rgba(0,0,0,0.20); border-radius: 12px; overflow: hidden;';
 
         const header = document.createElement('div');
         header.textContent = `> ${options.title}`;
         header.style.cssText =
-            'padding: 10px 12px; border-bottom: 1px solid rgba(34,197,94,0.15); font-size: 12px; letter-spacing: 0.12em; color: rgba(134,239,172,0.70); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;';
+            'padding: 10px 12px; border-bottom: 1px solid rgba(171, 213, 229, 0.15); font-size: 12px; letter-spacing: 0.12em; color: rgba(171,213,229,0.70); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;';
         block.appendChild(header);
 
         const container = document.createElement('div');
@@ -719,7 +719,7 @@ const updateMapMarkers = async () => {
 
         const popupEl = document.createElement('div');
         popupEl.style.cssText =
-            "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(226,255,232,0.92);";
+            "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(222,238,248,0.92);";
 
         const titleEl = document.createElement('div');
         titleEl.textContent = item.title;
@@ -735,7 +735,7 @@ const updateMapMarkers = async () => {
         buttonEl.type = 'button';
         buttonEl.textContent = '> OPEN DETAIL';
         buttonEl.style.cssText =
-            'display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(34,197,94,0.25); padding: 4px 10px; border-radius: 999px; background: rgba(34,197,94,0.10); color: rgba(226,255,232,0.92); font-size: 12px; cursor: pointer; margin-bottom: 10px;';
+            'display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(171, 213, 229, 0.25); padding: 4px 10px; border-radius: 999px; background: rgba(171, 213, 229, 0.10); color: rgba(222,238,248,0.92); font-size: 12px; cursor: pointer; margin-bottom: 10px;';
         buttonEl.addEventListener('click', (ev) => {
             L.DomEvent.stopPropagation(ev);
             goToDetail(item.id);
@@ -747,12 +747,12 @@ const updateMapMarkers = async () => {
         const sevEl = document.createElement('span');
         sevEl.textContent = severityLabel(item.severity_level);
         sevEl.style.cssText =
-            'border: 1px solid rgba(34,197,94,0.25); padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.35);';
+            'border: 1px solid rgba(171, 213, 229, 0.25); padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.35);';
         tagsEl.appendChild(sevEl);
         const statEl = document.createElement('span');
         statEl.textContent = statusLabel(item.status);
         statEl.style.cssText =
-            'border: 1px solid rgba(34,197,94,0.25); padding: 2px 8px; border-radius: 999px; background: rgba(34,197,94,0.10);';
+            'border: 1px solid rgba(171, 213, 229, 0.25); padding: 2px 8px; border-radius: 999px; background: rgba(171, 213, 229, 0.10);';
         tagsEl.appendChild(statEl);
         popupEl.appendChild(tagsEl);
 
@@ -958,7 +958,7 @@ const riskColor = (key: string): string => {
         critical: '#ef4444',
         high: '#f97316',
         medium: '#eab308',
-        low: '#22c55e',
+        low: '#ABD5E5',
     };
     return colors[key] ?? '#6b7280';
 };
@@ -1082,22 +1082,22 @@ watchEffect(() => {
         <div v-if="isDetailPage" class="space-y-4">
             <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
-                    <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                    <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                         > DETAIL INSIDEN
                     </h1>
-                    <Badge class="border border-green-500/25 bg-black/30 text-green-200">
+                    <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                         id: {{ props.detailId }}
                     </Badge>
                 </div>
                 <a
                     href="/ipoleksosbudkam"
-                    class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-green-200 hover:border-green-400/25"
+                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-sky-200 hover:border-sky-400/25"
                 >
                     > BACK
                 </a>
             </div>
 
-            <div v-if="detailLoading" class="flex items-center gap-2 text-xs text-green-300/60">
+            <div v-if="detailLoading" class="flex items-center gap-2 text-xs text-sky-300/60">
                 <Spinner />
                 loading_detail...
             </div>
@@ -1107,51 +1107,51 @@ watchEffect(() => {
             </div>
 
             <div v-else-if="detailItem" class="space-y-4">
-                <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
-                    <div class="text-sm font-semibold text-green-100">
+                <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
+                    <div class="text-sm font-semibold text-sky-100">
                         > {{ detailItem.title }}
                     </div>
-                    <div class="mt-2 text-xs text-green-300/60">
+                    <div class="mt-2 text-xs text-sky-300/60">
                         {{ formatDateTime(detailItem.incident_date) }} · {{ locationLabel(detailItem) }}
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2">
-                        <Badge class="border border-green-500/25 bg-black/35 text-green-200">
+                        <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
                             {{ severityLabel(detailItem.severity_level) }}
                         </Badge>
-                        <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                        <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
                             {{ statusLabel(detailItem.status) }}
                         </Badge>
-                        <Badge v-if="detailItem.category?.name" class="border border-green-500/25 bg-black/30 text-green-200">
+                        <Badge v-if="detailItem.category?.name" class="border border-sky-500/25 bg-black/30 text-sky-200">
                             {{ detailItem.category.name }}
                         </Badge>
-                        <Badge v-if="detailItem.sub_category?.name" class="border border-green-500/25 bg-black/30 text-green-200">
+                        <Badge v-if="detailItem.sub_category?.name" class="border border-sky-500/25 bg-black/30 text-sky-200">
                             {{ detailItem.sub_category.name }}
                         </Badge>
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
-                    <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
+                    <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
                         <span>> MAP LOCATION</span>
                         <span v-if="detailCoords" class="text-[11px]">> {{ detailCoords.lat.toFixed(5) }}, {{ detailCoords.lng.toFixed(5) }}</span>
                     </div>
                     <div
                         v-if="detailCoords"
                         ref="detailMapContainer"
-                        class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-green-500/15"
+                        class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-sky-500/15"
                     />
-                    <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-4 text-xs text-green-300/60">
+                    <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-xs text-sky-300/60">
                         > koordinat tidak tersedia.
                     </div>
                 </div>
 
                 <div
                     v-if="detailDescriptionHtml"
-                    class="rounded-xl border border-green-500/15 bg-black/20 p-4 text-sm text-green-200/85"
+                    class="rounded-xl border border-sky-500/15 bg-black/20 p-4 text-sm text-sky-200/85"
                     v-html="detailDescriptionHtml"
                 />
 
-                <div class="grid gap-2 rounded-xl border border-green-500/15 bg-black/20 p-4 text-xs text-green-300/70">
+                <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-xs text-sky-300/70">
                     <div v-if="detailItem.source">> source: {{ detailItem.source }}</div>
                     <div v-if="detailItem.data_source">> data_source: {{ detailItem.data_source }}</div>
                     <div v-if="detailItem.sumber_berita">> sumber_berita: {{ detailItem.sumber_berita }}</div>
@@ -1162,12 +1162,12 @@ watchEffect(() => {
                 </div>
 
                 <div v-if="detailItem.gallery?.length" class="space-y-2">
-                    <div class="text-xs tracking-widest text-green-300/60">GALLERY</div>
+                    <div class="text-xs tracking-widest text-sky-300/60">GALLERY</div>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         <div
                             v-for="img in detailItem.gallery"
                             :key="img.path"
-                            class="overflow-hidden rounded-md border border-green-500/15 bg-black/20"
+                            class="overflow-hidden rounded-md border border-sky-500/15 bg-black/20"
                         >
                             <div
                                 class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]"
@@ -1184,27 +1184,27 @@ watchEffect(() => {
                 </div>
 
                 <div v-if="detailItem.video_url" class="space-y-2">
-                    <div class="text-xs tracking-widest text-green-300/60">VIDEO</div>
-                    <video :src="detailItem.video_url" controls class="w-full rounded-md border border-green-500/15" />
+                    <div class="text-xs tracking-widest text-sky-300/60">VIDEO</div>
+                    <video :src="detailItem.video_url" controls class="w-full rounded-md border border-sky-500/15" />
                 </div>
             </div>
 
-            <div v-else class="text-xs text-green-300/60">> detail tidak ditemukan.</div>
+            <div v-else class="text-xs text-sky-300/60">> detail tidak ditemukan.</div>
         </div>
 
         <div v-else-if="isWidgetPage" class="space-y-4">
             <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-2">
-                    <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                    <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                         > {{ widgetTitle }}
                     </h1>
-                    <Badge class="border border-green-500/25 bg-black/30 text-green-200">
+                    <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                         ekonomi
                     </Badge>
                 </div>
                 <a
                     href="/ipoleksosbudkam/ekonomi"
-                    class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-green-200 hover:border-green-400/25"
+                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-sky-200 hover:border-sky-400/25"
                 >
                     > BACK
                 </a>
@@ -1214,14 +1214,14 @@ watchEffect(() => {
                 > {{ widgetError }}
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
-                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
+                <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
                     <span>> TRADINGVIEW_WIDGET</span>
                     <span class="text-[11px]">> external_embed</span>
                 </div>
                 <div
                     ref="widgetRoot"
-                    class="w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                    class="w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30"
                 />
             </div>
         </div>
@@ -1229,20 +1229,20 @@ watchEffect(() => {
         <template v-else>
             <div class="mb-6 flex flex-col gap-2">
                 <div class="flex flex-wrap items-center gap-2">
-                    <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                    <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                         > IPOLEKSOSBUDKAM
                     </h1>
-                    <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                    <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
                         {{ categoryLabel }}
                     </Badge>
                     <Badge
                         v-if="subcategoryLabel"
-                        class="border border-green-500/25 bg-black/30 text-green-200"
+                        class="border border-sky-500/25 bg-black/30 text-sky-200"
                     >
                         {{ subcategoryLabel }}
                     </Badge>
                 </div>
-                <div class="text-xs tracking-wide text-green-300/60">
+                <div class="text-xs tracking-wide text-sky-300/60">
                     <span v-if="meta">
                         total: {{ meta.total }}
                         · range: {{ meta.start_date }} → {{ meta.end_date }}
@@ -1256,33 +1256,33 @@ watchEffect(() => {
 
             <div v-else class="space-y-3">
                 <div class="grid gap-3 md:grid-cols-3">
-                    <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-green-300/60">TOTAL DATA</div>
-                        <div class="mt-2 text-2xl font-semibold tracking-wide text-green-100">
+                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
+                        <div class="text-xs tracking-widest text-sky-300/60">TOTAL DATA</div>
+                        <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
                             {{ formatNumber(totalData) }}
                         </div>
-                        <div class="mt-1 text-xs text-green-300/60">> record_count</div>
+                        <div class="mt-1 text-xs text-sky-300/60">> record_count</div>
                     </div>
-                    <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-green-300/60">TOTAL KATEGORI</div>
-                        <div class="mt-2 text-2xl font-semibold tracking-wide text-green-100">
+                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
+                        <div class="text-xs tracking-widest text-sky-300/60">TOTAL KATEGORI</div>
+                        <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
                             {{ formatNumber(totalCategory) }}
                         </div>
-                        <div class="mt-1 text-xs text-green-300/60">> distinct_category</div>
+                        <div class="mt-1 text-xs text-sky-300/60">> distinct_category</div>
                     </div>
-                    <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-green-300/60">TOTAL TERDAMPAK</div>
-                        <div class="mt-2 text-2xl font-semibold tracking-wide text-green-100">
+                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
+                        <div class="text-xs tracking-widest text-sky-300/60">TOTAL TERDAMPAK</div>
+                        <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
                             {{ formatNumber(totalTerdampak) }}
                         </div>
-                        <div class="mt-1 text-xs text-green-300/60">> sum_affected (loaded)</div>
+                        <div class="mt-1 text-xs text-sky-300/60">> sum_affected (loaded)</div>
                     </div>
                 </div>
 
                 <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div class="space-y-3">
-                        <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
-                            <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+                        <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
+                            <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
                                 <span>> leaflet_map: incidents</span>
                                 <span v-if="loading" class="flex items-center gap-2">
                                     <Spinner />
@@ -1291,31 +1291,31 @@ watchEffect(() => {
                             </div>
                             <div
                                 ref="mapContainer"
-                                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 sm:h-[420px]"
+                                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/15 sm:h-[420px]"
                             />
                         </div>
 
                         <div
                             v-for="item in items"
                             :key="item.id"
-                            class="cursor-pointer rounded-xl border border-green-500/15 bg-black/30 p-4 transition hover:border-green-400/25 hover:bg-black/35"
+                            class="cursor-pointer rounded-xl border border-sky-500/15 bg-black/30 p-4 transition hover:border-sky-400/25 hover:bg-black/35"
                             @click="goToDetail(item.id)"
                         >
                             <div class="flex flex-col gap-2">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <div class="min-w-0">
-                                        <div class="truncate text-sm font-semibold text-green-100">
+                                        <div class="truncate text-sm font-semibold text-sky-100">
                                             > {{ item.title }}
                                         </div>
-                                        <div class="mt-1 text-xs text-green-300/60">
+                                        <div class="mt-1 text-xs text-sky-300/60">
                                             {{ formatDateTime(item.incident_date) }} · {{ locationLabel(item) }}
                                         </div>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-2">
-                                        <Badge class="border border-green-500/25 bg-black/35 text-green-200">
+                                        <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
                                             {{ severityLabel(item.severity_level) }}
                                         </Badge>
-                                        <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                                        <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
                                             {{ statusLabel(item.status) }}
                                         </Badge>
                                     </div>
@@ -1323,11 +1323,11 @@ watchEffect(() => {
 
                                 <div
                                     v-if="item.description"
-                                    class="text-sm text-green-200/80 overflow-hidden [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]"
+                                    class="text-sm text-sky-200/80 overflow-hidden [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical]"
                                     v-html="sanitizeHtml(item.description)"
                                 />
 
-                                <div class="flex flex-wrap gap-3 text-xs text-green-300/60">
+                                <div class="flex flex-wrap gap-3 text-xs text-sky-300/60">
                                     <div v-if="item.category?.name">
                                         > kategori: {{ item.category.name }}
                                     </div>
@@ -1346,23 +1346,23 @@ watchEffect(() => {
 
                         <div
                             v-if="!items.length"
-                            class="rounded border border-green-500/15 bg-black/20 p-4 text-green-300/60"
+                            class="rounded border border-sky-500/15 bg-black/20 p-4 text-sky-300/60"
                         >
                             > tidak ada data untuk filter ini.
                         </div>
 
                         <div
                             v-if="meta && meta.last_page > 1"
-                            class="rounded-xl border border-green-500/15 bg-black/20 p-3"
+                            class="rounded-xl border border-sky-500/15 bg-black/20 p-3"
                         >
-                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300/60">
                                 <div>
                                     > halaman {{ meta.current_page }} / {{ meta.last_page }} · tampil: {{ items.length }} · total: {{ meta.total }}
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-green-200 hover:border-green-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                                        class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-sky-200 hover:border-sky-400/25 disabled:cursor-not-allowed disabled:opacity-50"
                                         :disabled="loading || meta.current_page <= 1"
                                         @click="setPage(meta.current_page - 1)"
                                     >
@@ -1376,8 +1376,8 @@ watchEffect(() => {
                                         class="inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-3 text-[11px] tracking-widest"
                                         :class="
                                             p === meta.current_page
-                                                ? 'border-green-400/35 bg-green-500/15 text-green-100'
-                                                : 'border-green-500/15 bg-black/30 text-green-200 hover:border-green-400/25'
+                                                ? 'border-sky-400/35 bg-sky-500/15 text-sky-100'
+                                                : 'border-sky-500/15 bg-black/30 text-sky-200 hover:border-sky-400/25'
                                         "
                                         :disabled="loading || p === meta.current_page"
                                         @click="setPage(p)"
@@ -1387,7 +1387,7 @@ watchEffect(() => {
 
                                     <button
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-md border border-green-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-green-200 hover:border-green-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                                        class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-[11px] tracking-widest text-sky-200 hover:border-sky-400/25 disabled:cursor-not-allowed disabled:opacity-50"
                                         :disabled="loading || meta.current_page >= meta.last_page"
                                         @click="setPage(meta.current_page + 1)"
                                     >
@@ -1399,61 +1399,61 @@ watchEffect(() => {
                     </div>
 
                     <aside class="space-y-3">
-                        <div class="rounded-xl border border-green-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-green-300/60">
+                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
+                            <div class="mb-3 text-xs tracking-widest text-sky-300/60">
                                 TOP WILAYAH TERDAMPAK
                             </div>
                             <div v-if="topWilayahTerdampak.length" class="space-y-2">
                                 <div
                                     v-for="row in topWilayahTerdampak"
                                     :key="row.label"
-                                    class="flex items-center justify-between gap-3 rounded-md border border-green-500/10 bg-black/20 px-3 py-2"
+                                    class="flex items-center justify-between gap-3 rounded-md border border-sky-500/10 bg-black/20 px-3 py-2"
                                 >
                                     <div class="min-w-0">
-                                        <div class="truncate text-xs font-medium text-green-200">
+                                        <div class="truncate text-xs font-medium text-sky-200">
                                             {{ row.label }}
                                         </div>
-                                        <div class="mt-1 text-[11px] text-green-300/60">
+                                        <div class="mt-1 text-[11px] text-sky-300/60">
                                             > data: {{ row.count }}
                                         </div>
                                     </div>
-                                    <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                                    <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
                                         {{ formatNumber(row.terdampak) }}
                                     </Badge>
                                 </div>
                             </div>
-                            <div v-else class="text-xs text-green-300/60">> no_rank_data</div>
+                            <div v-else class="text-xs text-sky-300/60">> no_rank_data</div>
                         </div>
 
-                        <div class="rounded-xl border border-green-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-green-300/60">
+                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
+                            <div class="mb-3 text-xs tracking-widest text-sky-300/60">
                                 TOP ISU MENONJOL
                             </div>
                             <div v-if="topIsuMenonjol.length" class="space-y-2">
                                 <div
                                     v-for="row in topIsuMenonjol"
                                     :key="row.label"
-                                    class="rounded-md border border-green-500/10 bg-black/20 px-3 py-2"
+                                    class="rounded-md border border-sky-500/10 bg-black/20 px-3 py-2"
                                 >
-                                    <div class="truncate text-xs font-medium text-green-200">
+                                    <div class="truncate text-xs font-medium text-sky-200">
                                         > {{ row.label }}
                                     </div>
-                                    <div class="mt-2 flex items-center justify-between gap-2 text-[11px] text-green-300/60">
+                                    <div class="mt-2 flex items-center justify-between gap-2 text-[11px] text-sky-300/60">
                                         <span>> freq: {{ row.count }}</span>
                                         <span>> terdampak: {{ formatNumber(row.terdampak) }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-xs text-green-300/60">> no_issues_detected</div>
+                            <div v-else class="text-xs text-sky-300/60">> no_issues_detected</div>
                         </div>
 
-                        <div class="rounded-xl border border-green-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-green-300/60">
+                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
+                            <div class="mb-3 text-xs tracking-widest text-sky-300/60">
                                 TINGKAT RESIKO
                             </div>
                             <div class="space-y-2">
                                 <div v-for="row in riskSummary" :key="row.key" class="space-y-1">
-                                    <div class="flex items-center justify-between text-xs text-green-200/80">
+                                    <div class="flex items-center justify-between text-xs text-sky-200/80">
                                         <span>> {{ row.label }}</span>
                                         <span>{{ row.count }}</span>
                                     </div>

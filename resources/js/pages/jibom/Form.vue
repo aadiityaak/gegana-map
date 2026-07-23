@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -170,7 +170,7 @@ const editor = useEditor({
     content: String(form.description ?? ''),
     editorProps: {
         attributes: {
-            class: 'min-h-[140px] px-3 py-2 text-sm text-green-200/85 outline-none',
+            class: 'min-h-[140px] px-3 py-2 text-sm text-sky-200/85 outline-none',
         },
     },
     editable: props.mode !== 'view',
@@ -289,8 +289,8 @@ const updateCoordMarker = async () => {
     if (!coordMarker) {
         coordMarker = L.circleMarker([lat, lng], {
             radius: 8,
-            color: '#22c55e',
-            fillColor: '#22c55e',
+            color: '#ABD5E5',
+            fillColor: '#ABD5E5',
             fillOpacity: 0.55,
             weight: 2,
         }).addTo(map);
@@ -496,7 +496,7 @@ const title = computed(() => {
     <div class="p-4 font-mono sm:p-6">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-                <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                     > {{
                         props.mode === 'view'
                             ? 'VIEW JIBOM'
@@ -505,7 +505,7 @@ const title = computed(() => {
                               : 'TAMBAH JIBOM'
                     }}
                 </h1>
-                <Badge class="border border-green-500/25 bg-black/30 text-green-200">
+                <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                     {{ form.incident_type }}
                 </Badge>
             </div>
@@ -520,28 +520,28 @@ const title = computed(() => {
         </div>
 
         <div v-if="isView" class="space-y-4">
-            <div class="rounded-xl border border-green-500/15 bg-black/30 p-4">
-                <div class="text-sm font-semibold text-green-100">
+            <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
+                <div class="text-sm font-semibold text-sky-100">
                     > {{ viewTypeLabel }}
                 </div>
-                <div class="mt-2 text-xs text-green-300/60">
+                <div class="mt-2 text-xs text-sky-300/60">
                     {{ formatDateTime(String(props.item?.created_at ?? '')) }} · {{ viewLocationLabel }}
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
-                    <Badge class="border border-green-500/25 bg-black/35 text-green-200">
+                    <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
                         {{ form.incident_type }}
                     </Badge>
-                    <Badge v-if="viewFindingLabel" class="border border-green-500/25 bg-black/30 text-green-200">
+                    <Badge v-if="viewFindingLabel" class="border border-sky-500/25 bg-black/30 text-sky-200">
                         {{ viewFindingLabel }}
                     </Badge>
-                    <Badge class="border border-green-500/25 bg-green-500/10 text-green-200">
+                    <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
                         {{ String(form.news_source || 'offline') }}
                     </Badge>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-3">
-                <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
+                <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
                     <span>> MAP LOCATION</span>
                     <span v-if="viewCoords" class="text-[11px]">
                         > {{ viewCoords.lat.toFixed(5) }}, {{ viewCoords.lng.toFixed(5) }}
@@ -550,20 +550,20 @@ const title = computed(() => {
                 <div
                     v-if="viewCoords"
                     ref="mapContainer"
-                    class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-green-500/15"
+                    class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-sky-500/15"
                 />
-                <div v-else class="rounded-lg border border-green-500/15 bg-black/30 p-4 text-xs text-green-300/60">
+                <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-xs text-sky-300/60">
                     > koordinat tidak tersedia.
                 </div>
             </div>
 
             <div
                 v-if="props.item?.description"
-                class="rounded-xl border border-green-500/15 bg-black/20 p-4 text-sm text-green-200/85"
+                class="rounded-xl border border-sky-500/15 bg-black/20 p-4 text-sm text-sky-200/85"
                 v-html="String(props.item?.description ?? '')"
             />
 
-            <div class="grid gap-2 rounded-xl border border-green-500/15 bg-black/20 p-4 text-xs text-green-300/70">
+            <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-xs text-sky-300/70">
                 <div>> wilayah: {{ viewLocationLabel }}</div>
                 <div v-if="form.news_source">> sumber_berita: {{ form.news_source }}</div>
                 <div v-if="form.news_url">
@@ -572,7 +572,7 @@ const title = computed(() => {
                         :href="String(form.news_url)"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="ml-1 text-green-200 underline decoration-green-400/40 underline-offset-4 hover:text-green-100"
+                        class="ml-1 text-sky-200 underline decoration-sky-400/40 underline-offset-4 hover:text-sky-100"
                     >
                         {{ String(form.news_url) }}
                     </a>
@@ -580,20 +580,20 @@ const title = computed(() => {
             </div>
 
             <div v-if="isView && props.developments && props.developments.length" class="space-y-2">
-                <div class="text-xs tracking-widest text-green-300/60">PERKEMBANGAN KASUS</div>
+                <div class="text-xs tracking-widest text-sky-300/60">PERKEMBANGAN KASUS</div>
                 <div class="space-y-2">
                     <div
                         v-for="dev in props.developments"
                         :key="dev.id"
-                        class="rounded-lg border border-green-500/12 bg-black/25 p-3"
+                        class="rounded-lg border border-sky-500/12 bg-black/25 p-3"
                     >
                         <div class="mb-1 flex items-center justify-between gap-2">
-                            <span class="text-sm font-medium text-green-200">{{ dev.title }}</span>
-                            <span class="shrink-0 text-[11px] text-green-300/50">
+                            <span class="text-sm font-medium text-sky-200">{{ dev.title }}</span>
+                            <span class="shrink-0 text-[11px] text-sky-300/50">
                                 {{ new Date(String(dev.reported_at ?? dev.created_at)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
                             </span>
                         </div>
-                        <p v-if="dev.description" class="text-xs leading-relaxed text-green-300/80">
+                        <p v-if="dev.description" class="text-xs leading-relaxed text-sky-300/80">
                             {{ dev.description }}
                         </p>
                         <a
@@ -601,7 +601,7 @@ const title = computed(() => {
                             :href="String(dev.source_url)"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="mt-1 inline-block text-[11px] text-green-400/60 underline underline-offset-4 hover:text-green-300"
+                            class="mt-1 inline-block text-[11px] text-sky-400/60 underline underline-offset-4 hover:text-sky-300"
                         >
                             {{ String(dev.source_url) }}
                         </a>
@@ -610,12 +610,12 @@ const title = computed(() => {
             </div>
 
             <div v-if="(props.item?.photos ?? []).length" class="space-y-2">
-                <div class="text-xs tracking-widest text-green-300/60">GALLERY</div>
+                <div class="text-xs tracking-widest text-sky-300/60">GALLERY</div>
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                         v-for="p in (props.item?.photos ?? [])"
                         :key="p"
-                        class="overflow-hidden rounded-md border border-green-500/15 bg-black/20"
+                        class="overflow-hidden rounded-md border border-sky-500/15 bg-black/20"
                     >
                         <div class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]">
                             <img
@@ -630,7 +630,7 @@ const title = computed(() => {
             </div>
         </div>
 
-        <div v-else class="space-y-6 rounded-xl border border-green-500/15 bg-black/20 p-4">
+        <div v-else class="space-y-6 rounded-xl border border-sky-500/15 bg-black/20 p-4">
             <div class="grid gap-2">
                 <Label>Jenis</Label>
                 <Select v-model="form.incident_type">
@@ -671,8 +671,8 @@ const title = computed(() => {
 
             <div class="grid gap-2">
                 <Label>Deskripsi</Label>
-                <div class="rounded-lg border border-green-500/15 bg-black/30">
-                    <div v-if="!isView" class="flex flex-wrap gap-2 border-b border-green-500/15 p-2">
+                <div class="rounded-lg border border-sky-500/15 bg-black/30">
+                    <div v-if="!isView" class="flex flex-wrap gap-2 border-b border-sky-500/15 p-2">
                         <Button
                             type="button"
                             size="sm"
@@ -734,18 +734,18 @@ const title = computed(() => {
                 <Label>Gallery Foto</Label>
                 <div v-if="isView">
                     <div v-if="(form.existing_photos ?? []).length > 0" class="grid gap-2">
-                        <div class="text-xs text-green-300/60">> foto tersimpan</div>
+                        <div class="text-xs text-sky-300/60">> foto tersimpan</div>
                         <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                             <div
                                 v-for="p in (form.existing_photos ?? [])"
                                 :key="p"
-                                class="overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                                class="overflow-hidden rounded-lg border border-sky-500/15 bg-black/30"
                             >
                                 <img :src="photoUrl(p)" class="h-24 w-full object-cover" />
                             </div>
                         </div>
                     </div>
-                    <div v-else class="text-xs text-green-300/60">> tidak ada foto.</div>
+                    <div v-else class="text-xs text-sky-300/60">> tidak ada foto.</div>
                 </div>
                 <input
                     ref="photoInputEl"
@@ -758,8 +758,8 @@ const title = computed(() => {
                 <button
                     v-if="!isView"
                     type="button"
-                    class="w-full rounded-lg border border-dashed border-green-500/25 bg-black/30 px-3 py-6 text-left text-xs text-green-200/85"
-                    :class="isDraggingPhotos ? 'bg-green-500/10' : ''"
+                    class="w-full rounded-lg border border-dashed border-sky-500/25 bg-black/30 px-3 py-6 text-left text-xs text-sky-200/85"
+                    :class="isDraggingPhotos ? 'bg-sky-500/10' : ''"
                     @click="openPhotoPicker"
                     @dragenter.prevent="isDraggingPhotos = true"
                     @dragover.prevent="isDraggingPhotos = true"
@@ -768,10 +768,10 @@ const title = computed(() => {
                 >
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                            <div class="text-green-200/90">> drag & drop foto di sini</div>
-                            <div class="mt-1 text-green-300/60">> atau klik untuk pilih file</div>
+                            <div class="text-sky-200/90">> drag & drop foto di sini</div>
+                            <div class="mt-1 text-sky-300/60">> atau klik untuk pilih file</div>
                         </div>
-                        <div v-if="newPhotoPreviews.length > 0" class="rounded border border-green-500/15 bg-black/20 px-2 py-1 text-[11px] text-green-200/85">
+                        <div v-if="newPhotoPreviews.length > 0" class="rounded border border-sky-500/15 bg-black/20 px-2 py-1 text-[11px] text-sky-200/85">
                             > baru: {{ newPhotoPreviews.length }}
                         </div>
                     </div>
@@ -779,17 +779,17 @@ const title = computed(() => {
                 <InputError :message="photosError" />
 
                 <div v-if="!isView && (form.existing_photos ?? []).length > 0" class="grid gap-2">
-                    <div class="text-xs text-green-300/60">> foto tersimpan</div>
+                    <div class="text-xs text-sky-300/60">> foto tersimpan</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
                             v-for="p in (form.existing_photos ?? [])"
                             :key="p"
                             type="button"
-                            class="group relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                            class="group relative overflow-hidden rounded-lg border border-sky-500/15 bg-black/30"
                             @click="removeExistingPhoto(p)"
                         >
                             <img :src="photoUrl(p)" class="h-24 w-full object-cover" />
-                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-green-200/85">
+                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-sky-200/85">
                                 > remove
                             </div>
                         </button>
@@ -797,17 +797,17 @@ const title = computed(() => {
                 </div>
 
                 <div v-if="!isView && newPhotoPreviews.length > 0" class="grid gap-2">
-                    <div class="text-xs text-green-300/60">> preview foto baru</div>
+                    <div class="text-xs text-sky-300/60">> preview foto baru</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
                             v-for="p in newPhotoPreviews"
                             :key="p.key"
                             type="button"
-                            class="group relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                            class="group relative overflow-hidden rounded-lg border border-sky-500/15 bg-black/30"
                             @click="removeNewPhoto(p.key)"
                         >
                             <img :src="p.url" class="h-24 w-full object-cover" />
-                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-green-200/85">
+                            <div class="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-[11px] text-sky-200/85">
                                 > remove
                             </div>
                         </button>
@@ -895,7 +895,7 @@ const title = computed(() => {
 
             <div class="grid gap-2">
                 <Label>Koordinat</Label>
-                <div ref="mapContainer" class="h-[260px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30" />
+                <div ref="mapContainer" class="h-[260px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30" />
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="grid gap-2">
                         <Label>Latitude</Label>
@@ -903,7 +903,7 @@ const title = computed(() => {
                             v-model.number="form.latitude"
                             type="number"
                             step="0.000001"
-                            class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                            class="h-10 w-full rounded-md border border-sky-500/15 bg-black/30 px-3 text-sm text-sky-200/85 outline-none"
                             placeholder="-6.200000"
                             :disabled="isView"
                         />
@@ -915,7 +915,7 @@ const title = computed(() => {
                             v-model.number="form.longitude"
                             type="number"
                             step="0.000001"
-                            class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                            class="h-10 w-full rounded-md border border-sky-500/15 bg-black/30 px-3 text-sm text-sky-200/85 outline-none"
                             placeholder="106.816666"
                             :disabled="isView"
                         />
@@ -945,7 +945,7 @@ const title = computed(() => {
                     <input
                         v-model="form.news_url"
                         type="url"
-                        class="h-10 w-full rounded-md border border-green-500/15 bg-black/30 px-3 text-sm text-green-200/85 outline-none"
+                        class="h-10 w-full rounded-md border border-sky-500/15 bg-black/30 px-3 text-sm text-sky-200/85 outline-none"
                         placeholder="https://..."
                         :disabled="isView"
                     />

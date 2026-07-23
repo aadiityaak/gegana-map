@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
     AlertTriangle,
@@ -321,12 +321,12 @@ const footerNavItems: NavItem[] = [
     opacity: 0.18;
     background-image: linear-gradient(
             to bottom,
-            rgba(34, 197, 94, 0.08) 1px,
+            rgba(171, 213, 229, 0.08) 1px,
             transparent 1px
         ),
         linear-gradient(
             to right,
-            rgba(34, 197, 94, 0.05) 1px,
+            rgba(171, 213, 229, 0.05) 1px,
             transparent 1px
         );
     background-size: 100% 3px, 36px 100%;
@@ -337,9 +337,9 @@ const footerNavItems: NavItem[] = [
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(34, 197, 94, 0.06) 45%,
-        rgba(34, 197, 94, 0.12) 50%,
-        rgba(34, 197, 94, 0.06) 55%,
+        rgba(171, 213, 229, 0.06) 45%,
+        rgba(171, 213, 229, 0.12) 50%,
+        rgba(171, 213, 229, 0.06) 55%,
         transparent 100%
     );
     transform: translateY(-120%);
@@ -350,7 +350,7 @@ const footerNavItems: NavItem[] = [
 .sb-fx-noise {
     opacity: 0.12;
     background-image: radial-gradient(
-            rgba(34, 197, 94, 0.12) 1px,
+            rgba(171, 213, 229, 0.12) 1px,
             transparent 1px
         ),
         radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
@@ -364,7 +364,7 @@ const footerNavItems: NavItem[] = [
     opacity: 0.9;
     background: radial-gradient(
         70% 60% at 20% 10%,
-        rgba(34, 197, 94, 0.12) 0%,
+        rgba(171, 213, 229, 0.12) 0%,
         transparent 60%
     );
 }
@@ -385,9 +385,9 @@ const footerNavItems: NavItem[] = [
     background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(34, 197, 94, 0.18) 45%,
-        rgba(34, 197, 94, 0.28) 50%,
-        rgba(34, 197, 94, 0.18) 55%,
+        rgba(171, 213, 229, 0.18) 45%,
+        rgba(171, 213, 229, 0.28) 50%,
+        rgba(171, 213, 229, 0.18) 55%,
         transparent 100%
     );
     transform: translateX(-35%);
@@ -403,14 +403,14 @@ const footerNavItems: NavItem[] = [
 
 :deep([data-sidebar='menu-button'][data-active='true']),
 :deep([data-sidebar='menu-sub-button'][data-active='true']) {
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12),
-        0 0 26px rgba(34, 197, 94, 0.06);
+    box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.12),
+        0 0 26px rgba(171, 213, 229, 0.06);
     animation: sb-glow 3.6s ease-in-out infinite;
 }
 
 :deep([data-sidebar='menu-button'][data-active='true'] > a),
 :deep([data-sidebar='menu-sub-button'][data-active='true'] > a) {
-    text-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+    text-shadow: 0 0 12px rgba(171, 213, 229, 0.18);
 }
 
 @keyframes sb-scan {
@@ -452,12 +452,12 @@ const footerNavItems: NavItem[] = [
 @keyframes sb-glow {
     0%,
     100% {
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12),
-            0 0 26px rgba(34, 197, 94, 0.06);
+        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.12),
+            0 0 26px rgba(171, 213, 229, 0.06);
     }
     50% {
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18),
-            0 0 38px rgba(34, 197, 94, 0.09);
+        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.18),
+            0 0 38px rgba(171, 213, 229, 0.09);
     }
 }
 

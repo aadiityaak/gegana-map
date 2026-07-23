@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -219,9 +219,9 @@ const renderMarkers = async () => {
 
         const count = Number(row.count) || 0;
         const isActive = currentProvinceId.value === row.id;
-        const fg = isActive ? '#22c55e' : count > 0 ? '#a3e635' : '#52525b';
+        const fg = isActive ? '#ABD5E5' : count > 0 ? '#ABD5E5' : '#52525b';
         const glow = isActive
-            ? '0 0 8px rgba(34,197,94,0.6)'
+            ? '0 0 8px rgba(171, 213, 229, 0.6)'
             : count > 0
               ? '0 0 4px rgba(163,230,53,0.4)'
               : 'none';
@@ -325,15 +325,15 @@ onMounted(async () => {
     <div class="p-4 font-mono sm:p-6">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-                <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                     > JIBOM
                 </h1>
-                <Badge class="border border-green-500/25 bg-black/30 text-green-200">
+                <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                     {{ currentType ? typeLabel(currentType) : 'Semua' }}
                 </Badge>
                 <Badge
                     v-if="currentProvinceId"
-                    class="border border-green-500/25 bg-black/30 text-green-200"
+                    class="border border-sky-500/25 bg-black/30 text-sky-200"
                 >
                     {{ provinceNameById[currentProvinceId] ?? currentProvinceId }}
                 </Badge>
@@ -348,48 +348,48 @@ onMounted(async () => {
         <div class="mb-4 flex flex-wrap items-center gap-2">
             <Button
                 variant="secondary"
-                :class="currentType ? '' : 'border-green-500/25 bg-green-500/10 text-green-200'"
+                :class="currentType ? '' : 'border-sky-500/25 bg-sky-500/10 text-sky-200'"
                 as-child
             >
                 <Link :href="listHref(null)">Semua</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'ancaman' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                :class="currentType === 'ancaman' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
                 as-child
             >
                 <Link :href="listHref('ancaman')">Ancaman</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'temuan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                :class="currentType === 'temuan' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
                 as-child
             >
                 <Link :href="listHref('temuan')">Temuan</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'ledakan' ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                :class="currentType === 'ledakan' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
                 as-child
             >
                 <Link :href="listHref('ledakan')">Ledakan</Link>
             </Button>
         </div>
 
-        <div class="mb-4 rounded-xl border border-green-500/15 bg-black/20 p-3">
-            <div class="mb-2 flex items-center justify-between text-xs text-green-300/60">
+        <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
+            <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
                 <span>> MAP INDONESIA</span>
                 <span class="text-[11px]">> leaflet · cartodb dark</span>
             </div>
             <div
                 ref="mapContainer"
-                class="h-[500px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30"
+                class="h-[500px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30"
             />
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-green-500/15 bg-black/20">
+        <div class="overflow-x-auto rounded-xl border border-sky-500/15 bg-black/20">
             <div class="min-w-[860px]">
-                <div class="grid grid-cols-12 gap-2 border-b border-green-500/15 p-3 text-xs text-green-300/70">
+                <div class="grid grid-cols-12 gap-2 border-b border-sky-500/15 p-3 text-xs text-sky-300/70">
                     <div class="col-span-1">ID</div>
                     <div class="col-span-2">Jenis</div>
                     <div class="col-span-2">Temuan</div>
@@ -397,13 +397,13 @@ onMounted(async () => {
                     <div class="col-span-4">Wilayah</div>
                     <div class="col-span-2 text-right">Aksi</div>
                 </div>
-                <div v-if="props.items.data.length === 0" class="p-4 text-xs text-green-300/60">
+                <div v-if="props.items.data.length === 0" class="p-4 text-xs text-sky-300/60">
                     > belum ada data.
                 </div>
                 <div
                     v-for="row in props.items.data"
                     :key="row.id"
-                    class="grid grid-cols-12 gap-2 border-b border-green-500/10 p-3 text-xs text-green-200/85 last:border-b-0"
+                    class="grid grid-cols-12 gap-2 border-b border-sky-500/10 p-3 text-xs text-sky-200/85 last:border-b-0"
                 >
                     <div class="col-span-1">{{ row.id }}</div>
                     <div class="col-span-2">
@@ -413,7 +413,7 @@ onMounted(async () => {
                         {{ findingLabel(row.finding_type) }}
                     </div>
                     <div class="col-span-1">
-                        <span class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5 text-[11px] text-green-200/85">
+                        <span class="rounded border border-sky-500/15 bg-black/20 px-2 py-0.5 text-[11px] text-sky-200/85">
                             {{ newsSourceLabel(row.news_source) }}
                         </span>
                     </div>
@@ -423,8 +423,8 @@ onMounted(async () => {
                                 .filter(Boolean)
                                 .join(', ') || '-'
                         }}
-                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-green-300/60">
-                            <span v-if="photosCount(row.photos) > 0" class="rounded border border-green-500/15 bg-black/20 px-2 py-0.5">
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-sky-300/60">
+                            <span v-if="photosCount(row.photos) > 0" class="rounded border border-sky-500/15 bg-black/20 px-2 py-0.5">
                                 > foto: {{ photosCount(row.photos) }}
                             </span>
                             <span v-if="descriptionPreview(row.description)" class="max-w-full truncate">
@@ -454,7 +454,7 @@ onMounted(async () => {
                 size="sm"
                 variant="secondary"
                 :disabled="!link.url"
-                :class="link.active ? 'border-green-500/25 bg-green-500/10 text-green-200' : ''"
+                :class="link.active ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
                 as-child
             >
                 <Link v-if="link.url" :href="link.url" v-html="link.label" />
@@ -471,7 +471,7 @@ onMounted(async () => {
 }
 .leaflet-tooltip-dark {
     background: rgba(0, 0, 0, 0.8) !important;
-    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    border: 1px solid rgba(171, 213, 229, 0.3) !important;
     color: #bbf7d0 !important;
     font-family: monospace !important;
     font-size: 11px !important;
@@ -480,7 +480,7 @@ onMounted(async () => {
     box-shadow: none !important;
 }
 .leaflet-tooltip-dark::before {
-    border-top-color: rgba(34, 197, 94, 0.3) !important;
+    border-top-color: rgba(171, 213, 229, 0.3) !important;
 }
 .leaflet-container {
     background: #0a0a0a !important;
@@ -489,17 +489,17 @@ onMounted(async () => {
 .leaflet-control-zoom a {
     background: rgba(0, 0, 0, 0.7) !important;
     color: #bbf7d0 !important;
-    border: 1px solid rgba(34, 197, 94, 0.2) !important;
+    border: 1px solid rgba(171, 213, 229, 0.2) !important;
 }
 .leaflet-control-zoom a:hover {
-    background: rgba(34, 197, 94, 0.15) !important;
+    background: rgba(171, 213, 229, 0.15) !important;
 }
 .leaflet-control-attribution {
     background: rgba(0, 0, 0, 0.6) !important;
-    color: rgba(34, 197, 94, 0.5) !important;
+    color: rgba(171, 213, 229, 0.5) !important;
     font-size: 9px !important;
 }
 .leaflet-control-attribution a {
-    color: rgba(34, 197, 94, 0.5) !important;
+    color: rgba(171, 213, 229, 0.5) !important;
 }
 </style>

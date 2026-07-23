@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <Head title="Ketahanan Pangan" />
 
 
@@ -19,7 +19,7 @@
                             </label>
                             <select
                                 v-model="selectedKomoditas"
-                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-sky-500/20"
                             >
                                 <option value="" disabled>Pilih Komoditas</option>
                                 <option
@@ -40,7 +40,7 @@
                             </label>
                             <select
                                 v-model="selectedLevelHarga"
-                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-sky-500/20"
                             >
                                 <option value="1">Harga Produsen</option>
                                 <option value="2">Harga Grosir</option>
@@ -59,7 +59,7 @@
                             <input
                                 v-model="startDate"
                                 type="date"
-                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-sky-500/20"
                             />
                         </div>
 
@@ -72,7 +72,7 @@
                             <input
                                 v-model="endDate"
                                 type="date"
-                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-green-500/20"
+                                class="block w-full rounded-md border border-border bg-background/50 px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none dark:border-sky-500/20"
                             />
                         </div>
 
@@ -136,10 +136,10 @@
                             :key="provinceCode.id"
                             :d="provinceCode.path"
                             :fill="getProvinceMapColor(provinceCode.name)"
-                            stroke="rgba(34, 197, 94, 0.22)"
+                            stroke="rgba(171, 213, 229, 0.22)"
                             stroke-width="1"
                             stroke-linejoin="round"
-                            class="cursor-pointer transition-all hover:stroke-[rgba(34,197,94,0.75)]"
+                            class="cursor-pointer transition-all hover:stroke-[rgba(171, 213, 229, 0.75)]"
                             @click="showProvinceByName(provinceCode.name)"
                         >
                             <title>{{ provinceCode.name }}</title>
@@ -194,7 +194,7 @@
                         </h4>
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <div class="flex items-center">
-                                <div class="mr-2 h-3 w-3 rounded-full bg-green-500"></div>
+                                <div class="mr-2 h-3 w-3 rounded-full bg-sky-500"></div>
                                 <span class="text-muted-foreground">Aman</span>
                             </div>
                             <div class="flex items-center">
@@ -237,7 +237,7 @@
 
                 <div class="px-6 py-4">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs tracking-widest text-muted-foreground">
@@ -247,7 +247,7 @@
                                         {{ formatPrice(getAveragePrice()) }}
                                     </p>
                                 </div>
-                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-sky-500/15">
                                     <svg
                                         class="h-6 w-6 text-primary"
                                         fill="none"
@@ -265,7 +265,7 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs tracking-widest text-muted-foreground">
@@ -278,7 +278,7 @@
                                         {{ getHighestPrice().province }}
                                     </p>
                                 </div>
-                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-sky-500/15">
                                     <svg
                                         class="h-6 w-6 text-primary"
                                         fill="none"
@@ -296,7 +296,7 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs tracking-widest text-muted-foreground">
@@ -309,7 +309,7 @@
                                         {{ getLowestPrice().province }}
                                     </p>
                                 </div>
-                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-green-500/15">
+                                <div class="rounded-full border border-border bg-background/40 p-2 dark:border-sky-500/15">
                                     <svg
                                         class="h-6 w-6 text-primary"
                                         fill="none"
@@ -327,7 +327,7 @@
                             </div>
                         </div>
 
-                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-green-500/15">
+                        <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs tracking-widest text-muted-foreground">
@@ -656,7 +656,7 @@ const transformPriceData = (rawData: any): PriceDataItem[] => {
 const getMarkerColor = (mapColor?: string | null, status?: string | null): string => {
     switch (mapColor?.toString()?.toLowerCase()) {
         case 'green':
-            return '#10b981';
+            return '#ABD5E5';
         case 'yellow':
             return '#f59e0b';
         case 'red':
@@ -665,7 +665,7 @@ const getMarkerColor = (mapColor?: string | null, status?: string | null): strin
 
     switch (status?.toString()?.toLowerCase()) {
         case 'aman':
-            return '#10b981';
+            return '#ABD5E5';
         case 'waspada':
             return '#f59e0b';
         case 'intervensi':
@@ -841,7 +841,7 @@ const getDominantStatus = (): { status: string; count: number; bgClass: string; 
     const dominantStatus = Object.keys(statusCount).reduce((a, b) => (statusCount[a] > statusCount[b] ? a : b));
 
     const statusMapping: Record<string, { label: string; bgClass: string; colorClass: string }> = {
-        aman: { label: 'Aman', bgClass: 'bg-green-100 dark:bg-green-800', colorClass: 'bg-green-500' },
+        aman: { label: 'Aman', bgClass: 'bg-sky-100 dark:bg-sky-800', colorClass: 'bg-sky-500' },
         waspada: { label: 'Waspada', bgClass: 'bg-yellow-100 dark:bg-yellow-800', colorClass: 'bg-yellow-500' },
         intervensi: { label: 'Intervensi', bgClass: 'bg-red-100 dark:bg-red-800', colorClass: 'bg-red-500' },
         normal: { label: 'Normal', bgClass: 'bg-gray-100 dark:bg-gray-800', colorClass: 'bg-gray-400' },
@@ -904,7 +904,7 @@ const formatPrice = (price: number): string => {
 const getPriceStatusClass = (status: string | null | undefined): string => {
     switch (status?.toString()?.toLowerCase()) {
         case 'aman':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            return 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200';
         case 'waspada':
             return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
         case 'intervensi':

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -240,8 +240,8 @@ const renderProvinceMarkers = async () => {
         const centroid = provinceCentroids[row.id];
         if (!centroid) continue;
         const count = Number(row.count) || 0;
-        const fg = count > 0 ? '#22c55e' : '#52525b';
-        const glow = count > 0 ? '0 0 4px rgba(34,197,94,0.45)' : 'none';
+        const fg = count > 0 ? '#ABD5E5' : '#52525b';
+        const glow = count > 0 ? '0 0 4px rgba(171, 213, 229, 0.45)' : 'none';
         const size = count > 0 ? 28 + Math.min(count, 40) * 0.6 : 20;
 
         const svgPin = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fg}" stroke="${fg}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(${glow})"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
@@ -331,12 +331,12 @@ const getLeaflet = async () => {
 
 const markerColor = (severity: string) => {
     const map: Record<string, string> = {
-        low: '#34d399',
+        low: '#8EC8DD',
         medium: '#fbbf24',
         high: '#fb7185',
         critical: '#f87171',
     };
-    return map[severity] ?? '#22c55e';
+    return map[severity] ?? '#ABD5E5';
 };
 
 const parseCoordNumber = (value: number | string | null | undefined): number | null => {
@@ -430,7 +430,7 @@ const updateMapMarkers = async () => {
 
         const popupEl = document.createElement('div');
         popupEl.style.cssText =
-            "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(226,255,232,0.92);";
+            "font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: rgba(222,238,248,0.92);";
 
         const titleEl = document.createElement('div');
         titleEl.textContent = item.title;
@@ -446,7 +446,7 @@ const updateMapMarkers = async () => {
         buttonEl.type = 'button';
         buttonEl.textContent = '> OPEN DETAIL';
         buttonEl.style.cssText =
-            'display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(34,197,94,0.25); padding: 4px 10px; border-radius: 999px; background: rgba(34,197,94,0.10); color: rgba(226,255,232,0.92); font-size: 12px; cursor: pointer; margin-bottom: 10px;';
+            'display:inline-flex; align-items:center; justify-content:center; border: 1px solid rgba(171, 213, 229, 0.25); padding: 4px 10px; border-radius: 999px; background: rgba(171, 213, 229, 0.10); color: rgba(222,238,248,0.92); font-size: 12px; cursor: pointer; margin-bottom: 10px;';
         buttonEl.addEventListener('click', (ev) => {
             L.DomEvent.stopPropagation(ev);
             goToDetail(item.id);
@@ -552,61 +552,61 @@ watch(
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-                <h1 class="text-lg font-semibold tracking-widest text-green-200">
+                <h1 class="text-lg font-semibold tracking-widest text-sky-200">
                     > <span class="glitch" data-text="DASHBOARD">DASHBOARD</span
                     ><span class="cursor">_</span>
                 </h1>
-                <Badge class="border border-green-500/25 bg-black/30 text-green-200">
+                <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                     total: {{ fmt(props.dashboard.totals.all) }}
                 </Badge>
-                <Badge class="border border-green-500/25 bg-black/30 text-green-300/80">
+                <Badge class="border border-sky-500/25 bg-black/30 text-sky-300/80">
                     sync: {{ generatedLabel }}
                 </Badge>
             </div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-green-300/60">> TOTAL</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+                <div class="text-xs text-sky-300/60">> TOTAL</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.all) }}
                 </div>
-                <div class="mt-3 text-xs text-green-300/60">
+                <div class="mt-3 text-xs text-sky-300/60">
                     > semua modul (kejadian)
                 </div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-green-300/60">> JIBOM</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+                <div class="text-xs text-sky-300/60">> JIBOM</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.jibom) }}
                 </div>
-                <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-xs text-sky-300/60">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-green-300/60">> KBRN</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+                <div class="text-xs text-sky-300/60">> KBRN</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.kbrn) }}
                 </div>
-                <div class="mt-3 text-xs text-green-300/60">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-xs text-sky-300/60">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-green-300/60">> WAN TEROR</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-green-200">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+                <div class="text-xs text-sky-300/60">> WAN TEROR</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.wanTeror) }}
                 </div>
-                <div class="mt-3 text-xs text-green-300/60">> 5 kategori</div>
+                <div class="mt-3 text-xs text-sky-300/60">> 5 kategori</div>
             </div>
         </div>
 
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs font-semibold tracking-widest text-green-300/60">
+                    <div class="text-xs font-semibold tracking-widest text-sky-300/60">
                         > GRAFIK 12 BULAN (JIBOM / KBRN / WAN TEROR)
                     </div>
-                    <div class="flex items-center gap-3 text-[11px] text-green-200/80">
+                    <div class="flex items-center gap-3 text-[11px] text-sky-200/80">
                         <div class="flex items-center gap-2">
-                            <span class="h-2 w-2 rounded-full bg-green-400"></span>
+                            <span class="h-2 w-2 rounded-full bg-sky-400"></span>
                             <span>> JIBOM</span>
                         </div>
                         <div class="flex items-center gap-2">
@@ -620,8 +620,8 @@ watch(
                     </div>
                 </div>
 
-                <div class="relative overflow-hidden rounded-lg border border-green-500/15 bg-black/30 p-3 dash-chart">
-                    <div v-if="months.length === 0" class="text-xs text-green-300/60">
+                <div class="relative overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 p-3 dash-chart">
+                    <div v-if="months.length === 0" class="text-xs text-sky-300/60">
                         > belum ada data grafik.
                     </div>
                     <svg
@@ -640,7 +640,7 @@ watch(
                                 :x2="chartWidth - padRight"
                                 :y1="padTop + (plotH * i) / 4"
                                 :y2="padTop + (plotH * i) / 4"
-                                stroke="rgba(34,197,94,0.12)"
+                                stroke="rgba(171, 213, 229, 0.12)"
                                 stroke-width="1"
                             />
                             <line
@@ -648,7 +648,7 @@ watch(
                                 :x2="chartWidth - padRight"
                                 :y1="padTop + plotH"
                                 :y2="padTop + plotH"
-                                stroke="rgba(34,197,94,0.18)"
+                                stroke="rgba(171, 213, 229, 0.18)"
                                 stroke-width="1"
                             />
                             <line
@@ -656,7 +656,7 @@ watch(
                                 :x2="padLeft"
                                 :y1="padTop"
                                 :y2="padTop + plotH"
-                                stroke="rgba(34,197,94,0.18)"
+                                stroke="rgba(171, 213, 229, 0.18)"
                                 stroke-width="1"
                             />
                         </g>
@@ -665,7 +665,7 @@ watch(
                             v-if="pathJibom"
                             :d="pathJibom"
                             fill="none"
-                            stroke="#22c55e"
+                            stroke="#ABD5E5"
                             stroke-width="2.2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -698,7 +698,7 @@ watch(
                                 :x2="hoverX"
                                 :y1="padTop"
                                 :y2="padTop + plotH"
-                                stroke="rgba(34,197,94,0.25)"
+                                stroke="rgba(171, 213, 229, 0.25)"
                                 stroke-width="1"
                             />
                             <circle
@@ -706,7 +706,7 @@ watch(
                                 :cx="hoverX"
                                 :cy="pointXY(hoverIndex, series.jibom[hoverIndex] ?? 0).y"
                                 r="3.2"
-                                fill="#22c55e"
+                                fill="#ABD5E5"
                                 stroke="rgba(0,0,0,0.7)"
                                 stroke-width="1"
                             />
@@ -738,7 +738,7 @@ watch(
                                 :y="chartHeight - 12"
                                 text-anchor="middle"
                                 font-size="10"
-                                fill="rgba(134,239,172,0.65)"
+                                fill="rgba(171,213,229,0.65)"
                             >
                                 {{ lbl }}
                             </text>
@@ -750,7 +750,7 @@ watch(
                                 :y="padTop + 10"
                                 text-anchor="end"
                                 font-size="10"
-                                fill="rgba(134,239,172,0.65)"
+                                fill="rgba(171,213,229,0.65)"
                             >
                                 {{ fmt(maxValue) }}
                             </text>
@@ -759,7 +759,7 @@ watch(
                                 :y="padTop + plotH"
                                 text-anchor="end"
                                 font-size="10"
-                                fill="rgba(134,239,172,0.65)"
+                                fill="rgba(171,213,229,0.65)"
                             >
                                 0
                             </text>
@@ -768,10 +768,10 @@ watch(
 
                     <div
                         v-if="hoverLabel && hoverValues"
-                        class="pointer-events-none absolute right-3 top-3 rounded-lg border border-green-500/15 bg-black/60 px-3 py-2 text-[11px] text-green-200/90 backdrop-blur"
+                        class="pointer-events-none absolute right-3 top-3 rounded-lg border border-sky-500/15 bg-black/60 px-3 py-2 text-[11px] text-sky-200/90 backdrop-blur"
                     >
                         <div>> {{ hoverLabel }} ({{ hoverMonthShort }})</div>
-                        <div class="mt-1 grid gap-0.5 text-green-200/85">
+                        <div class="mt-1 grid gap-0.5 text-sky-200/85">
                             <div>> JIBOM: {{ fmt(hoverValues.jibom) }}</div>
                             <div>> KBRN: {{ fmt(hoverValues.kbrn) }}</div>
                             <div>> WAN TEROR: {{ fmt(hoverValues.wanTeror) }}</div>
@@ -783,53 +783,53 @@ watch(
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/jibom">> JIBOM</Link>
                     </Button>
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/kbrn">> KBRN</Link>
                     </Button>
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/wan-teror">> WAN TEROR</Link>
                     </Button>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs font-semibold tracking-widest text-green-300/60">
+            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+                <div class="text-xs font-semibold tracking-widest text-sky-300/60">
                     > TOP PROVINSI (ALL)
                 </div>
                 <div class="mt-3 grid gap-2">
                     <div
                         v-for="(row, idx) in props.dashboard.topProvincesAll"
                         :key="row.id"
-                        class="flex items-center justify-between rounded-lg border border-green-500/10 bg-black/30 px-3 py-2 text-xs text-green-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
                     >
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
                         </div>
-                        <div class="ml-3 shrink-0 text-green-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300/70">
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-xs text-green-300/60">
+                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-xs text-sky-300/60">
                         > belum ada data.
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-6 rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+        <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300/60">
                 <div>> MAP: IPOLEKSOSBUDKAM (LAST 200)</div>
                 <div class="flex items-center gap-3">
                     <span v-if="mapLoading">> loading_map...</span>
@@ -844,19 +844,19 @@ watch(
             <div
                 v-else
                 ref="mapContainer"
-                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 sm:h-[420px]"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 sm:h-[420px]"
             />
         </div>
 
-        <div class="mt-6 rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-green-300/60">
+        <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300/60">
                 <div>> MAP PROVINSI: {{ activeTabLabel }}</div>
                 <div class="flex flex-wrap items-center gap-2">
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="provinceTab === 'jibom' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        :class="provinceTab === 'jibom' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'jibom'"
                     >
                         JIBOM
@@ -864,8 +864,8 @@ watch(
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="provinceTab === 'kbrn' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        :class="provinceTab === 'kbrn' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'kbrn'"
                     >
                         KBRN
@@ -873,8 +873,8 @@ watch(
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-green-500/15 bg-black/30 text-green-200 hover:bg-green-500/10"
-                        :class="provinceTab === 'wan-teror' ? 'border-green-500/25 bg-green-500/10' : ''"
+                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        :class="provinceTab === 'wan-teror' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'wan-teror'"
                     >
                         WAN TEROR
@@ -884,7 +884,7 @@ watch(
 
             <div
                 ref="provinceMapContainer"
-                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-green-500/15 bg-black/30 sm:h-[420px]"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 sm:h-[420px]"
             />
         </div>
 
@@ -892,51 +892,51 @@ watch(
             <div
                 v-for="mod in props.dashboard.modules"
                 :key="mod.key"
-                class="rounded-xl border border-green-500/15 bg-black/20 p-4 dash-card"
+                class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card"
             >
                 <div class="mb-3 flex items-center justify-between gap-2">
-                    <div class="text-xs font-semibold tracking-widest text-green-300/60">
+                    <div class="text-xs font-semibold tracking-widest text-sky-300/60">
                         > {{ mod.title }}
                     </div>
-                    <Button as-child size="sm" class="border border-green-500/25 bg-green-500/10 text-green-200 hover:bg-green-500/15">
+                    <Button as-child size="sm" class="border border-sky-500/25 bg-sky-500/10 text-sky-200 hover:bg-sky-500/15">
                         <Link :href="mod.href">Open</Link>
                     </Button>
                 </div>
 
                 <div class="grid gap-2">
-                    <div class="flex items-center justify-between rounded-lg border border-green-500/10 bg-black/30 px-3 py-2 text-xs text-green-200/85">
+                    <div class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85">
                         <div>> total</div>
-                        <div class="text-green-300/70">{{ fmt(mod.total) }}</div>
+                        <div class="text-sky-300/70">{{ fmt(mod.total) }}</div>
                     </div>
                     <div
                         v-for="t in mod.types"
                         :key="t.value"
-                        class="flex items-center justify-between rounded-lg border border-green-500/10 bg-black/30 px-3 py-2 text-xs text-green-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
                     >
                         <div class="truncate">> {{ t.label }}</div>
-                        <div class="ml-3 shrink-0 text-green-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300/70">
                             {{ fmt(mod.countsByType[t.value] ?? 0) }}
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 text-xs font-semibold tracking-widest text-green-300/60">
+                <div class="mt-4 text-xs font-semibold tracking-widest text-sky-300/60">
                     > TOP PROVINSI
                 </div>
                 <div class="mt-2 grid gap-2">
                     <div
                         v-for="(row, idx) in mod.topProvinces"
                         :key="row.id"
-                        class="flex items-center justify-between rounded-lg border border-green-500/10 bg-black/30 px-3 py-2 text-xs text-green-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
                     >
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
                         </div>
-                        <div class="ml-3 shrink-0 text-green-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300/70">
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="mod.topProvinces.length === 0" class="text-xs text-green-300/60">
+                    <div v-if="mod.topProvinces.length === 0" class="text-xs text-sky-300/60">
                         > belum ada data.
                     </div>
                 </div>
@@ -954,12 +954,12 @@ watch(
     opacity: 0.18;
     background-image: linear-gradient(
             to bottom,
-            rgba(34, 197, 94, 0.08) 1px,
+            rgba(171, 213, 229, 0.08) 1px,
             transparent 1px
         ),
         linear-gradient(
             to right,
-            rgba(34, 197, 94, 0.05) 1px,
+            rgba(171, 213, 229, 0.05) 1px,
             transparent 1px
         );
     background-size: 100% 3px, 40px 100%;
@@ -971,9 +971,9 @@ watch(
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(34, 197, 94, 0.08) 45%,
-        rgba(34, 197, 94, 0.12) 50%,
-        rgba(34, 197, 94, 0.08) 55%,
+        rgba(171, 213, 229, 0.08) 45%,
+        rgba(171, 213, 229, 0.12) 50%,
+        rgba(171, 213, 229, 0.08) 55%,
         transparent 100%
     );
     transform: translateY(-120%);
@@ -984,7 +984,7 @@ watch(
 .fx-noise {
     opacity: 0.12;
     background-image: radial-gradient(
-            rgba(34, 197, 94, 0.12) 1px,
+            rgba(171, 213, 229, 0.12) 1px,
             transparent 1px
         ),
         radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
@@ -996,14 +996,14 @@ watch(
 
 .dash-card {
     position: relative;
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.06),
-        0 0 26px rgba(34, 197, 94, 0.05);
+    box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.06),
+        0 0 26px rgba(171, 213, 229, 0.05);
     animation: glow 3.8s ease-in-out infinite;
 }
 
 .dash-chart {
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.05),
-        0 0 34px rgba(34, 197, 94, 0.06);
+    box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.05),
+        0 0 34px rgba(171, 213, 229, 0.06);
 }
 
 .dash-draw {
@@ -1039,7 +1039,7 @@ watch(
 
 .glitch::before {
     transform: translateX(-0.8px);
-    text-shadow: -1px 0 rgba(34, 197, 94, 0.35);
+    text-shadow: -1px 0 rgba(171, 213, 229, 0.35);
     clip-path: inset(0 0 55% 0);
     animation: glitch 2.7s infinite linear alternate-reverse;
 }
@@ -1088,12 +1088,12 @@ watch(
 @keyframes glow {
     0%,
     100% {
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.06),
-            0 0 26px rgba(34, 197, 94, 0.05);
+        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.06),
+            0 0 26px rgba(171, 213, 229, 0.05);
     }
     50% {
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.1),
-            0 0 40px rgba(34, 197, 94, 0.08);
+        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.1),
+            0 0 40px rgba(171, 213, 229, 0.08);
     }
 }
 

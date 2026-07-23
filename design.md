@@ -8,7 +8,7 @@
 
 ## Brand Feel
 
-- Nuansa: matrix-green, scanline halus, glow tipis, sudut sedikit tajam.
+- Nuansa: blue-sky, scanline halus, glow tipis, sudut sedikit tajam.
 - Tekstur: grid halus / noise ringan (opsional), jangan sampai mengganggu teks.
 - Bahasa UI: ringkas, “system-like” (contoh: ACCESS_REQUIRED, AUTHENTICATING).
 
@@ -19,26 +19,26 @@
 - Background utama: #05070A
 - Surface 1 (panel): #0A0F14
 - Surface 2 (raised): #0E1620
-- Border: rgba(34, 197, 94, 0.22)
+- Border: rgba(171, 213, 229, 0.22)
 
 ### Teks
 
-- Teks utama: rgba(226, 255, 232, 0.92)
-- Teks sekunder: rgba(164, 255, 186, 0.65)
-- Teks muted: rgba(164, 255, 186, 0.45)
+- Teks utama: rgba(222, 238, 248, 0.92)
+- Teks sekunder: rgba(171, 213, 229, 0.65)
+- Teks muted: rgba(171, 213, 229, 0.45)
 
 ### Aksen
 
-- Primary (green): #22C55E
-- Primary hover: #34D399
-- Primary glow: rgba(34, 197, 94, 0.35)
+- Primary (biru muda): #ABD5E5
+- Primary hover: #8EC8DD
+- Primary glow: rgba(171, 213, 229, 0.35)
 
 ### Status
 
 - Info: #60A5FA
 - Warning: #F59E0B
 - Danger: #F87171
-- Success: #22C55E
+- Success: #ABD5E5
 
 ## Tipografi
 
@@ -53,7 +53,7 @@
 
 - Radius: 10–14px untuk card/panel, 8–10px untuk input/button.
 - Spacing scale: 4 / 8 / 12 / 16 / 24 / 32.
-- Gunakan pemisah tipis (1px) dengan border hijau transparan, bukan shadow berat.
+- Gunakan pemisah tipis (1px) dengan border biru transparan, bukan shadow berat.
 
 ## Efek Visual
 
@@ -65,19 +65,19 @@
 
 ### Button
 
-- Primary: border hijau transparan + background hijau sangat tipis + teks hijau.
+- Primary: border biru transparan + background biru sangat tipis + teks biru.
 - Hover: border lebih terang, background sedikit naik, glow tipis.
 - Disabled: turunkan opacity, hilangkan glow.
 
 ### Input
 
-- Background: hitam transparan, border hijau tipis.
-- Focus: ring hijau (alpha) + border lebih terang.
+- Background: hitam transparan, border biru tipis.
+- Focus: ring biru (alpha) + border lebih terang.
 - Error: border merah transparan + teks helper merah.
 
 ### Card / Panel
 
-- Surface 1/2 dengan border hijau tipis.
+- Surface 1/2 dengan border biru tipis.
 - Header memakai judul monospace + subjudul muted.
 
 ### Table
@@ -124,7 +124,7 @@
 - Cursor blink (`.cursor`)
     - Opacity step (on/off) 1s infinite.
 - Card glow pulse (`.dash-card`)
-    - Box-shadow hijau tipis yang “bernapas” (3–4s ease-in-out).
+    - Box-shadow biru tipis yang "bernapas" (3–4s ease-in-out).
 - Chart line draw (`.dash-draw`)
     - `stroke-dasharray`/`stroke-dashoffset` untuk efek “digambar”.
     - Delay per seri: `.dash-draw-1/.dash-draw-2/.dash-draw-3`.
@@ -143,14 +143,14 @@
 ## Contoh Utility (Tailwind)
 
 - Background: `bg-black/80` + `backdrop-blur` tipis untuk overlay.
-- Border: `border border-green-500/30`
-- Teks: `text-green-300` / `text-green-300/70`
-- Focus: `focus:ring-2 focus:ring-green-400/40 focus:border-green-400`
-- Panel: `bg-black/50` atau `bg-zinc-950/60` dengan border hijau transparan
+- Border: `border border-sky-500/30`
+- Teks: `text-sky-300` / `text-sky-300/70`
+- Focus: `focus:ring-2 focus:ring-sky-400/40 focus:border-sky-400`
+- Panel: `bg-black/50` atau `bg-zinc-950/60` dengan border biru transparan
 
 ## Do / Don’t
 
-- Do: gunakan hijau sebagai aksen, bukan untuk semua teks.
-- Do: jaga whitespace agar tidak terlihat “ramai”.
-- Don’t: glow berlebihan atau animasi berkedip yang mengganggu.
-- Don’t: kombinasi hijau neon + background terang (mengurangi kenyamanan).
+- Do: gunakan biru sebagai aksen, bukan untuk semua teks.
+- Do: jaga whitespace agar tidak terlihat "ramai".
+- Don't: glow berlebihan atau animasi berkedip yang mengganggu.
+- Don't: kombinasi biru neon + background terang (mengurangi kenyamanan).
