@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { Activity, Search, FileText, AlertCircle, Info, PlusCircle, InfoIcon, ArrowUpRight, RefreshCw } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -104,7 +104,7 @@ const typeBadgeClass = (t: string) => {
     if (t === 'skip') return 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300';
     if (t.startsWith('search') || t.startsWith('scan')) return 'border-blue-500/30 bg-blue-500/10 text-blue-300';
     if (t.startsWith('summary')) return 'border-purple-500/30 bg-purple-500/10 text-purple-300';
-    return 'border-sky-500/20 bg-black/30 text-sky-300/70';
+    return 'border-sky-500/20 bg-black/30 text-sky-300';
 };
 
 const formatTime = (ts: string) => {
@@ -133,13 +133,13 @@ const parseMeta = (meta: string | null): Record<string, any> => {
             <Heading title="AI Agent Logs" description="Realtime log aktivitas AI Agent" />
             <div class="flex items-center gap-2">
                 <Button variant="outline" size="sm" @click="togglePause" class="text-xs">
-                    <span v-if="paused">▶ Lanjutkan</span>
+                    <span v-if="paused">? Lanjutkan</span>
                     <span v-else class="flex items-center gap-1">
                         <RefreshCw class="size-3 animate-spin" />
                         Live
                     </span>
                 </Button>
-                <span class="text-[11px] text-sky-300/40">
+                <span class="text-[11px] text-sky-300">
                     {{ logs.length }} log
                 </span>
             </div>
@@ -148,15 +148,15 @@ const parseMeta = (meta: string | null): Record<string, any> => {
         <!-- Log table -->
         <div class="relative overflow-hidden rounded-xl border border-sky-500/15 bg-black/30">
             <div class="flex items-center justify-between border-b border-sky-500/10 px-4 py-2">
-                <div class="flex items-center gap-2 text-xs text-sky-300/50">
+                <div class="flex items-center gap-2 text-xs text-sky-300">
                     <Activity class="size-3.5" />
                     <span>AI_AGENT_LOG / {{ logs.length }} entries</span>
                 </div>
-                <span class="text-[10px] text-sky-300/30 font-mono">polling 3s</span>
+                <span class="text-[10px] text-sky-300 font-mono">polling 3s</span>
             </div>
 
             <div class="max-h-[65vh] overflow-y-auto">
-                <div v-if="logs.length === 0" class="flex flex-col items-center gap-2 px-4 py-12 text-sky-300/40">
+                <div v-if="logs.length === 0" class="flex flex-col items-center gap-2 px-4 py-12 text-sky-300">
                     <InfoIcon class="size-8" />
                     <span class="text-sm">Belum ada log. Menunggu AI Agent...</span>
                 </div>
@@ -168,7 +168,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
                 >
                     <component
                         :is="typeIcon(log.type)"
-                        class="mt-0.5 size-4 shrink-0 text-sky-300/50"
+                        class="mt-0.5 size-4 shrink-0 text-sky-300"
                     />
 
                     <div class="min-w-0 flex-1">
@@ -181,7 +181,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
 
                         <p
                             v-if="log.message"
-                            class="mt-0.5 text-xs leading-relaxed text-sky-300/70 whitespace-pre-wrap break-words"
+                            class="mt-0.5 text-xs leading-relaxed text-sky-300 whitespace-pre-wrap break-words"
                         >
                             {{ log.message }}
                         </p>
@@ -190,13 +190,13 @@ const parseMeta = (meta: string | null): Record<string, any> => {
                             <span
                                 v-for="(v, k) in parseMeta(log.metadata)"
                                 :key="k"
-                                class="inline-flex items-center gap-1 rounded border border-sky-500/10 bg-black/20 px-1.5 py-0 text-[10px] font-mono text-sky-300/50"
+                                class="inline-flex items-center gap-1 rounded border border-sky-500/10 bg-black/20 px-1.5 py-0 text-[10px] font-mono text-sky-300"
                             >
-                                {{ k }}: <span class="text-sky-300/80 break-all">{{ v }}</span>
+                                {{ k }}: <span class="text-sky-300 break-all">{{ v }}</span>
                             </span>
                         </div>
 
-                        <div class="mt-1 flex items-center gap-2 text-[10px] text-sky-300/30 font-mono">
+                        <div class="mt-1 flex items-center gap-2 text-[10px] text-sky-300 font-mono">
                             <span>{{ formatDate(String(log.created_at)) }}</span>
                             <span>{{ formatTime(String(log.created_at)) }}</span>
                             <span>#{{ log.id }}</span>

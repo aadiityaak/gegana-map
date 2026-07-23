@@ -144,7 +144,7 @@
 
 - Background: `bg-black/80` + `backdrop-blur` tipis untuk overlay.
 - Border: `border border-sky-500/30`
-- Teks: `text-sky-300` / `text-sky-300/70`
+- Teks: `text-sky-300`
 - Focus: `focus:ring-2 focus:ring-sky-400/40 focus:border-sky-400`
 - Panel: `bg-black/50` atau `bg-zinc-950/60` dengan border biru transparan
 

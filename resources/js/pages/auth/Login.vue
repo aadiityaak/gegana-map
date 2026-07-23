@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -42,7 +42,7 @@ defineProps<{
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email" class="text-sky-300/80">> user_id:</Label>
+                <Label for="email" class="text-sky-300">> user_id:</Label>
                 <Input
                     id="email"
                     type="email"
@@ -59,11 +59,11 @@ defineProps<{
 
             <div class="grid gap-2">
                 <div class="flex items-center justify-between">
-                    <Label for="password" class="text-sky-300/80">> password:</Label>
+                    <Label for="password" class="text-sky-300">> password:</Label>
                     <Link
                         v-if="canResetPassword"
                         :href="request()"
-                        class="text-xs text-sky-300/70 underline decoration-sky-500/30 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-400/60"
+                        class="text-xs text-sky-300 underline decoration-sky-500/30 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-400/60"
                         :tabindex="5"
                     >
                         > recovery_mode?
@@ -82,7 +82,7 @@ defineProps<{
             </div>
 
             <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3 text-sky-300/70">
+                <Label for="remember" class="flex items-center space-x-3 text-sky-300">
                     <Checkbox
                         id="remember"
                         name="remember"
@@ -105,7 +105,7 @@ defineProps<{
             </Button>
         </div>
 
-        <div class="text-center text-sm text-sky-300/60">
+        <div class="text-center text-sm text-sky-300">
             > need_access_token?
             <Link
                 :href="register()"

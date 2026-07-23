@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -291,7 +291,7 @@ const ensureProvinceMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
+        attribution: '� CartoDB',
         maxZoom: 19,
     }).addTo(provinceMap);
 
@@ -393,7 +393,7 @@ const ensureMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
+        attribution: '� CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -438,7 +438,7 @@ const updateMapMarkers = async () => {
         popupEl.appendChild(titleEl);
 
         const metaEl = document.createElement('div');
-        metaEl.textContent = `${formatDateTime(item.incident_date)} · ${locationLabel(item)}`;
+        metaEl.textContent = `${formatDateTime(item.incident_date)} � ${locationLabel(item)}`;
         metaEl.style.cssText = 'font-size: 12px; opacity: 0.75; margin-bottom: 10px;';
         popupEl.appendChild(metaEl);
 
@@ -559,49 +559,49 @@ watch(
                 <Badge class="border border-sky-500/25 bg-black/30 text-sky-200">
                     total: {{ fmt(props.dashboard.totals.all) }}
                 </Badge>
-                <Badge class="border border-sky-500/25 bg-black/30 text-sky-300/80">
+                <Badge class="border border-sky-500/25 bg-black/30 text-sky-300">
                     sync: {{ generatedLabel }}
                 </Badge>
             </div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300/60">> TOTAL</div>
+            <div class="rounded-xl border border-sky-500/15 bg-[#759DC1]/20 p-4 dash-card">
+                <div class="text-xs text-sky-300">> TOTAL</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.all) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300/60">
+                <div class="mt-3 text-xs text-sky-300">
                     > semua modul (kejadian)
                 </div>
             </div>
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300/60">> JIBOM</div>
+                <div class="text-xs text-sky-300">> JIBOM</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.jibom) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300/60">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-xs text-sky-300">> ancaman / temuan / ledakan</div>
             </div>
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300/60">> KBRN</div>
+                <div class="text-xs text-sky-300">> KBRN</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.kbrn) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300/60">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-xs text-sky-300">> ancaman / temuan / ledakan</div>
             </div>
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300/60">> WAN TEROR</div>
+                <div class="text-xs text-sky-300">> WAN TEROR</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.wanTeror) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300/60">> 5 kategori</div>
+                <div class="mt-3 text-xs text-sky-300">> 5 kategori</div>
             </div>
         </div>
 
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+                    <div class="text-xs font-semibold tracking-widest text-sky-300">
                         > GRAFIK 12 BULAN (JIBOM / KBRN / WAN TEROR)
                     </div>
                     <div class="flex items-center gap-3 text-[11px] text-sky-200/80">
@@ -621,7 +621,7 @@ watch(
                 </div>
 
                 <div class="relative overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 p-3 dash-chart">
-                    <div v-if="months.length === 0" class="text-xs text-sky-300/60">
+                    <div v-if="months.length === 0" class="text-xs text-sky-300">
                         > belum ada data grafik.
                     </div>
                     <svg
@@ -805,7 +805,7 @@ watch(
             </div>
 
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+                <div class="text-xs font-semibold tracking-widest text-sky-300">
                     > TOP PROVINSI (ALL)
                 </div>
                 <div class="mt-3 grid gap-2">
@@ -817,11 +817,11 @@ watch(
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
                         </div>
-                        <div class="ml-3 shrink-0 text-sky-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300">
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-xs text-sky-300/60">
+                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-xs text-sky-300">
                         > belum ada data.
                     </div>
                 </div>
@@ -829,7 +829,7 @@ watch(
         </div>
 
         <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300/60">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300">
                 <div>> MAP: IPOLEKSOSBUDKAM (LAST 200)</div>
                 <div class="flex items-center gap-3">
                     <span v-if="mapLoading">> loading_map...</span>
@@ -849,7 +849,7 @@ watch(
         </div>
 
         <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300/60">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300">
                 <div>> MAP PROVINSI: {{ activeTabLabel }}</div>
                 <div class="flex flex-wrap items-center gap-2">
                     <Button
@@ -895,7 +895,7 @@ watch(
                 class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card"
             >
                 <div class="mb-3 flex items-center justify-between gap-2">
-                    <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+                    <div class="text-xs font-semibold tracking-widest text-sky-300">
                         > {{ mod.title }}
                     </div>
                     <Button as-child size="sm" class="border border-sky-500/25 bg-sky-500/10 text-sky-200 hover:bg-sky-500/15">
@@ -906,7 +906,7 @@ watch(
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85">
                         <div>> total</div>
-                        <div class="text-sky-300/70">{{ fmt(mod.total) }}</div>
+                        <div class="text-sky-300">{{ fmt(mod.total) }}</div>
                     </div>
                     <div
                         v-for="t in mod.types"
@@ -914,13 +914,13 @@ watch(
                         class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
                     >
                         <div class="truncate">> {{ t.label }}</div>
-                        <div class="ml-3 shrink-0 text-sky-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300">
                             {{ fmt(mod.countsByType[t.value] ?? 0) }}
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 text-xs font-semibold tracking-widest text-sky-300/60">
+                <div class="mt-4 text-xs font-semibold tracking-widest text-sky-300">
                     > TOP PROVINSI
                 </div>
                 <div class="mt-2 grid gap-2">
@@ -932,11 +932,11 @@ watch(
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
                         </div>
-                        <div class="ml-3 shrink-0 text-sky-300/70">
+                        <div class="ml-3 shrink-0 text-sky-300">
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="mod.topProvinces.length === 0" class="text-xs text-sky-300/60">
+                    <div v-if="mod.topProvinces.length === 0" class="text-xs text-sky-300">
                         > belum ada data.
                     </div>
                 </div>

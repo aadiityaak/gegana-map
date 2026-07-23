@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -282,7 +282,7 @@ const ensureMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
+        attribution: '� CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -377,9 +377,9 @@ onMounted(async () => {
         </div>
 
         <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
-            <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
+            <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
                 <span>> MAP INDONESIA</span>
-                <span class="text-[11px]">> leaflet · cartodb dark</span>
+                <span class="text-[11px]">> leaflet � cartodb dark</span>
             </div>
             <div
                 ref="mapContainer"
@@ -389,7 +389,7 @@ onMounted(async () => {
 
         <div class="overflow-x-auto rounded-xl border border-sky-500/15 bg-black/20">
             <div class="min-w-[860px]">
-                <div class="grid grid-cols-12 gap-2 border-b border-sky-500/15 p-3 text-xs text-sky-300/70">
+                <div class="grid grid-cols-12 gap-2 border-b border-sky-500/15 p-3 text-xs text-sky-300">
                     <div class="col-span-1">ID</div>
                     <div class="col-span-2">Jenis</div>
                     <div class="col-span-2">Temuan</div>
@@ -397,7 +397,7 @@ onMounted(async () => {
                     <div class="col-span-4">Wilayah</div>
                     <div class="col-span-2 text-right">Aksi</div>
                 </div>
-                <div v-if="props.items.data.length === 0" class="p-4 text-xs text-sky-300/60">
+                <div v-if="props.items.data.length === 0" class="p-4 text-xs text-sky-300">
                     > belum ada data.
                 </div>
                 <div
@@ -423,7 +423,7 @@ onMounted(async () => {
                                 .filter(Boolean)
                                 .join(', ') || '-'
                         }}
-                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-sky-300/60">
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-sky-300">
                             <span v-if="photosCount(row.photos) > 0" class="rounded border border-sky-500/15 bg-black/20 px-2 py-0.5">
                                 > foto: {{ photosCount(row.photos) }}
                             </span>

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
@@ -71,7 +71,7 @@ const frontendDevDepsLines = computed(() =>
         />
 
         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 font-mono">
-            <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+            <div class="text-xs font-semibold tracking-widest text-sky-300">
                 > APP
             </div>
             <div class="mt-3 grid gap-2 text-sm text-sky-200/85">
@@ -82,7 +82,7 @@ const frontendDevDepsLines = computed(() =>
         </div>
 
         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 font-mono">
-            <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+            <div class="text-xs font-semibold tracking-widest text-sky-300">
                 > BACKEND
             </div>
             <div class="mt-3 grid gap-2 text-sm text-sky-200/85">
@@ -91,11 +91,11 @@ const frontendDevDepsLines = computed(() =>
             </div>
 
             <div class="mt-4 grid gap-3">
-                <div class="text-xs text-sky-300/60">> composer require</div>
+                <div class="text-xs text-sky-300">> composer require</div>
                 <div class="grid gap-1 max-h-[260px] overflow-auto rounded-lg border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-200/85">
                     <div v-for="line in backendRequireLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-sky-200/30"></span><span class="shrink-0"> installed</span></div>
                 </div>
-                <div class="text-xs text-sky-300/60">> composer require-dev</div>
+                <div class="text-xs text-sky-300">> composer require-dev</div>
                 <div class="grid gap-1 max-h-[220px] overflow-auto rounded-lg border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-200/85">
                     <div v-for="line in backendRequireDevLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-sky-200/30"></span><span class="shrink-0"> installed</span></div>
                 </div>
@@ -103,15 +103,15 @@ const frontendDevDepsLines = computed(() =>
         </div>
 
         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 font-mono">
-            <div class="text-xs font-semibold tracking-widest text-sky-300/60">
+            <div class="text-xs font-semibold tracking-widest text-sky-300">
                 > FRONTEND
             </div>
             <div class="mt-4 grid gap-3">
-                <div class="text-xs text-sky-300/60">> npm dependencies</div>
+                <div class="text-xs text-sky-300">> npm dependencies</div>
                 <div class="grid gap-1 max-h-[260px] overflow-auto rounded-lg border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-200/85">
                     <div v-for="line in frontendDepsLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-sky-200/30"></span><span class="shrink-0"> installed</span></div>
                 </div>
-                <div class="text-xs text-sky-300/60">> npm devDependencies</div>
+                <div class="text-xs text-sky-300">> npm devDependencies</div>
                 <div class="grid gap-1 max-h-[220px] overflow-auto rounded-lg border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-200/85">
                     <div v-for="line in frontendDevDepsLines" :key="line" class="flex items-baseline"><span class="shrink-0">{{ line }} </span><span class="flex-1 border-b border-dotted border-sky-200/30"></span><span class="shrink-0"> installed</span></div>
                 </div>

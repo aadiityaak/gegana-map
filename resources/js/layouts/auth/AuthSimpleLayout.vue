@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import { home } from '@/routes';
@@ -42,7 +42,7 @@ defineProps<{
                         <h1 class="font-mono text-lg font-semibold tracking-widest text-sky-200">
                             {{ title }}
                         </h1>
-                        <p class="text-center font-mono text-xs tracking-wide text-sky-300/60">
+                        <p class="text-center font-mono text-xs tracking-wide text-sky-300">
                             {{ description }}
                         </p>
                     </div>

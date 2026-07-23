@@ -317,11 +317,8 @@
 }
 
 .dark .bg-sidebar {
-    background-color: color-mix(
-        in oklab,
-        var(--sidebar-background) 30%,
-        transparent
-    ) !important;
+    background-color: rgba(95, 123, 147, 0.85);
+    border-radius: 10px;
 }
 
 .dark [data-slot='sidebar-wrapper'] {

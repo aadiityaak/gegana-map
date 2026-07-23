@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -330,7 +330,7 @@ const ensureMap = async () => {
     );
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
+        attribution: '� CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -524,8 +524,8 @@ const title = computed(() => {
                 <div class="text-sm font-semibold text-sky-100">
                     > {{ viewTypeLabel }}
                 </div>
-                <div class="mt-2 text-xs text-sky-300/60">
-                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} · {{ viewLocationLabel }}
+                <div class="mt-2 text-xs text-sky-300">
+                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} � {{ viewLocationLabel }}
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
                     <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
@@ -541,7 +541,7 @@ const title = computed(() => {
             </div>
 
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
-                <div class="mb-2 flex items-center justify-between text-xs text-sky-300/60">
+                <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
                     <span>> MAP LOCATION</span>
                     <span v-if="viewCoords" class="text-[11px]">
                         > {{ viewCoords.lat.toFixed(5) }}, {{ viewCoords.lng.toFixed(5) }}
@@ -552,7 +552,7 @@ const title = computed(() => {
                     ref="mapContainer"
                     class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-sky-500/15"
                 />
-                <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-xs text-sky-300/60">
+                <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-xs text-sky-300">
                     > koordinat tidak tersedia.
                 </div>
             </div>
@@ -563,7 +563,7 @@ const title = computed(() => {
                 v-html="String(props.item?.description ?? '')"
             />
 
-            <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-xs text-sky-300/70">
+            <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-xs text-sky-300">
                 <div>> wilayah: {{ viewLocationLabel }}</div>
                 <div v-if="form.news_source">> sumber_berita: {{ form.news_source }}</div>
                 <div v-if="form.news_url">
@@ -580,7 +580,7 @@ const title = computed(() => {
             </div>
 
             <div v-if="isView && props.developments && props.developments.length" class="space-y-2">
-                <div class="text-xs tracking-widest text-sky-300/60">PERKEMBANGAN KASUS</div>
+                <div class="text-xs tracking-widest text-sky-300">PERKEMBANGAN KASUS</div>
                 <div class="space-y-2">
                     <div
                         v-for="dev in props.developments"
@@ -589,11 +589,11 @@ const title = computed(() => {
                     >
                         <div class="mb-1 flex items-center justify-between gap-2">
                             <span class="text-sm font-medium text-sky-200">{{ dev.title }}</span>
-                            <span class="shrink-0 text-[11px] text-sky-300/50">
+                            <span class="shrink-0 text-[11px] text-sky-300">
                                 {{ new Date(String(dev.reported_at ?? dev.created_at)).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
                             </span>
                         </div>
-                        <p v-if="dev.description" class="text-xs leading-relaxed text-sky-300/80">
+                        <p v-if="dev.description" class="text-xs leading-relaxed text-sky-300">
                             {{ dev.description }}
                         </p>
                         <a
@@ -610,7 +610,7 @@ const title = computed(() => {
             </div>
 
             <div v-if="(props.item?.photos ?? []).length" class="space-y-2">
-                <div class="text-xs tracking-widest text-sky-300/60">GALLERY</div>
+                <div class="text-xs tracking-widest text-sky-300">GALLERY</div>
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                         v-for="p in (props.item?.photos ?? [])"
@@ -734,7 +734,7 @@ const title = computed(() => {
                 <Label>Gallery Foto</Label>
                 <div v-if="isView">
                     <div v-if="(form.existing_photos ?? []).length > 0" class="grid gap-2">
-                        <div class="text-xs text-sky-300/60">> foto tersimpan</div>
+                        <div class="text-xs text-sky-300">> foto tersimpan</div>
                         <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                             <div
                                 v-for="p in (form.existing_photos ?? [])"
@@ -745,7 +745,7 @@ const title = computed(() => {
                             </div>
                         </div>
                     </div>
-                    <div v-else class="text-xs text-sky-300/60">> tidak ada foto.</div>
+                    <div v-else class="text-xs text-sky-300">> tidak ada foto.</div>
                 </div>
                 <input
                     ref="photoInputEl"
@@ -769,7 +769,7 @@ const title = computed(() => {
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div>
                             <div class="text-sky-200/90">> drag & drop foto di sini</div>
-                            <div class="mt-1 text-sky-300/60">> atau klik untuk pilih file</div>
+                            <div class="mt-1 text-sky-300">> atau klik untuk pilih file</div>
                         </div>
                         <div v-if="newPhotoPreviews.length > 0" class="rounded border border-sky-500/15 bg-black/20 px-2 py-1 text-[11px] text-sky-200/85">
                             > baru: {{ newPhotoPreviews.length }}
@@ -779,7 +779,7 @@ const title = computed(() => {
                 <InputError :message="photosError" />
 
                 <div v-if="!isView && (form.existing_photos ?? []).length > 0" class="grid gap-2">
-                    <div class="text-xs text-sky-300/60">> foto tersimpan</div>
+                    <div class="text-xs text-sky-300">> foto tersimpan</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
                             v-for="p in (form.existing_photos ?? [])"
@@ -797,7 +797,7 @@ const title = computed(() => {
                 </div>
 
                 <div v-if="!isView && newPhotoPreviews.length > 0" class="grid gap-2">
-                    <div class="text-xs text-sky-300/60">> preview foto baru</div>
+                    <div class="text-xs text-sky-300">> preview foto baru</div>
                     <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
                         <button
                             v-for="p in newPhotoPreviews"
