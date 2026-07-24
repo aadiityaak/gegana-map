@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
         />
 
         <div class="rounded-xl border border-sidebar-border/70 bg-card p-4">
-            <div class="mb-3 text-xs font-semibold tracking-widest text-muted-foreground">
+            <div class="mb-3 text-sm font-semibold tracking-widest text-muted-foreground">
                 PREVIEW
             </div>
             <div class="flex items-center gap-2">
@@ -151,14 +151,14 @@ onBeforeUnmount(() => {
                         alt="Logo preview"
                         class="max-h-[300px] max-w-[300px] rounded-md object-contain"
                     />
-                    <div class="text-xs text-muted-foreground">
+                    <div class="text-sm text-muted-foreground">
                         {{ form.logo ? 'Logo baru siap diupload' : 'Logo aktif dari server' }}
                     </div>
                 </div>
                 <div v-if="form.errors.logo" class="text-sm text-destructive">
                     {{ form.errors.logo }}
                 </div>
-                <div class="text-xs text-muted-foreground">
+                <div class="text-sm text-muted-foreground">
                     Gunakan file PNG agar URL `branding/pusdata.png` tetap konsisten.
                 </div>
             </div>
@@ -179,14 +179,14 @@ onBeforeUnmount(() => {
                         alt="Favicon preview"
                         class="max-h-[300px] max-w-[300px] rounded object-contain"
                     />
-                    <div class="text-xs text-muted-foreground">
+                    <div class="text-sm text-muted-foreground">
                         {{ form.favicon ? 'Favicon baru siap diupload' : 'Favicon aktif dari server' }}
                     </div>
                 </div>
                 <div v-if="form.errors.favicon" class="text-sm text-destructive">
                     {{ form.errors.favicon }}
                 </div>
-                <div class="text-xs text-muted-foreground">
+                <div class="text-sm text-muted-foreground">
                     Gunakan file PNG agar URL `branding/gegana-fav.png` tetap konsisten.
                 </div>
             </div>
@@ -206,3 +206,4 @@ onBeforeUnmount(() => {
         </div>
     </div>
 </template>
+

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <Head title="Ketahanan Pangan" />
 
 
@@ -13,7 +13,7 @@
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                             <label
-                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
+                                class="mb-2 block text-sm tracking-widest text-muted-foreground"
                             >
                                 PILIH KOMODITAS
                             </label>
@@ -34,7 +34,7 @@
 
                         <div>
                             <label
-                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
+                                class="mb-2 block text-sm tracking-widest text-muted-foreground"
                             >
                                 LEVEL HARGA
                             </label>
@@ -52,7 +52,7 @@
                     <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
                             <label
-                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
+                                class="mb-2 block text-sm tracking-widest text-muted-foreground"
                             >
                                 TANGGAL MULAI
                             </label>
@@ -65,7 +65,7 @@
 
                         <div>
                             <label
-                                class="mb-2 block text-xs tracking-widest text-muted-foreground"
+                                class="mb-2 block text-sm tracking-widest text-muted-foreground"
                             >
                                 TANGGAL AKHIR
                             </label>
@@ -101,7 +101,7 @@
                 >
                     <div class="flex flex-col items-center">
                         <RefreshCw class="mb-4 h-8 w-8 animate-spin text-primary" />
-                        <p class="text-xs tracking-widest text-muted-foreground">LOADING_MAP_DATA...</p>
+                        <p class="text-sm tracking-widest text-muted-foreground">LOADING_MAP_DATA...</p>
                     </div>
                 </div>
 
@@ -114,7 +114,7 @@
                         <p class="text-sm text-destructive">{{ error }}</p>
                         <button
                             @click="fetchPriceData"
-                            class="mt-3 text-xs tracking-widest text-primary underline-offset-4 hover:underline"
+                            class="mt-3 text-sm tracking-widest text-primary underline-offset-4 hover:underline"
                         >
                             > RETRY
                         </button>
@@ -162,24 +162,24 @@
                         <h4 class="text-sm font-semibold tracking-widest text-foreground">
                             {{ selectedProvince.province_name }}
                         </h4>
-                        <p class="mt-2 text-xs text-muted-foreground">
+                        <p class="mt-2 text-sm text-muted-foreground">
                             > HARGA:
                             <span class="font-semibold text-foreground">
                                 {{ formatPrice(selectedProvince.price) }}
                             </span>
                         </p>
-                        <p class="mt-1 text-xs text-muted-foreground">
+                        <p class="mt-1 text-sm text-muted-foreground">
                             > STATUS:
                             <span
                                 :class="getPriceStatusClass(selectedProvince.status)"
-                                class="rounded px-2 py-1 text-xs"
+                                class="rounded px-2 py-1 text-sm"
                             >
                                 {{ getPriceStatusText(selectedProvince.status) }}
                             </span>
                         </p>
                         <button
                             @click="selectedProvince = null"
-                            class="mt-3 text-xs tracking-widest text-primary underline-offset-4 hover:underline"
+                            class="mt-3 text-sm tracking-widest text-primary underline-offset-4 hover:underline"
                         >
                             > CLOSE
                         </button>
@@ -189,10 +189,10 @@
                         class="absolute bottom-4 left-4 z-30 rounded-lg border border-border bg-card/80 p-4 shadow-lg backdrop-blur"
                         style="position: absolute"
                     >
-                        <h4 class="mb-2 text-xs font-semibold tracking-widest text-foreground">
+                        <h4 class="mb-2 text-sm font-semibold tracking-widest text-foreground">
                             > LEGEND STATUS HARGA
                         </h4>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="grid grid-cols-2 gap-2 text-sm">
                             <div class="flex items-center">
                                 <div class="mr-2 h-3 w-3 rounded-full bg-sky-500"></div>
                                 <span class="text-muted-foreground">Aman</span>
@@ -228,7 +228,7 @@
                             }}
                         </h3>
                         <div class="flex items-center space-x-4">
-                            <div class="text-xs tracking-widest text-muted-foreground">
+                            <div class="text-sm tracking-widest text-muted-foreground">
                                 > {{ priceData.length }} PROVINSI
                             </div>
                         </div>
@@ -240,7 +240,7 @@
                         <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                    <p class="text-sm tracking-widest text-muted-foreground">
                                         RATA-RATA
                                     </p>
                                     <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
@@ -268,7 +268,7 @@
                         <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                    <p class="text-sm tracking-widest text-muted-foreground">
                                         TERTINGGI
                                     </p>
                                     <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
@@ -299,7 +299,7 @@
                         <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                    <p class="text-sm tracking-widest text-muted-foreground">
                                         TERENDAH
                                     </p>
                                     <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
@@ -330,7 +330,7 @@
                         <div class="rounded-lg border border-border bg-background/40 p-4 dark:border-sky-500/15">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs tracking-widest text-muted-foreground">
+                                    <p class="text-sm tracking-widest text-muted-foreground">
                                         STATUS DOMINAN
                                     </p>
                                     <p class="mt-2 text-lg font-semibold tracking-wide text-foreground">
@@ -414,7 +414,7 @@
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <span
                                             :class="getPriceStatusClass(item.status)"
-                                            class="inline-flex rounded-full px-2 py-1 text-xs font-semibold"
+                                            class="inline-flex rounded-full px-2 py-1 text-sm font-semibold"
                                         >
                                             {{ getPriceStatusText(item.status) }}
                                         </span>
@@ -464,7 +464,7 @@
                                                 />
                                             </svg>
                                             <span
-                                                class="ml-1 text-xs"
+                                                class="ml-1 text-sm"
                                                 :class="{
                                                     'text-destructive': getTrendDirection(item) === 'up',
                                                     'text-primary': getTrendDirection(item) === 'down',
@@ -478,7 +478,7 @@
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <div class="flex items-center">
                                             <span
-                                                class="text-xs font-medium"
+                                                class="text-sm font-medium"
                                                 :class="{
                                                     'text-destructive': getHppHapPercentage(item) > 0,
                                                     'text-primary': getHppHapPercentage(item) < 0,
@@ -944,3 +944,4 @@ onMounted(async () => {
     }
 });
 </script>
+

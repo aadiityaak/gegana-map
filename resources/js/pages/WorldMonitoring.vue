@@ -20,7 +20,7 @@ const src = 'https://world.pemetaankerawanan.my.id/';
 
     <div class="p-4 font-mono sm:p-6">
         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4">
-            <div class="mb-3 flex items-center justify-between text-xs text-sky-300">
+            <div class="mb-3 flex items-center justify-between text-sm text-sky-300">
                 <div>> WORLD MONITORING</div>
                 <div class="text-[11px]">></div>
             </div>
@@ -36,3 +36,4 @@ const src = 'https://world.pemetaankerawanan.my.id/';
         </div>
     </div>
 </template>
+

@@ -132,7 +132,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
         <div class="flex items-center justify-between">
             <Heading title="AI Agent Logs" description="Realtime log aktivitas AI Agent" />
             <div class="flex items-center gap-2">
-                <Button variant="outline" size="sm" @click="togglePause" class="text-xs">
+                <Button variant="outline" size="sm" @click="togglePause" class="text-sm">
                     <span v-if="paused">? Lanjutkan</span>
                     <span v-else class="flex items-center gap-1">
                         <RefreshCw class="size-3 animate-spin" />
@@ -148,7 +148,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
         <!-- Log table -->
         <div class="relative overflow-hidden rounded-xl border border-sky-500/15 bg-black/30">
             <div class="flex items-center justify-between border-b border-sky-500/10 px-4 py-2">
-                <div class="flex items-center gap-2 text-xs text-sky-300">
+                <div class="flex items-center gap-2 text-sm text-sky-300">
                     <Activity class="size-3.5" />
                     <span>AI_AGENT_LOG / {{ logs.length }} entries</span>
                 </div>
@@ -181,7 +181,7 @@ const parseMeta = (meta: string | null): Record<string, any> => {
 
                         <p
                             v-if="log.message"
-                            class="mt-0.5 text-xs leading-relaxed text-sky-300 whitespace-pre-wrap break-words"
+                            class="mt-0.5 text-sm leading-relaxed text-sky-300 whitespace-pre-wrap break-words"
                         >
                             {{ log.message }}
                         </p>
@@ -207,3 +207,4 @@ const parseMeta = (meta: string | null): Record<string, any> => {
         </div>
     </div>
 </template>
+

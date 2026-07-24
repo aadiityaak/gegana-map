@@ -63,7 +63,7 @@ defineProps<{
                     <Link
                         v-if="canResetPassword"
                         :href="request()"
-                        class="text-xs text-sky-300 underline decoration-sky-500/30 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-400/60"
+                        class="text-sm text-sky-300 underline decoration-sky-500/30 underline-offset-4 transition-colors hover:text-sky-200 hover:decoration-sky-400/60"
                         :tabindex="5"
                     >
                         > recovery_mode?
@@ -117,3 +117,4 @@ defineProps<{
         </div>
     </Form>
 </template>
+

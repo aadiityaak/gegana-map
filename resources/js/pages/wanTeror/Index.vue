@@ -385,7 +385,7 @@ onMounted(async () => {
         </div>
 
         <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
-            <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
+            <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                 <span>> MAP INDONESIA</span>
                 <span class="text-[11px]">> leaflet cartodb dark</span>
             </div>
@@ -397,7 +397,7 @@ onMounted(async () => {
 
         <div class="overflow-x-auto rounded-xl border border-sky-500/15 bg-black/20">
             <div class="min-w-[860px]">
-                <div class="grid grid-cols-12 gap-2 border-b border-sky-500/15 p-3 text-xs text-sky-300">
+                <div class="grid grid-cols-12 gap-2 border-b border-sky-500/15 p-3 text-sm text-sky-300">
                     <div class="col-span-1">ID</div>
                     <div class="col-span-4">Kategori</div>
                     <div class="col-span-1">Sumber</div>
@@ -406,14 +406,14 @@ onMounted(async () => {
                 </div>
                 <div
                     v-if="props.items.data.length === 0"
-                    class="p-4 text-xs text-sky-300"
+                    class="p-4 text-sm text-sky-300"
                 >
                     > belum ada data.
                 </div>
                 <div
                     v-for="row in props.items.data"
                     :key="row.id"
-                    class="grid grid-cols-12 gap-2 border-b border-sky-500/10 p-3 text-xs text-sky-200/85 last:border-b-0"
+                    class="grid grid-cols-12 gap-2 border-b border-sky-500/10 p-3 text-sm text-sky-200/85 last:border-b-0"
                 >
                     <div class="col-span-1">{{ row.id }}</div>
                     <div class="col-span-4">
@@ -523,3 +523,4 @@ onMounted(async () => {
     color: rgba(171, 213, 229, 0.5) !important;
 }
 </style>
+

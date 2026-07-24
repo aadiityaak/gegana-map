@@ -73,6 +73,7 @@ const props = defineProps<{
 }>();
 
 const fmt = (n: number) => new Intl.NumberFormat('id-ID').format(n ?? 0);
+const moduleColor = (key: string) => (key === 'jibom' ? 'blue' : key === 'kbrn' ? 'violet' : 'amber');
 const generatedLabel = computed(() => {
     try {
         const d = new Date(props.dashboard.generatedAt);
@@ -566,42 +567,42 @@ watch(
         </div>
 
         <div class="grid gap-4 md:grid-cols-4">
-            <div class="rounded-xl border border-sky-500/15 bg-[#759DC1]/20 p-4 dash-card">
-                <div class="text-xs text-sky-300">> TOTAL</div>
+            <div data-color="sky" class="rounded-xl border border-sky-500/35 p-4 dash-card">
+                <div class="text-sm text-sky-300">> TOTAL</div>
                 <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
                     {{ fmt(props.dashboard.totals.all) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300">
+                <div class="mt-3 text-sm text-sky-300">
                     > semua modul (kejadian)
                 </div>
             </div>
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300">> JIBOM</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
+            <div data-color="blue" class="rounded-xl border border-sky-500/35 p-4 dash-card">
+                <div class="text-sm text-blue-300">> JIBOM</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-blue-200">
                     {{ fmt(props.dashboard.totals.jibom) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-sm text-blue-300">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300">> KBRN</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
+            <div data-color="violet" class="rounded-xl border border-sky-500/35 p-4 dash-card">
+                <div class="text-sm text-violet-300">> KBRN</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-violet-200">
                     {{ fmt(props.dashboard.totals.kbrn) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300">> ancaman / temuan / ledakan</div>
+                <div class="mt-3 text-sm text-violet-300">> ancaman / temuan / ledakan</div>
             </div>
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs text-sky-300">> WAN TEROR</div>
-                <div class="mt-2 text-3xl font-semibold tracking-widest text-sky-200">
+            <div data-color="amber" class="rounded-xl border border-sky-500/35 p-4 dash-card">
+                <div class="text-sm text-amber-300">> WAN TEROR</div>
+                <div class="mt-2 text-3xl font-semibold tracking-widest text-amber-200">
                     {{ fmt(props.dashboard.totals.wanTeror) }}
                 </div>
-                <div class="mt-3 text-xs text-sky-300">> 5 kategori</div>
+                <div class="mt-3 text-sm text-amber-300">> 5 kategori</div>
             </div>
         </div>
 
         <div class="mt-6 grid gap-4 lg:grid-cols-3">
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 lg:col-span-2 dash-card">
+            <div class="rounded-xl border border-sky-500/35 bg-black/20 p-4 lg:col-span-2 dash-card">
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs font-semibold tracking-widest text-sky-300">
+                    <div class="text-sm font-semibold tracking-widest text-sky-300">
                         > GRAFIK 12 BULAN (JIBOM / KBRN / WAN TEROR)
                     </div>
                     <div class="flex items-center gap-3 text-[11px] text-sky-200/80">
@@ -620,8 +621,8 @@ watch(
                     </div>
                 </div>
 
-                <div class="relative overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 p-3 dash-chart">
-                    <div v-if="months.length === 0" class="text-xs text-sky-300">
+                <div class="relative overflow-hidden rounded-lg border border-sky-500/35 bg-black/30 p-3 dash-chart">
+                    <div v-if="months.length === 0" class="text-sm text-sky-300">
                         > belum ada data grafik.
                     </div>
                     <svg
@@ -768,7 +769,7 @@ watch(
 
                     <div
                         v-if="hoverLabel && hoverValues"
-                        class="pointer-events-none absolute right-3 top-3 rounded-lg border border-sky-500/15 bg-black/60 px-3 py-2 text-[11px] text-sky-200/90 backdrop-blur"
+                        class="pointer-events-none absolute right-3 top-3 rounded-lg border border-sky-500/35 bg-black/60 px-3 py-2 text-[11px] text-sky-200/90 backdrop-blur"
                     >
                         <div>> {{ hoverLabel }} ({{ hoverMonthShort }})</div>
                         <div class="mt-1 grid gap-0.5 text-sky-200/85">
@@ -783,36 +784,36 @@ watch(
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/jibom">> JIBOM</Link>
                     </Button>
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/kbrn">> KBRN</Link>
                     </Button>
                     <Button
                         variant="secondary"
                         as-child
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                     >
                         <Link href="/wan-teror">> WAN TEROR</Link>
                     </Button>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-                <div class="text-xs font-semibold tracking-widest text-sky-300">
+            <div class="rounded-xl border border-sky-500/35 bg-black/20 p-4 dash-card">
+                <div class="text-sm font-semibold tracking-widest text-sky-300">
                     > TOP PROVINSI (ALL)
                 </div>
                 <div class="mt-3 grid gap-2">
                     <div
                         v-for="(row, idx) in props.dashboard.topProvincesAll"
                         :key="row.id"
-                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-sm text-sky-200/85"
                     >
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
@@ -821,15 +822,15 @@ watch(
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-xs text-sky-300">
+                    <div v-if="props.dashboard.topProvincesAll.length === 0" class="text-sm text-sky-300">
                         > belum ada data.
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300">
+        <div class="mt-6 rounded-xl border border-sky-500/35 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-sm text-sky-300">
                 <div>> MAP: IPOLEKSOSBUDKAM (LAST 200)</div>
                 <div class="flex items-center gap-3">
                     <span v-if="mapLoading">> loading_map...</span>
@@ -837,25 +838,25 @@ watch(
                 </div>
             </div>
 
-            <div v-if="mapError" class="rounded border border-red-500/25 bg-red-500/10 p-3 text-xs text-red-200">
+            <div v-if="mapError" class="rounded border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-200">
                 > {{ mapError }}
             </div>
 
             <div
                 v-else
                 ref="mapContainer"
-                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 sm:h-[420px]"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/35 bg-black/30 sm:h-[420px]"
             />
         </div>
 
-        <div class="mt-6 rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card">
-            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300">
+        <div class="mt-6 rounded-xl border border-sky-500/35 bg-black/20 p-4 dash-card">
+            <div class="mb-2 flex flex-wrap items-center justify-between gap-3 text-sm text-sky-300">
                 <div>> MAP PROVINSI: {{ activeTabLabel }}</div>
                 <div class="flex flex-wrap items-center gap-2">
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                         :class="provinceTab === 'jibom' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'jibom'"
                     >
@@ -864,7 +865,7 @@ watch(
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                         :class="provinceTab === 'kbrn' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'kbrn'"
                     >
@@ -873,7 +874,7 @@ watch(
                     <Button
                         variant="secondary"
                         size="sm"
-                        class="border border-sky-500/15 bg-black/30 text-sky-200 hover:bg-sky-500/10"
+                        class="border border-sky-500/35 bg-black/30 text-sky-200 hover:bg-sky-500/10"
                         :class="provinceTab === 'wan-teror' ? 'border-sky-500/25 bg-sky-500/10' : ''"
                         @click="provinceTab = 'wan-teror'"
                     >
@@ -884,7 +885,7 @@ watch(
 
             <div
                 ref="provinceMapContainer"
-                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/15 bg-black/30 sm:h-[420px]"
+                class="relative z-0 h-[320px] w-full overflow-hidden rounded-lg border border-sky-500/35 bg-black/30 sm:h-[420px]"
             />
         </div>
 
@@ -892,10 +893,11 @@ watch(
             <div
                 v-for="mod in props.dashboard.modules"
                 :key="mod.key"
-                class="rounded-xl border border-sky-500/15 bg-black/20 p-4 dash-card"
+                :data-color="moduleColor(mod.key)"
+                class="rounded-xl border border-sky-500/35 p-4 dash-card"
             >
                 <div class="mb-3 flex items-center justify-between gap-2">
-                    <div class="text-xs font-semibold tracking-widest text-sky-300">
+                    <div class="text-sm font-semibold tracking-widest text-sky-300">
                         > {{ mod.title }}
                     </div>
                     <Button as-child size="sm" class="border border-sky-500/25 bg-sky-500/10 text-sky-200 hover:bg-sky-500/15">
@@ -904,14 +906,14 @@ watch(
                 </div>
 
                 <div class="grid gap-2">
-                    <div class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85">
+                    <div class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-sm text-sky-200/85">
                         <div>> total</div>
                         <div class="text-sky-300">{{ fmt(mod.total) }}</div>
                     </div>
                     <div
                         v-for="t in mod.types"
                         :key="t.value"
-                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-sm text-sky-200/85"
                     >
                         <div class="truncate">> {{ t.label }}</div>
                         <div class="ml-3 shrink-0 text-sky-300">
@@ -920,14 +922,14 @@ watch(
                     </div>
                 </div>
 
-                <div class="mt-4 text-xs font-semibold tracking-widest text-sky-300">
+                <div class="mt-4 text-sm font-semibold tracking-widest text-sky-300">
                     > TOP PROVINSI
                 </div>
                 <div class="mt-2 grid gap-2">
                     <div
                         v-for="(row, idx) in mod.topProvinces"
                         :key="row.id"
-                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-xs text-sky-200/85"
+                        class="flex items-center justify-between rounded-lg border border-sky-500/10 bg-black/30 px-3 py-2 text-sm text-sky-200/85"
                     >
                         <div class="truncate">
                             > {{ idx + 1 }}. {{ row.name || row.id }}
@@ -936,7 +938,7 @@ watch(
                             {{ fmt(row.count) }}
                         </div>
                     </div>
-                    <div v-if="mod.topProvinces.length === 0" class="text-xs text-sky-300">
+                    <div v-if="mod.topProvinces.length === 0" class="text-sm text-sky-300">
                         > belum ada data.
                     </div>
                 </div>
@@ -994,10 +996,21 @@ watch(
     mix-blend-mode: overlay;
 }
 
+/* Color variants — cohesive sky/atmosphere palette */
+.dash-card[data-color='sky']   { --card-rgb: 56, 189, 248; }
+.dash-card[data-color='blue']  { --card-rgb: 96, 165, 250; }
+.dash-card[data-color='violet'] { --card-rgb: 167, 139, 250; }
+.dash-card[data-color='amber'] { --card-rgb: 251, 191, 36; }
+
+.dash-card[data-color] {
+    background-color: rgba(var(--card-rgb), 0.35);
+}
+
 .dash-card {
+    --card-rgb: 171, 213, 229;
     position: relative;
-    box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.06),
-        0 0 26px rgba(171, 213, 229, 0.05);
+    box-shadow: 0 0 0 1px rgba(var(--card-rgb), 0.06),
+        0 0 26px rgba(var(--card-rgb), 0.05);
     animation: glow 3.8s ease-in-out infinite;
 }
 
@@ -1088,12 +1101,12 @@ watch(
 @keyframes glow {
     0%,
     100% {
-        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.06),
-            0 0 26px rgba(171, 213, 229, 0.05);
+        box-shadow: 0 0 0 1px rgba(var(--card-rgb, 171, 213, 229), 0.06),
+            0 0 26px rgba(var(--card-rgb, 171, 213, 229), 0.05);
     }
     50% {
-        box-shadow: 0 0 0 1px rgba(171, 213, 229, 0.1),
-            0 0 40px rgba(171, 213, 229, 0.08);
+        box-shadow: 0 0 0 1px rgba(var(--card-rgb, 171, 213, 229), 0.1),
+            0 0 40px rgba(var(--card-rgb, 171, 213, 229), 0.08);
     }
 }
 
@@ -1173,3 +1186,4 @@ watch(
     }
 }
 </style>
+

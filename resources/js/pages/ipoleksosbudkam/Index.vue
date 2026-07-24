@@ -1091,13 +1091,13 @@ watchEffect(() => {
                 </div>
                 <a
                     href="/ipoleksosbudkam"
-                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-sky-200 hover:border-sky-400/25"
+                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-sm tracking-widest text-sky-200 hover:border-sky-400/25"
                 >
                     > BACK
                 </a>
             </div>
 
-            <div v-if="detailLoading" class="flex items-center gap-2 text-xs text-sky-300">
+            <div v-if="detailLoading" class="flex items-center gap-2 text-sm text-sky-300">
                 <Spinner />
                 loading_detail...
             </div>
@@ -1111,7 +1111,7 @@ watchEffect(() => {
                     <div class="text-sm font-semibold text-sky-100">
                         > {{ detailItem.title }}
                     </div>
-                    <div class="mt-2 text-xs text-sky-300">
+                    <div class="mt-2 text-sm text-sky-300">
                         {{ formatDateTime(detailItem.incident_date) }} � {{ locationLabel(detailItem) }}
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -1131,7 +1131,7 @@ watchEffect(() => {
                 </div>
 
                 <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
-                    <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
+                    <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                         <span>> MAP LOCATION</span>
                         <span v-if="detailCoords" class="text-[11px]">> {{ detailCoords.lat.toFixed(5) }}, {{ detailCoords.lng.toFixed(5) }}</span>
                     </div>
@@ -1140,7 +1140,7 @@ watchEffect(() => {
                         ref="detailMapContainer"
                         class="relative z-0 h-[360px] w-full overflow-hidden rounded-lg border border-sky-500/15"
                     />
-                    <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-xs text-sky-300">
+                    <div v-else class="rounded-lg border border-sky-500/15 bg-black/30 p-4 text-sm text-sky-300">
                         > koordinat tidak tersedia.
                     </div>
                 </div>
@@ -1151,7 +1151,7 @@ watchEffect(() => {
                     v-html="detailDescriptionHtml"
                 />
 
-                <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-xs text-sky-300">
+                <div class="grid gap-2 rounded-xl border border-sky-500/15 bg-black/20 p-4 text-sm text-sky-300">
                     <div v-if="detailItem.source">> source: {{ detailItem.source }}</div>
                     <div v-if="detailItem.data_source">> data_source: {{ detailItem.data_source }}</div>
                     <div v-if="detailItem.sumber_berita">> sumber_berita: {{ detailItem.sumber_berita }}</div>
@@ -1162,7 +1162,7 @@ watchEffect(() => {
                 </div>
 
                 <div v-if="detailItem.gallery?.length" class="space-y-2">
-                    <div class="text-xs tracking-widest text-sky-300">GALLERY</div>
+                    <div class="text-sm tracking-widest text-sky-300">GALLERY</div>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         <div
                             v-for="img in detailItem.gallery"
@@ -1184,12 +1184,12 @@ watchEffect(() => {
                 </div>
 
                 <div v-if="detailItem.video_url" class="space-y-2">
-                    <div class="text-xs tracking-widest text-sky-300">VIDEO</div>
+                    <div class="text-sm tracking-widest text-sky-300">VIDEO</div>
                     <video :src="detailItem.video_url" controls class="w-full rounded-md border border-sky-500/15" />
                 </div>
             </div>
 
-            <div v-else class="text-xs text-sky-300">> detail tidak ditemukan.</div>
+            <div v-else class="text-sm text-sky-300">> detail tidak ditemukan.</div>
         </div>
 
         <div v-else-if="isWidgetPage" class="space-y-4">
@@ -1204,7 +1204,7 @@ watchEffect(() => {
                 </div>
                 <a
                     href="/ipoleksosbudkam/ekonomi"
-                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-xs tracking-widest text-sky-200 hover:border-sky-400/25"
+                    class="inline-flex items-center justify-center rounded-md border border-sky-500/15 bg-black/30 px-3 py-2 text-sm tracking-widest text-sky-200 hover:border-sky-400/25"
                 >
                     > BACK
                 </a>
@@ -1215,7 +1215,7 @@ watchEffect(() => {
             </div>
 
             <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
-                <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
+                <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                     <span>> TRADINGVIEW_WIDGET</span>
                     <span class="text-[11px]">> external_embed</span>
                 </div>
@@ -1242,7 +1242,7 @@ watchEffect(() => {
                         {{ subcategoryLabel }}
                     </Badge>
                 </div>
-                <div class="text-xs tracking-wide text-sky-300">
+                <div class="text-sm tracking-wide text-sky-300">
                     <span v-if="meta">
                         total: {{ meta.total }}
                         � range: {{ meta.start_date }} ? {{ meta.end_date }}
@@ -1256,33 +1256,33 @@ watchEffect(() => {
 
             <div v-else class="space-y-3">
                 <div class="grid gap-3 md:grid-cols-3">
-                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-sky-300">TOTAL DATA</div>
+                    <div data-color="sky" class="rounded-xl border p-4 ipol-card">
+                        <div class="text-sm tracking-widest text-sky-300">TOTAL DATA</div>
                         <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
                             {{ formatNumber(totalData) }}
                         </div>
-                        <div class="mt-1 text-xs text-sky-300">> record_count</div>
+                        <div class="mt-1 text-sm text-sky-300">> record_count</div>
                     </div>
-                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-sky-300">TOTAL KATEGORI</div>
-                        <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
+                    <div data-color="blue" class="rounded-xl border p-4 ipol-card">
+                        <div class="text-sm tracking-widest text-blue-300">TOTAL KATEGORI</div>
+                        <div class="mt-2 text-2xl font-semibold tracking-wide text-blue-100">
                             {{ formatNumber(totalCategory) }}
                         </div>
-                        <div class="mt-1 text-xs text-sky-300">> distinct_category</div>
+                        <div class="mt-1 text-sm text-blue-300">> distinct_category</div>
                     </div>
-                    <div class="rounded-xl border border-sky-500/15 bg-black/30 p-4">
-                        <div class="text-xs tracking-widest text-sky-300">TOTAL TERDAMPAK</div>
-                        <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
+                    <div data-color="violet" class="rounded-xl border p-4 ipol-card">
+                        <div class="text-sm tracking-widest text-violet-300">TOTAL TERDAMPAK</div>
+                        <div class="mt-2 text-2xl font-semibold tracking-wide text-violet-100">
                             {{ formatNumber(totalTerdampak) }}
                         </div>
-                        <div class="mt-1 text-xs text-sky-300">> sum_affected (loaded)</div>
+                        <div class="mt-1 text-sm text-violet-300">> sum_affected (loaded)</div>
                     </div>
                 </div>
 
                 <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div class="space-y-3">
                         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
-                            <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
+                            <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                                 <span>> leaflet_map: incidents</span>
                                 <span v-if="loading" class="flex items-center gap-2">
                                     <Spinner />
@@ -1307,7 +1307,7 @@ watchEffect(() => {
                                         <div class="truncate text-sm font-semibold text-sky-100">
                                             > {{ item.title }}
                                         </div>
-                                        <div class="mt-1 text-xs text-sky-300">
+                                        <div class="mt-1 text-sm text-sky-300">
                                             {{ formatDateTime(item.incident_date) }} � {{ locationLabel(item) }}
                                         </div>
                                     </div>
@@ -1327,7 +1327,7 @@ watchEffect(() => {
                                     v-html="sanitizeHtml(item.description)"
                                 />
 
-                                <div class="flex flex-wrap gap-3 text-xs text-sky-300">
+                                <div class="flex flex-wrap gap-3 text-sm text-sky-300">
                                     <div v-if="item.category?.name">
                                         > kategori: {{ item.category.name }}
                                     </div>
@@ -1355,7 +1355,7 @@ watchEffect(() => {
                             v-if="meta && meta.last_page > 1"
                             class="rounded-xl border border-sky-500/15 bg-black/20 p-3"
                         >
-                            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-sky-300">
+                            <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-sky-300">
                                 <div>
                                     > halaman {{ meta.current_page }} / {{ meta.last_page }} � tampil: {{ items.length }} � total: {{ meta.total }}
                                 </div>
@@ -1399,61 +1399,61 @@ watchEffect(() => {
                     </div>
 
                     <aside class="space-y-3">
-                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-sky-300">
+                        <div data-color="amber" class="rounded-xl border p-4 ipol-card">
+                            <div class="mb-3 text-sm tracking-widest text-amber-300">
                                 TOP WILAYAH TERDAMPAK
                             </div>
                             <div v-if="topWilayahTerdampak.length" class="space-y-2">
                                 <div
                                     v-for="row in topWilayahTerdampak"
                                     :key="row.label"
-                                    class="flex items-center justify-between gap-3 rounded-md border border-sky-500/10 bg-black/20 px-3 py-2"
+                                    class="flex items-center justify-between gap-3 rounded-md border border-amber-500/15 bg-black/20 px-3 py-2"
                                 >
                                     <div class="min-w-0">
-                                        <div class="truncate text-xs font-medium text-sky-200">
+                                        <div class="truncate text-sm font-medium text-amber-200">
                                             {{ row.label }}
                                         </div>
-                                        <div class="mt-1 text-[11px] text-sky-300">
+                                        <div class="mt-1 text-[11px] text-amber-300">
                                             > data: {{ row.count }}
                                         </div>
                                     </div>
-                                    <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
+                                    <Badge class="border border-amber-500/25 bg-amber-500/10 text-amber-200">
                                         {{ formatNumber(row.terdampak) }}
                                     </Badge>
                                 </div>
                             </div>
-                            <div v-else class="text-xs text-sky-300">> no_rank_data</div>
+                            <div v-else class="text-sm text-amber-300">> no_rank_data</div>
                         </div>
 
-                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-sky-300">
+                        <div data-color="teal" class="rounded-xl border p-4 ipol-card">
+                            <div class="mb-3 text-sm tracking-widest text-teal-300">
                                 TOP ISU MENONJOL
                             </div>
                             <div v-if="topIsuMenonjol.length" class="space-y-2">
                                 <div
                                     v-for="row in topIsuMenonjol"
                                     :key="row.label"
-                                    class="rounded-md border border-sky-500/10 bg-black/20 px-3 py-2"
+                                    class="rounded-md border border-teal-500/15 bg-black/20 px-3 py-2"
                                 >
-                                    <div class="truncate text-xs font-medium text-sky-200">
+                                    <div class="truncate text-sm font-medium text-teal-200">
                                         > {{ row.label }}
                                     </div>
-                                    <div class="mt-2 flex items-center justify-between gap-2 text-[11px] text-sky-300">
+                                    <div class="mt-2 flex items-center justify-between gap-2 text-[11px] text-teal-300">
                                         <span>> freq: {{ row.count }}</span>
                                         <span>> terdampak: {{ formatNumber(row.terdampak) }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-xs text-sky-300">> no_issues_detected</div>
+                            <div v-else class="text-sm text-teal-300">> no_issues_detected</div>
                         </div>
 
-                        <div class="rounded-xl border border-sky-500/15 bg-black/25 p-4">
-                            <div class="mb-3 text-xs tracking-widest text-sky-300">
+                        <div data-color="sky" class="rounded-xl border p-4 ipol-card">
+                            <div class="mb-3 text-sm tracking-widest text-sky-300">
                                 TINGKAT RESIKO
                             </div>
                             <div class="space-y-2">
                                 <div v-for="row in riskSummary" :key="row.key" class="space-y-1">
-                                    <div class="flex items-center justify-between text-xs text-sky-200/80">
+                                    <div class="flex items-center justify-between text-sm text-sky-200/80">
                                         <span>> {{ row.label }}</span>
                                         <span>{{ row.count }}</span>
                                     </div>
@@ -1476,3 +1476,18 @@ watchEffect(() => {
         </template>
     </div>
 </template>
+
+<style scoped>
+/* card color variants — sky palette */
+.ipol-card[data-color='sky']   { --card-rgb: 56, 189, 248; }
+.ipol-card[data-color='blue']  { --card-rgb: 96, 165, 250; }
+.ipol-card[data-color='violet'] { --card-rgb: 167, 139, 250; }
+.ipol-card[data-color='amber'] { --card-rgb: 251, 191, 36; }
+.ipol-card[data-color='teal']  { --card-rgb: 45, 212, 191; }
+
+.ipol-card[data-color] {
+    background-color: rgba(var(--card-rgb), 0.35);
+    border-color: rgba(var(--card-rgb), 0.35);
+}
+</style>
+
