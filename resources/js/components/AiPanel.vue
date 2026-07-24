@@ -138,11 +138,13 @@ const run = async () => {
             >
                 {{ label }}
             </Button>
-        </div>
 
-        <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="mx-1 ms-auto h-5 w-px bg-sky-500/20"></span>
+
             <Button
                 size="sm"
+                variant="default"
+                class="font-semibold"
                 :disabled="loading"
                 @click="run"
             >
@@ -153,7 +155,7 @@ const run = async () => {
             <Button
                 size="sm"
                 variant="secondary"
-                :class="showHistory ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="showHistory ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
                 @click="showHistory = !showHistory"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-clock-icon lucide-rotate-ccw-clock me-1"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
@@ -163,7 +165,7 @@ const run = async () => {
 
         <div
             v-if="totalData !== null"
-            class="mb-2 text-[11px] text-sky-300"
+            class="mb-3 text-[11px] text-sky-300/80"
         >
             &gt; Data tersedia: {{ totalData }} kejadian
         </div>
@@ -205,23 +207,27 @@ const run = async () => {
             </div>
         </div>
 
+        <!-- loading -->
         <div
             v-if="loading"
-            class="rounded border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-300"
+            class="rounded border border-sky-500/15 bg-sky-500/5 p-3 text-xs text-sky-300"
         >
-            &gt; Menghubungi AI...
+            <span class="inline-block animate-pulse">&gt; Menghubungi AI...</span>
         </div>
 
+        <!-- error -->
         <div
             v-if="error"
             class="rounded border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300"
         >
-            &gt; Error: {{ error }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block me-1 -mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            {{ error }}
         </div>
 
+        <!-- result -->
         <div
             v-if="result && !loading"
-            class="rounded border border-sky-500/15 bg-black/30 p-3 text-xs text-sky-200/90 leading-relaxed whitespace-pre-wrap"
+            class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4 text-sm text-sky-100/90 leading-relaxed whitespace-pre-wrap"
         >
             {{ result }}
         </div>
