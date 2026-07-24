@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KBRNIncident extends Model
 {
+    protected $table = 'kbrn_incidents';
+
     protected $fillable = [
         'incident_type',
         'finding_type',
