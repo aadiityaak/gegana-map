@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import type { CircleMarker, Map as LeafletMap } from 'leaflet';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import type { Marker, Map as LeafletMap } from 'leaflet';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import TiptapLink from '@tiptap/extension-link';
@@ -87,6 +87,7 @@ const initialType = computed(() => {
 });
 
 const isView = computed(() => props.mode === 'view');
+const erroredPhotos = reactive(new Set<string>());
 const viewTypeLabel = computed(() => {
     const value = String(props.item?.incident_type ?? form.incident_type ?? '');
     return incidentTypes.find((t) => t.value === value)?.label ?? value;
@@ -276,7 +277,7 @@ const getLeaflet = async () => {
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: LeafletMap | null = null;
-let coordMarker: CircleMarker | null = null;
+let coordMarker: Marker | null = null;
 
 const parseCoordNumber = (value: unknown): number | null => {
     if (typeof value === 'number') {
@@ -305,13 +306,13 @@ const updateCoordMarker = async () => {
 
     const L = await getLeaflet();
     if (!coordMarker) {
-        coordMarker = L.circleMarker([lat, lng], {
-            radius: 8,
-            color: '#ABD5E5',
-            fillColor: '#ABD5E5',
-            fillOpacity: 0.55,
-            weight: 2,
-        }).addTo(map);
+        const svgIcon = L.divIcon({
+            className: '',
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+        });
+        coordMarker = L.marker([lat, lng], { icon: svgIcon }).addTo(map);
     } else {
         coordMarker.setLatLng([lat, lng]);
     }
@@ -634,13 +635,26 @@ const title = computed(() => {
                         :key="p"
                         class="overflow-hidden rounded-md border border-sky-500/15 bg-black/20"
                     >
-                        <div class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]">
+                        <div class="relative flex w-full items-center justify-center overflow-hidden bg-black/35 [aspect-ratio:4/3]">
                             <img
                                 :src="photoUrl(p)"
                                 :alt="p"
                                 class="absolute inset-0 h-full w-full object-contain p-2 opacity-95"
+                                :class="{ hidden: erroredPhotos.has(p) }"
                                 loading="lazy"
+                                @error="erroredPhotos.add(p); $forceUpdate?.()"
                             />
+                            <div
+                                v-if="erroredPhotos.has(p)"
+                                class="flex flex-col items-center gap-1 text-sky-400/50"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                                    <circle cx="9" cy="9" r="2"/>
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                </svg>
+                                <span class="text-[10px]">gagal load</span>
+                            </div>
                         </div>
                     </div>
                 </div>

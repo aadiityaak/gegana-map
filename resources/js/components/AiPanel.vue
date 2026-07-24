@@ -212,7 +212,7 @@ const run = async () => {
             v-if="loading"
             class="rounded border border-sky-500/15 bg-sky-500/5 p-3 text-xs text-sky-300"
         >
-            <span class="inline-block animate-pulse">&gt; Menghubungi AI...</span>
+            <span class="inline-block animate-pulse">&gt; Menghubungi Sistem...</span>
         </div>
 
         <!-- error -->
