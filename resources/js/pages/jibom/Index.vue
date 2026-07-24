@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import AiPanel from '@/components/AiPanel.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -48,7 +49,7 @@ const props = defineProps<{
 
 const typeLabel = (value: string) =>
     ({
-        ancaman: 'Ancaman Pengeboman',
+        ancaman: 'Ancaman Bom',
         temuan: 'Temuan Bom',
         ledakan: 'Ledakan Bom',
     })[value] ?? value;
@@ -376,10 +377,14 @@ onMounted(async () => {
             </Button>
         </div>
 
+        <div class="mb-4">
+            <AiPanel module="jibom" />
+        </div>
+
         <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
             <div class="mb-2 flex items-center justify-between text-xs text-sky-300">
                 <span>> MAP INDONESIA</span>
-                <span class="text-[11px]">> leaflet � cartodb dark</span>
+                <span class="text-[11px]">> leaflet cartodb dark</span>
             </div>
             <div
                 ref="mapContainer"

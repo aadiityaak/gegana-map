@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
     AlertTriangle,
@@ -197,7 +197,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: Bomb,
         children: [
             {
-                title: 'Ancaman Pengeboman',
+                title: 'Ancaman Bom',
                 href: jibomUrl('?type=ancaman'),
             },
             {

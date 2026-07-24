@@ -8,6 +8,7 @@ use App\Http\Controllers\Jibom\JibomIncidentController;
 use App\Http\Controllers\KBRN\KBRNIncidentController;
 use App\Http\Controllers\WanTeror\WanTerorIncidentController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\AiAnalysisController;
 
 if (! function_exists('crimeMapBaseUrl')) {
     function crimeMapBaseUrl(string $endpoint): ?string
@@ -362,7 +363,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'title' => 'JIBOM',
                     'total' => $totals['jibom'],
                     'types' => [
-                        ['value' => 'ancaman', 'label' => 'Ancaman Pengeboman'],
+                        ['value' => 'ancaman', 'label' => 'Ancaman Bom'],
                         ['value' => 'temuan', 'label' => 'Temuan Bom'],
                         ['value' => 'ledakan', 'label' => 'Ledakan Bom'],
                     ],
@@ -582,6 +583,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response($svg, 200)
             ->header('Content-Type', 'image/svg+xml; charset=UTF-8');
     })->name('api.wan-teror.indonesia-map-svg');
+
+    Route::get('api/ai/analyze/{module}', [AiAnalysisController::class, 'analyze'])->name('api.ai.analyze');
 
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
         Route::inertia('hermes-logs', 'hermes/Logs')->name('hermes.logs');
