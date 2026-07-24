@@ -585,6 +585,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('api.wan-teror.indonesia-map-svg');
 
     Route::get('api/ai/analyze/{module}', [AiAnalysisController::class, 'analyze'])->name('api.ai.analyze');
+    Route::get('api/ai/history/{module}', [AiAnalysisController::class, 'history'])->name('api.ai.history');
 
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
         Route::inertia('hermes-logs', 'hermes/Logs')->name('hermes.logs');

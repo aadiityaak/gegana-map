@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiAnalysisHistory;
 use App\Support\AiSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AiAnalysisController extends Controller
 {
@@ -47,9 +49,18 @@ class AiAnalysisController extends Controller
         $months = self::PERIOD_MONTHS[$period];
         $startDate = now()->subMonths($months);
 
-        $data = DB::table($config['table'])
-            ->where('created_at', '>=', $startDate)
-            ->orderByDesc('created_at')
+        $table = $config['table'];
+        $data = DB::table("{$table} as t")
+            ->leftJoin('reg_provinces as p', 'p.id', '=', 't.province_id')
+            ->where('t.created_at', '>=', $startDate)
+            ->select([
+                't.id',
+                't.incident_type',
+                't.province_id',
+                'p.name as province_name',
+                't.created_at',
+            ])
+            ->orderByDesc('t.created_at')
             ->limit(500)
             ->get()
             ->map(function ($row) {
@@ -60,7 +71,6 @@ class AiAnalysisController extends Controller
             ->toArray();
 
         $totalCount = count($data);
-
         $prompt = $this->buildPrompt($action, $config['label'], $totalCount, $data, $period);
 
         try {
@@ -78,26 +88,68 @@ class AiAnalysisController extends Controller
             ]);
 
             if (!$response->successful()) {
-                return response()->json([
-                    'message' => 'AI API error: ' . $response->body(),
-                ], 502);
+                $status = $response->status();
+                $body = $response->body();
+                $reason = 'AI API returned HTTP ' . $status;
+                if ($body !== '' && $body !== null) {
+                    $reason .= ': ' . substr($body, 0, 2000);
+                } else {
+                    $reason .= ' (empty response body)';
+                }
+                Log::error('AI API call failed', [
+                    'status' => $status,
+                    'body' => $body,
+                    'endpoint' => $settings['endpoint'],
+                ]);
+                return response()->json(['message' => $reason], 502);
             }
 
             $body = $response->json();
-            $content = $body['choices'][0]['message']['content'] ?? 'No response from AI.';
+            $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? 'No response from AI.');
+
+            // Simpan riwayat
+            $history = AiAnalysisHistory::create([
+                'module' => $module,
+                'action' => $action,
+                'period' => $period,
+                'total_data' => $totalCount,
+                'prompt' => $prompt,
+                'result' => $content,
+            ]);
 
             return response()->json([
+                'id' => $history->id,
                 'action' => $action,
                 'module' => $module,
                 'period' => $period,
                 'total_data' => $totalCount,
                 'result' => $content,
+                'created_at' => $history->created_at->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
+            Log::error('AI analysis failed', [
+                'error' => $e->getMessage(),
+                'module' => $module,
+                'action' => $action,
+            ]);
             return response()->json([
                 'message' => 'Failed to call AI: ' . $e->getMessage(),
             ], 502);
         }
+    }
+
+    public function history(Request $request, string $module): JsonResponse
+    {
+        if (!isset(self::MODULES[$module])) {
+            return response()->json(['message' => 'Module not found.'], 404);
+        }
+
+        $rows = AiAnalysisHistory::where('module', $module)
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get(['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at']);
+
+        return response()->json(['data' => $rows]);
     }
 
     private function buildPrompt(string $action, string $label, int $totalCount, array $data, string $period): string

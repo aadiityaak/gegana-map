@@ -1,8 +1,15 @@
     <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+} from '@/components/ui/dialog';
 
-defineProps<{
+const props = defineProps<{
     module: string;
 }>();
 
@@ -16,6 +23,15 @@ const result = ref<string | null>(null);
 const error = ref<string | null>(null);
 const totalData = ref<number | null>(null);
 
+// riwayat
+const history = ref<any[]>([]);
+const loadingHistory = ref(false);
+const showHistory = ref(false);
+
+// modal
+const modalOpen = ref(false);
+const modalItem = ref<any>(null);
+
 const actionLabels: Record<Action, string> = {
     analisa: 'Analisa',
     prediksi: 'Prediksi',
@@ -26,6 +42,42 @@ const periodLabels: Record<Period, string> = {
     '1month': '1 Bulan',
     '6months': '6 Bulan',
     '1year': '1 Tahun',
+};
+
+const actionLabelMap: Record<string, string> = {
+    analisa: 'Analisa',
+    prediksi: 'Prediksi',
+    antisipasi: 'Antisipasi',
+};
+
+const periodLabelMap: Record<string, string> = {
+    '1month': '1 Bulan',
+    '6months': '6 Bulan',
+    '1year': '1 Tahun',
+};
+
+const fetchHistory = async () => {
+    loadingHistory.value = true;
+    try {
+        const res = await fetch(`/api/ai/history/${props.module}`, {
+            headers: { Accept: 'application/json' },
+        });
+        const json = await res.json();
+        if (res.ok) {
+            history.value = json.data ?? [];
+        }
+    } catch {
+        // silent
+    } finally {
+        loadingHistory.value = false;
+    }
+};
+
+onMounted(fetchHistory);
+
+const viewHistory = (item: any) => {
+    modalItem.value = item;
+    modalOpen.value = true;
 };
 
 const run = async () => {
@@ -44,6 +96,7 @@ const run = async () => {
         } else {
             result.value = json.result;
             totalData.value = json.total_data;
+            await fetchHistory();
         }
     } catch (e: any) {
         error.value = e.message ?? 'Network error.';
@@ -54,7 +107,7 @@ const run = async () => {
 </script>
 
 <template>
-    <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
+    <div class="rounded-xl border border-sky-500/50 bg-sky-500/30 p-3">
         <div class="mb-3 flex items-center justify-between text-xs text-sky-300">
             <span>&gt; AI ANALYSIS</span>
             <span class="text-[11px]">&gt; {{ module.toUpperCase() }}</span>
@@ -66,7 +119,7 @@ const run = async () => {
                 :key="key"
                 size="sm"
                 variant="secondary"
-                :class="activeAction === key ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="activeAction === key ? 'border-rose-500/25 bg-rose-500/40 text-rose-200' : ''"
                 @click="activeAction = key"
             >
                 {{ label }}
@@ -80,20 +133,31 @@ const run = async () => {
                 :key="key"
                 size="sm"
                 variant="secondary"
-                :class="activePeriod === key ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="activePeriod === key ? 'border-rose-500/25 bg-rose-500/40 text-rose-200' : ''"
                 @click="activePeriod = key"
             >
                 {{ label }}
             </Button>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-3 flex flex-wrap items-center gap-2">
             <Button
                 size="sm"
                 :disabled="loading"
                 @click="run"
             >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play me-1"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
                 {{ loading ? 'Memproses...' : 'Jalankan' }}
+            </Button>
+
+            <Button
+                size="sm"
+                variant="secondary"
+                :class="showHistory ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                @click="showHistory = !showHistory"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-clock-icon lucide-rotate-ccw-clock me-1"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                Riwayat ({{ history.length }})
             </Button>
         </div>
 
@@ -102,6 +166,43 @@ const run = async () => {
             class="mb-2 text-[11px] text-sky-300"
         >
             &gt; Data tersedia: {{ totalData }} kejadian
+        </div>
+
+        <!-- daftar riwayat -->
+        <div
+            v-if="showHistory"
+            class="mb-3 max-h-48 overflow-y-auto rounded border border-sky-500/15 bg-black/30 p-2 space-y-1"
+        >
+            <div
+                v-for="item in history"
+                :key="item.id"
+                class="cursor-pointer rounded px-2 py-1.5 text-xs transition-colors bg-sky-500/5"
+                :class="modalItem?.id === item.id && modalOpen ? 'bg-sky-500/15 text-sky-200' : 'hover:bg-sky-500/10 hover:text-sky-300'"
+                @click="viewHistory(item)"
+            >
+                <div class="flex items-center justify-between gap-2">
+                    <span>
+                        [{{ actionLabelMap[item.action] ?? item.action }}]
+                        {{ periodLabelMap[item.period] ?? item.period }}
+                    </span>
+                    <span class="shrink-0 text-[10px] opacity-60">{{ item.total_data }} data</span>
+                </div>
+                <div class="text-[10px] opacity-50">
+                    {{ new Date(item.created_at).toLocaleString('id-ID') }}
+                </div>
+            </div>
+            <div
+                v-if="!loadingHistory && history.length === 0"
+                class="py-2 text-center text-[11px] text-sky-300/50"
+            >
+                Belum ada riwayat
+            </div>
+            <div
+                v-if="loadingHistory"
+                class="py-2 text-center text-[11px] text-sky-300/50"
+            >
+                Memuat...
+            </div>
         </div>
 
         <div
@@ -125,4 +226,25 @@ const run = async () => {
             {{ result }}
         </div>
     </div>
+
+    <!-- modal riwayat -->
+    <Dialog :open="modalOpen" @update:open="modalOpen = $event">
+        <DialogContent class="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle>
+                    <template v-if="modalItem">
+                        [{{ actionLabelMap[modalItem.action] ?? modalItem.action }}]
+                        {{ periodLabelMap[modalItem.period] ?? modalItem.period }}
+                        — {{ modalItem.total_data }} data
+                    </template>
+                </DialogTitle>
+            </DialogHeader>
+            <div
+                v-if="modalItem"
+                class="text-base leading-relaxed whitespace-pre-wrap text-foreground/90"
+            >
+                {{ modalItem.result }}
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>

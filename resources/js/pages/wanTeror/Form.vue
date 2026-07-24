@@ -534,7 +534,7 @@ const title = computed(() => {
                     <Badge v-if="viewNoteLabel" class="border border-sky-500/25 bg-black/30 text-sky-200">
                         {{ viewNoteLabel }}
                     </Badge>
-                    <Badge class="border border-sky-500/25 bg-sky-500/10 text-sky-200">
+                    <Badge class="border border-sky-500/50 bg-sky-500/25 text-sky-100">
                         {{ String(form.news_source || 'offline') }}
                     </Badge>
                 </div>

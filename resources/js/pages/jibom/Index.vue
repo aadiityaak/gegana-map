@@ -349,28 +349,28 @@ onMounted(async () => {
         <div class="mb-4 flex flex-wrap items-center gap-2">
             <Button
                 variant="secondary"
-                :class="currentType ? '' : 'border-sky-500/25 bg-sky-500/10 text-sky-200'"
+                :class="currentType ? '' : 'border-sky-500/50 bg-sky-500/25 text-sky-100'"
                 as-child
             >
                 <Link :href="listHref(null)">Semua</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'ancaman' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="currentType === 'ancaman' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
                 as-child
             >
                 <Link :href="listHref('ancaman')">Ancaman</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'temuan' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="currentType === 'temuan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
                 as-child
             >
                 <Link :href="listHref('temuan')">Temuan</Link>
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'ledakan' ? 'border-sky-500/25 bg-sky-500/10 text-sky-200' : ''"
+                :class="currentType === 'ledakan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
                 as-child
             >
                 <Link :href="listHref('ledakan')">Ledakan</Link>
