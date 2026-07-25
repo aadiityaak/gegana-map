@@ -30,6 +30,7 @@
             }
         </style>
 
+        <meta name="app-name" content="{{ $page['props']['name'] ?? config('app.name', 'Laravel') }}">
         <link rel="icon" href="{{ app(\App\Support\BrandingSettings::class)->faviconUrl() }}" type="image/png">
         <link rel="apple-touch-icon" href="{{ app(\App\Support\BrandingSettings::class)->faviconUrl() }}">
 

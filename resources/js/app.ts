@@ -6,7 +6,7 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 import 'leaflet/dist/leaflet.css';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = document.querySelector('meta[name="app-name"]')?.getAttribute('content') || import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
