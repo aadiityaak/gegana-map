@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\IpoleksosbudkamItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -42,6 +43,9 @@ class IpoleksosbudkamController extends Controller
         return Inertia::render('ipoleksosbudkam/Form', [
             'mode' => 'create',
             'item' => null,
+            'provinceList' => DB::table('reg_provinces')->select(['id', 'name'])->orderBy('name')->get(),
+            'regencyList'  => DB::table('reg_regencies')->select(['id', 'name', 'province_id'])->orderBy('name')->get(),
+            'districtList' => DB::table('reg_districts')->select(['id', 'name', 'regency_id'])->orderBy('name')->get(),
         ]);
     }
 
@@ -67,6 +71,9 @@ class IpoleksosbudkamController extends Controller
         return Inertia::render('ipoleksosbudkam/Form', [
             'mode' => 'edit',
             'item' => $item,
+            'provinceList' => DB::table('reg_provinces')->select(['id', 'name'])->orderBy('name')->get(),
+            'regencyList'  => DB::table('reg_regencies')->select(['id', 'name', 'province_id'])->orderBy('name')->get(),
+            'districtList' => DB::table('reg_districts')->select(['id', 'name', 'regency_id'])->orderBy('name')->get(),
         ]);
     }
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, onMounted, ref, nextTick, watch } from 'vue';
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
@@ -37,6 +39,9 @@ const props = defineProps<{
     } | null;
     items?: any;
     filters?: { category?: string | null };
+    provinceList?: { id: number; name: string }[];
+    regencyList?: { id: number; name: string; province_id: number }[];
+    districtList?: { id: number; name: string; regency_id: number }[];
 }>();
 
 const page = usePage();
@@ -123,14 +128,144 @@ const form = useForm({
     sumber_berita: props.item?.sumber_berita ?? '',
 });
 
-const filteredSubCategories = computed(() => {
-    if (!form.category) return [];
-    return subCategoryMap[form.category] ?? [];
+// Local refs for category/sub_category to avoid useForm reactivity issues with shadcn Select
+const localCategory = ref(props.item?.category ?? '');
+const localSubCategory = ref(props.item?.sub_category ?? '');
+
+// Leaflet map for coordinate picking
+const mapContainer = ref<HTMLDivElement | null>(null);
+let pickerMap: any = null;
+let pickerMarker: any = null;
+
+const initPickerMap = async () => {
+    if (typeof window === 'undefined') return;
+    if (!mapContainer.value) return;
+    if (pickerMap) return;
+
+    const L = await import('leaflet');
+
+    pickerMap = L.map(mapContainer.value, { zoomControl: true }).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(pickerMap);
+
+    const initLat = props.item?.latitude != null && props.item?.latitude !== ''
+        ? Number(props.item.latitude)
+        : null;
+    const initLng = props.item?.longitude != null && props.item?.longitude !== ''
+        ? Number(props.item.longitude)
+        : null;
+
+    if (initLat != null && initLng != null && Number.isFinite(initLat) && Number.isFinite(initLng)) {
+        pickerMarker = L.marker([initLat, initLng], { draggable: true }).addTo(pickerMap);
+        pickerMarker.on('dragend', () => {
+            const pos = pickerMarker.getLatLng();
+            form.latitude = String(pos.lat.toFixed(6));
+            form.longitude = String(pos.lng.toFixed(6));
+        });
+        pickerMap.setView([initLat, initLng], 12);
+    }
+
+    pickerMap.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        form.latitude = String(lat.toFixed(6));
+        form.longitude = String(lng.toFixed(6));
+        if (pickerMarker) {
+            pickerMarker.setLatLng([lat, lng]);
+        } else {
+            pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
+            pickerMarker.on('dragend', () => {
+                const pos = pickerMarker.getLatLng();
+                form.latitude = String(pos.lat.toFixed(6));
+                form.longitude = String(pos.lng.toFixed(6));
+            });
+        }
+    });
+
+    setTimeout(() => pickerMap?.invalidateSize(), 300);
+};
+
+// Wilayah cascade — preloaded via Inertia props, client-side filtering (crime-map pattern)
+const provinceId = ref('');
+const regencyId = ref('');
+const districtId = ref('');
+
+const filteredRegencies = computed(() => {
+    if (!provinceId.value) return [];
+    return (props.regencyList ?? []).filter((r) => String(r.province_id) === String(provinceId.value));
 });
 
-watch(() => form.category, () => {
-    form.sub_category = '';
+const filteredDistricts = computed(() => {
+    if (!regencyId.value) return [];
+    return (props.districtList ?? []).filter((d) => String(d.regency_id) === String(regencyId.value));
 });
+
+// Watchers: map selected ID → form name string, reset children
+watch(provinceId, (val) => {
+    form.provinsi = (props.provinceList ?? []).find((x) => String(x.id) === String(val))?.name ?? '';
+    regencyId.value = '';
+    districtId.value = '';
+    form.kabupaten_kota = '';
+    form.kecamatan = '';
+});
+
+watch(regencyId, (val) => {
+    form.kabupaten_kota = filteredRegencies.value.find((x) => String(x.id) === String(val))?.name ?? '';
+    districtId.value = '';
+    form.kecamatan = '';
+});
+
+watch(districtId, (val) => {
+    form.kecamatan = filteredDistricts.value.find((x) => String(x.id) === String(val))?.name ?? '';
+});
+
+onMounted(async () => {
+    await nextTick();
+    await initPickerMap();
+
+    if (isEdit.value && props.item) {
+        const prov = (props.provinceList ?? []).find((p) => p.name === props.item?.provinsi);
+        if (prov) {
+            provinceId.value = String(prov.id);
+            const reg = (props.regencyList ?? []).find(
+                (r) => r.name === props.item?.kabupaten_kota && String(r.province_id) === String(prov.id),
+            );
+            if (reg) {
+                regencyId.value = String(reg.id);
+                const dist = (props.districtList ?? []).find(
+                    (d) => d.name === props.item?.kecamatan && String(d.regency_id) === String(reg.id),
+                );
+                if (dist) districtId.value = String(dist.id);
+            }
+        }
+    }
+});
+
+const editor = useEditor({
+    extensions: [StarterKit],
+    content: String(form.description ?? ''),
+    editorProps: {
+        attributes: {
+            class: 'min-h-[140px] px-3 py-2 text-sm text-sky-200/85 outline-none prose prose-invert prose-sm max-w-none',
+        },
+    },
+    editable: !isView.value,
+    onUpdate: ({ editor: ed }) => {
+        form.description = ed.getHTML();
+    },
+});
+
+const filteredSubCategories = computed(() => {
+    const cat = localCategory.value;
+    if (!cat) return [];
+    return subCategoryMap[cat] ?? [];
+});
+
+function onCategoryChange(v: string) {
+    localCategory.value = v;
+    localSubCategory.value = '';
+}
 
 const title = computed(() => {
     if (isCreate.value) return 'IPOLEKSOSBUDKAM / create';
@@ -140,33 +275,16 @@ const title = computed(() => {
 });
 
 const submit = () => {
-    const data: Record<string, any> = {
-        title: form.title,
-        description: form.description || null,
-        incident_date: form.incident_date || null,
-        severity_level: form.severity_level,
-        status: form.status,
-        category: form.category || null,
-        sub_category: form.sub_category || null,
-        latitude: form.latitude ? Number(form.latitude) : null,
-        longitude: form.longitude ? Number(form.longitude) : null,
-        provinsi: form.provinsi || null,
-        kabupaten_kota: form.kabupaten_kota || null,
-        kecamatan: form.kecamatan || null,
-        jumlah_terdampak: form.jumlah_terdampak ? Number(form.jumlah_terdampak) : null,
-        source: form.source || null,
-        sumber_berita: form.sumber_berita || null,
-    };
+    form.category = localCategory.value || null;
+    form.sub_category = localSubCategory.value || null;
 
     if (isEdit.value && props.item) {
         form.put(`/ipoleksosbudkam-local/${props.item.id}`, {
             preserveScroll: true,
-            onSuccess: () => {},
         });
     } else {
         form.post('/ipoleksosbudkam-local', {
             preserveScroll: true,
-            onSuccess: () => {},
         });
     }
 };
@@ -205,12 +323,9 @@ const submit = () => {
                 <!-- Description -->
                 <div>
                     <Label class="text-sky-200">Deskripsi</Label>
-                    <textarea
-                        v-model="form.description"
-                        rows="5"
-                        class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                        placeholder="Deskripsi..."
-                    />
+                    <div v-if="editor" class="mt-1 rounded-md border border-sky-500/25 bg-black/40">
+                        <EditorContent :editor="editor" />
+                    </div>
                     <InputError :message="form.errors.description" />
                 </div>
 
@@ -271,12 +386,11 @@ const submit = () => {
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <Label class="text-sky-200">Kategori</Label>
-                        <Select v-model="form.category">
+                        <Select :model-value="localCategory" @update:model-value="onCategoryChange($event as string)">
                             <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100">
                                 <SelectValue placeholder="Pilih kategori..." />
                             </SelectTrigger>
                             <SelectContent class="border-sky-500/25 bg-black/90 text-sky-100">
-                                <SelectItem value="">Semua</SelectItem>
                                 <SelectItem v-for="c in categoryOptions" :key="c.value" :value="c.value">
                                     {{ c.label }}
                                 </SelectItem>
@@ -286,12 +400,11 @@ const submit = () => {
                     </div>
                     <div>
                         <Label class="text-sky-200">Sub Kategori</Label>
-                        <Select v-model="form.sub_category" :disabled="!form.category">
+                        <Select :model-value="localSubCategory" :disabled="!localCategory" @update:model-value="(v: string) => localSubCategory = v">
                             <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100">
                                 <SelectValue placeholder="Pilih sub kategori..." />
                             </SelectTrigger>
                             <SelectContent class="border-sky-500/25 bg-black/90 text-sky-100">
-                                <SelectItem value="">Semua</SelectItem>
                                 <SelectItem v-for="sc in filteredSubCategories" :key="sc.value" :value="sc.value">
                                     {{ sc.label }}
                                 </SelectItem>
@@ -301,60 +414,61 @@ const submit = () => {
                     </div>
                 </div>
 
-                <!-- Row: lat + lng -->
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <Label class="text-sky-200">Latitude</Label>
-                        <input
-                            v-model="form.latitude"
-                            type="number"
-                            step="any"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="-6.2088"
-                        />
-                        <InputError :message="form.errors.latitude" />
+                <!-- Leaflet Map for coordinates -->
+                <div>
+                    <Label class="text-sky-200">Lokasi (klik peta)</Label>
+                    <div
+                        ref="mapContainer"
+                        class="mt-1 h-[280px] w-full rounded-lg border border-sky-500/25"
+                    />
+                    <div class="mt-2 flex gap-4 text-sm text-sky-300">
+                        <span>Lat: {{ form.latitude || '-' }}</span>
+                        <span>Lng: {{ form.longitude || '-' }}</span>
                     </div>
-                    <div>
-                        <Label class="text-sky-200">Longitude</Label>
-                        <input
-                            v-model="form.longitude"
-                            type="number"
-                            step="any"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="106.8456"
-                        />
-                        <InputError :message="form.errors.longitude" />
-                    </div>
+                    <InputError :message="form.errors.latitude" />
+                    <InputError :message="form.errors.longitude" />
                 </div>
 
                 <!-- Row: provinsi + kab/kota + kec -->
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <Label class="text-sky-200">Provinsi</Label>
-                        <input
-                            v-model="form.provinsi"
-                            type="text"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="Provinsi..."
-                        />
+                        <Select v-model="provinceId" :disabled="isView">
+                            <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100 text-sm">
+                                <SelectValue placeholder="Pilih provinsi..." />
+                            </SelectTrigger>
+                            <SelectContent class="max-h-[200px] border-sky-500/25 bg-black/90 text-sky-100">
+                                <SelectItem v-for="p in (provinceList ?? [])" :key="p.id" :value="p.id">
+                                    {{ p.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label class="text-sky-200">Kabupaten / Kota</Label>
-                        <input
-                            v-model="form.kabupaten_kota"
-                            type="text"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="Kab/Kota..."
-                        />
+                        <Select v-model="regencyId" :disabled="isView || !provinceId">
+                            <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100 text-sm">
+                                <SelectValue placeholder="Pilih kab/kota..." />
+                            </SelectTrigger>
+                            <SelectContent class="max-h-[200px] border-sky-500/25 bg-black/90 text-sky-100">
+                                <SelectItem v-for="r in filteredRegencies" :key="r.id" :value="r.id">
+                                    {{ r.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label class="text-sky-200">Kecamatan</Label>
-                        <input
-                            v-model="form.kecamatan"
-                            type="text"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="Kecamatan..."
-                        />
+                        <Select v-model="districtId" :disabled="isView || !regencyId">
+                            <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100 text-sm">
+                                <SelectValue placeholder="Pilih kecamatan..." />
+                            </SelectTrigger>
+                            <SelectContent class="max-h-[200px] border-sky-500/25 bg-black/90 text-sky-100">
+                                <SelectItem v-for="d in filteredDistricts" :key="d.id" :value="d.id">
+                                    {{ d.name }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
