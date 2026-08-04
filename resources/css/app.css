@@ -379,6 +379,10 @@
     color: rgba(171, 213, 229, 0.7);
 }
 
+.dark input[type='date'] {
+    color-scheme: dark;
+}
+
 @keyframes cg-breathe {
     0%,
     100% {

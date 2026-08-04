@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import { Badge } from '@/components/ui/badge';
+import { computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import {
     Select,
     SelectContent,
@@ -62,6 +62,45 @@ const categoryOptions = [
     { value: 'keamanan', label: 'Keamanan' },
 ];
 
+const subCategoryMap: Record<string, { value: string; label: string }[]> = {
+    ideologi: [
+        { value: 'ideologi-ideologi-kanan', label: 'Ideologi Kanan' },
+        { value: 'ideologi-ideologi-kiri', label: 'Ideologi Kiri' },
+        { value: 'ideologi-isu-menonjol', label: 'Isu Menonjol' },
+    ],
+    politik: [
+        { value: 'politik-dalam-negeri', label: 'Dalam Negeri' },
+        { value: 'politik-luar-negeri', label: 'Luar Negeri' },
+        { value: 'politik-isu-menonjol', label: 'Isu Menonjol' },
+    ],
+    ekonomi: [
+        { value: 'ekonomi-export-import', label: 'Export Import' },
+        { value: 'ekonomi-harga-sembako', label: 'Harga Sembako' },
+        { value: 'ekonomi-kurs-mata-uang', label: 'Kurs Mata Uang' },
+        { value: 'ekonomi-pasar-saham', label: 'Pasar Saham' },
+        { value: 'ekonomi-index-pendapatan-masyarakat', label: 'Index Pendapatan Masyarakat' },
+        { value: 'ekonomi-kesenjangan-sosial', label: 'Kesenjangan Sosial' },
+        { value: 'ekonomi-ekonomi-asing', label: 'Ekonomi Asing' },
+        { value: 'ekonomi-pro-kontra-proyek-strategis-nasional', label: 'Pro Kontra Proyek Strategis' },
+        { value: 'ekonomi-korupsi', label: 'Korupsi' },
+        { value: 'ekonomi-isu-menonjol', label: 'Isu Menonjol' },
+    ],
+    'sosial-budaya': [
+        { value: 'sosial-budaya-ormas', label: 'Ormas' },
+        { value: 'sosial-budaya-bencana-alam', label: 'Bencana Alam' },
+        { value: 'sosial-budaya-unjuk-rasa', label: 'Unjuk Rasa' },
+        { value: 'sosial-budaya-konflik-sosial', label: 'Konflik Sosial' },
+        { value: 'sosial-budaya-phk', label: 'PHK' },
+        { value: 'sosial-budaya-sara', label: 'SARA' },
+        { value: 'sosial-budaya-isu-menonjol', label: 'Isu Menonjol' },
+    ],
+    keamanan: [
+        { value: 'keamanan-teror', label: 'Teror' },
+        { value: 'keamanan-keamanan-negara', label: 'Keamanan Negara' },
+        { value: 'keamanan-isu-menonjol', label: 'Isu Menonjol' },
+    ],
+};
+
 const isView = computed(() => props.mode === 'view');
 const isEdit = computed(() => props.mode === 'edit');
 const isCreate = computed(() => props.mode === 'create');
@@ -82,6 +121,15 @@ const form = useForm({
     jumlah_terdampak: props.item?.jumlah_terdampak != null ? String(props.item.jumlah_terdampak) : '',
     source: props.item?.source ?? '',
     sumber_berita: props.item?.sumber_berita ?? '',
+});
+
+const filteredSubCategories = computed(() => {
+    if (!form.category) return [];
+    return subCategoryMap[form.category] ?? [];
+});
+
+watch(() => form.category, () => {
+    form.sub_category = '';
 });
 
 const title = computed(() => {
@@ -170,11 +218,9 @@ const submit = () => {
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <Label class="text-sky-200">Tanggal Kejadian</Label>
-                        <input
-                            v-model="form.incident_date"
-                            type="date"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100"
-                        />
+                        <div class="mt-1">
+                            <DatePicker v-model="form.incident_date" />
+                        </div>
                         <InputError :message="form.errors.incident_date" />
                     </div>
                     <div>
@@ -240,12 +286,17 @@ const submit = () => {
                     </div>
                     <div>
                         <Label class="text-sky-200">Sub Kategori</Label>
-                        <input
-                            v-model="form.sub_category"
-                            type="text"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="Sub kategori..."
-                        />
+                        <Select v-model="form.sub_category" :disabled="!form.category">
+                            <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100">
+                                <SelectValue placeholder="Pilih sub kategori..." />
+                            </SelectTrigger>
+                            <SelectContent class="border-sky-500/25 bg-black/90 text-sky-100">
+                                <SelectItem value="">Semua</SelectItem>
+                                <SelectItem v-for="sc in filteredSubCategories" :key="sc.value" :value="sc.value">
+                                    {{ sc.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                         <InputError :message="form.errors.sub_category" />
                     </div>
                 </div>
@@ -378,9 +429,10 @@ const submit = () => {
                         > BACK
                     </a>
                 </div>
+            </div>
 
-                <!-- Index mode: admin list -->
-                <div v-else-if="mode === 'index' && items" class="space-y-3">
+            <!-- Index mode: admin list -->
+            <div v-else-if="mode === 'index' && items" class="space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-sky-300">> Total lokal: {{ items.meta?.total ?? items.data?.length ?? 0 }}</span>
                         <a
@@ -441,7 +493,6 @@ const submit = () => {
                                 v-html="link.label"
                             />
                         </div>
-                    </div>
                 </div>
             </div>
         </div>

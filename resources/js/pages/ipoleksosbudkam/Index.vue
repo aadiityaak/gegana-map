@@ -668,6 +668,13 @@ const ensureDetailMap = async () => {
 
     const L = await getLeaflet();
 
+    // cleanup any stale Leaflet instance on this container
+    const existingDetail = (detailMapContainer.value as any)._leaflet_id;
+    if (existingDetail != null) {
+        detailMapContainer.value.innerHTML = '';
+        delete (detailMapContainer.value as any)._leaflet_id;
+    }
+
     detailMap = L.map(detailMapContainer.value, { zoomControl: true }).setView([-2.5489, 118.0149], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '� OpenStreetMap contributors',
@@ -1001,6 +1008,13 @@ const ensureListMap = async () => {
 
     const L = await getLeaflet();
 
+    // cleanup any stale Leaflet instance on this container (e.g. after HMR)
+    const existing = (mapContainer.value as any)._leaflet_id;
+    if (existing != null) {
+        mapContainer.value.innerHTML = '';
+        delete (mapContainer.value as any)._leaflet_id;
+    }
+
     map = L.map(mapContainer.value, {
         zoomControl: true,
     }).setView([-2.5489, 118.0149], 5);
@@ -1274,12 +1288,6 @@ watchEffect(() => {
             </div>
 
             <div v-if="canManage" class="flex items-center gap-2 mt-2">
-                <a
-                    href="/ipoleksosbudkam-local/create"
-                    class="inline-flex items-center justify-center rounded-md border border-green-500/35 bg-green-500/10 px-4 py-2 text-sm tracking-widest text-green-300 hover:bg-green-500/20"
-                >
-                    > TAMBAH DATA
-                </a>
             </div>
 
             <div v-if="errorMessage" class="rounded border border-red-500/25 bg-red-500/10 p-4 text-red-200">
@@ -1287,7 +1295,7 @@ watchEffect(() => {
             </div>
 
             <div v-else class="space-y-3">
-                <div class="grid gap-3 md:grid-cols-3">
+                <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                     <div data-color="sky" class="rounded-xl border p-4 ipol-card">
                         <div class="text-sm tracking-widest text-sky-300">TOTAL DATA</div>
                         <div class="mt-2 text-2xl font-semibold tracking-wide text-sky-100">
@@ -1311,15 +1319,22 @@ watchEffect(() => {
                     </div>
                 </div>
 
-                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
                     <div class="space-y-3">
                         <div class="rounded-xl border border-sky-500/15 bg-black/20 p-3">
-                            <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
+                            <div class="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm text-sky-300">
                                 <span>> leaflet_map: incidents</span>
                                 <span v-if="loading" class="flex items-center gap-2">
                                     <Spinner />
                                     loading_feed...
                                 </span>
+                                <a
+                                    v-if="canManage"
+                                    href="/ipoleksosbudkam-local/create"
+                                    class="inline-flex items-center justify-center rounded-md border border-green-500/35 bg-green-500/10 px-3 py-1 text-xs tracking-widest text-green-300 hover:bg-green-500/20"
+                                >
+                                    > TAMBAH DATA
+                                </a>
                             </div>
                             <div
                                 ref="mapContainer"
