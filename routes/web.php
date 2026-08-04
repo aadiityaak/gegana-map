@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Jibom\JibomIncidentController;
 use App\Http\Controllers\KBRN\KBRNIncidentController;
 use App\Http\Controllers\WanTeror\WanTerorIncidentController;
+use App\Http\Controllers\IpoleksosbudkamController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\AiAnalysisController;
 
@@ -67,54 +68,135 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
     $endpoint = config('services.crime_map.data_endpoint');
     $token = config('services.crime_map.data_token');
 
-    if (!is_string($endpoint) || trim($endpoint) === '' || !is_string($token) || trim($token) === '') {
-        return response()->json(['message' => 'Server misconfigured: DATA_ENDPOINT / DATA_TOKEN not set.'], 500);
+    $page = max(1, (int) $request->query('page', 1));
+    $perPage = min(100, max(1, (int) $request->query('per_page', 25)));
+    $sortDir = $request->query('sort_dir', 'desc');
+    $sortDir = in_array($sortDir, ['asc', 'desc'], true) ? $sortDir : 'desc';
+
+    $apiItems = [];
+    $apiMeta = null;
+
+    // 1. Fetch from external API
+    if (is_string($endpoint) && trim($endpoint) !== '' && is_string($token) && trim($token) !== '') {
+        $base = crimeMapBaseUrl($endpoint);
+
+        $allowedQueryKeys = [
+            'page', 'per_page', 'sort_by', 'sort_dir',
+            'search', 'status', 'level',
+            'start_date', 'end_date',
+            'category', 'subcategory',
+        ];
+
+        $query = array_filter(
+            $request->only($allowedQueryKeys),
+            fn($value) => $value !== null && $value !== '',
+        );
+
+        $upstreamUrl = rtrim($base, '/') . '/api/monitoring-data';
+
+        try {
+            $upstream = Http::acceptJson()
+                ->withToken($token)
+                ->timeout(15)
+                ->get($upstreamUrl, $query);
+
+            $status = $upstream->status();
+            if ($status >= 200 && $status < 300) {
+                $upstreamData = json_decode($upstream->body(), true);
+                if (is_array($upstreamData)) {
+                    $apiItems = $upstreamData['data'] ?? [];
+                    $apiMeta = $upstreamData['meta'] ?? null;
+
+                    // Mark all API items with data_source
+                    foreach ($apiItems as &$item) {
+                        $item['data_source'] = 'api';
+                    }
+                    unset($item);
+                }
+            }
+        } catch (\Throwable $e) {
+            // API unavailable — fallback to local only
+        }
     }
 
-    $base = crimeMapBaseUrl($endpoint);
-    if (!is_string($base) || trim($base) === '') {
-        return response()->json(['message' => 'Server misconfigured: invalid DATA_ENDPOINT.'], 500);
+    // 2. Query local data
+    $localQuery = \App\Models\IpoleksosbudkamItem::query();
+
+    $category = $request->query('category');
+    if (is_string($category) && $category !== '') {
+        $localQuery->where('category', $category);
+    }
+    $subcategory = $request->query('subcategory');
+    if (is_string($subcategory) && $subcategory !== '') {
+        $localQuery->where('sub_category', $subcategory);
+    }
+    $search = $request->query('search');
+    if (is_string($search) && $search !== '') {
+        $localQuery->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
     }
 
-    $allowedQueryKeys = [
-        'page',
-        'per_page',
-        'sort_by',
-        'sort_dir',
-        'search',
-        'status',
-        'level',
-        'start_date',
-        'end_date',
-        'category',
-        'subcategory',
-    ];
+    $localRows = $localQuery->orderBy('incident_date', $sortDir)
+        ->orderBy('id', $sortDir)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'id' => 'local-' . $item->id,
+                '_local_id' => $item->id,
+                'title' => $item->title,
+                'description' => $item->description,
+                'incident_date' => $item->incident_date,
+                'severity_level' => $item->severity_level,
+                'status' => $item->status,
+                'category' => $item->category ? ['id' => 0, 'name' => $item->category, 'slug' => $item->category] : null,
+                'sub_category' => $item->sub_category ? ['id' => 0, 'name' => $item->sub_category, 'slug' => $item->sub_category] : null,
+                'latitude' => $item->latitude,
+                'longitude' => $item->longitude,
+                'provinsi' => $item->provinsi ? ['id' => 0, 'nama' => $item->provinsi] : null,
+                'kabupaten_kota' => $item->kabupaten_kota ? ['id' => 0, 'nama' => $item->kabupaten_kota] : null,
+                'kecamatan' => $item->kecamatan ? ['id' => 0, 'nama' => $item->kecamatan] : null,
+                'jumlah_terdampak' => $item->jumlah_terdampak,
+                'source' => $item->source,
+                'sumber_berita' => $item->sumber_berita,
+                'data_source' => 'lokal',
+            ];
+        })
+        ->toArray();
 
-    $query = array_filter(
-        $request->only($allowedQueryKeys),
-        fn($value) => $value !== null && $value !== '',
-    );
+    // 3. Merge & sort
+    $allItems = array_merge($apiItems, $localRows);
 
-    $upstreamUrl = rtrim($base, '/') . '/api/monitoring-data';
+    usort($allItems, function ($a, $b) use ($sortDir) {
+        $dateA = $a['incident_date'] ?? '';
+        $dateB = $b['incident_date'] ?? '';
+        if ($sortDir === 'asc') {
+            $cmp = strcmp($dateA, $dateB);
+            if ($cmp !== 0) return $cmp;
+            return strcmp($a['id'], $b['id']);
+        }
+        $cmp = strcmp($dateB, $dateA);
+        if ($cmp !== 0) return $cmp;
+        return strcmp($b['id'], $a['id']);
+    });
 
-    try {
-        $upstream = Http::acceptJson()
-            ->withToken($token)
-            ->timeout(15)
-            ->get($upstreamUrl, $query);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'message' => 'Gagal menghubungi service crime-map. Pastikan crime-map (port 8000) sedang berjalan dan DATA_ENDPOINT benar.',
-        ], 502);
-    }
+    // 4. Paginate merged result
+    $total = count($allItems);
+    $lastPage = max(1, (int) ceil($total / $perPage));
+    $currentPage = min($page, $lastPage);
+    $offset = ($currentPage - 1) * $perPage;
+    $pagedItems = array_slice($allItems, $offset, $perPage);
 
-    $status = $upstream->status();
-    if ($status < 100 || $status > 599) {
-        $status = 502;
-    }
-
-    return response($upstream->body(), $status)
-        ->header('Content-Type', $upstream->header('Content-Type', 'application/json'));
+    return response()->json([
+        'data' => $pagedItems,
+        'meta' => [
+            'current_page' => $currentPage,
+            'last_page' => $lastPage,
+            'per_page' => $perPage,
+            'total' => $total,
+        ],
+    ]);
 })->name('api.ipoleksosbudkam.monitoring-data');
 
 Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-data/{id}', function (Request $request, string $id) {
@@ -738,6 +820,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('wan-teror/{incident}/edit', [WanTerorIncidentController::class, 'edit'])->name('wan-teror.edit');
         Route::put('wan-teror/{incident}', [WanTerorIncidentController::class, 'update'])->name('wan-teror.update');
         Route::delete('wan-teror/{incident}', [WanTerorIncidentController::class, 'destroy'])->name('wan-teror.destroy');
+
+        Route::get('ipoleksosbudkam-local', [IpoleksosbudkamController::class, 'index'])->name('ipoleksosbudkam-local.index');
+        Route::get('ipoleksosbudkam-local/create', [IpoleksosbudkamController::class, 'create'])->name('ipoleksosbudkam-local.create');
+        Route::post('ipoleksosbudkam-local', [IpoleksosbudkamController::class, 'store'])->name('ipoleksosbudkam-local.store');
+        Route::get('ipoleksosbudkam-local/{item}', [IpoleksosbudkamController::class, 'show'])->name('ipoleksosbudkam-local.show');
+        Route::get('ipoleksosbudkam-local/{item}/edit', [IpoleksosbudkamController::class, 'edit'])->name('ipoleksosbudkam-local.edit');
+        Route::put('ipoleksosbudkam-local/{item}', [IpoleksosbudkamController::class, 'update'])->name('ipoleksosbudkam-local.update');
+        Route::delete('ipoleksosbudkam-local/{item}', [IpoleksosbudkamController::class, 'destroy'])->name('ipoleksosbudkam-local.destroy');
     });
 });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
@@ -24,6 +24,7 @@ type MonitoringItem = {
     video_url?: string | null;
     sumber_berita?: string | null;
     data_source?: string | null;
+    _local_id?: number;
 };
 
 type MonitoringResponse = {
@@ -48,6 +49,28 @@ const items = ref<MonitoringItem[]>([]);
 const meta = ref<MonitoringResponse['meta'] | null>(null);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+
+const page = usePage();
+const canManage = computed(() => {
+    const role = (page.props.auth as any)?.user?.role;
+    return ['superadmin', 'admin', 'adminvip'].includes(role as string);
+});
+
+const deleteConfirmId = ref<string | null>(null);
+
+const handleDelete = async (item: MonitoringItem) => {
+    if (!item._local_id) return;
+    if (deleteConfirmId.value === item.id) {
+        router.delete(`/ipoleksosbudkam-local/${item._local_id}`, {
+            onSuccess: () => {
+                deleteConfirmId.value = null;
+                void load();
+            },
+        });
+    } else {
+        deleteConfirmId.value = item.id;
+    }
+};
 
 const parsePositiveInt = (value: string | null): number | null => {
     if (!value) return null;
@@ -708,11 +731,11 @@ const updateMapMarkers = async () => {
         points.push([fixedLat, fixedLng]);
 
 
-        const color = markerColor(item.severity_level);
+        const color = item.data_source === 'lokal' ? '#4ade80' : markerColor(item.severity_level);
         const marker = L.circleMarker([fixedLat, fixedLng], {
             radius: 7,
             color: color,
-            weight: 1,
+            weight: item.data_source === 'lokal' ? 2 : 1,
             fillColor: color,
             fillOpacity: 0.65,
         });
@@ -1250,6 +1273,15 @@ watchEffect(() => {
                 </div>
             </div>
 
+            <div v-if="canManage" class="flex items-center gap-2 mt-2">
+                <a
+                    href="/ipoleksosbudkam-local/create"
+                    class="inline-flex items-center justify-center rounded-md border border-green-500/35 bg-green-500/10 px-4 py-2 text-sm tracking-widest text-green-300 hover:bg-green-500/20"
+                >
+                    > TAMBAH DATA
+                </a>
+            </div>
+
             <div v-if="errorMessage" class="rounded border border-red-500/25 bg-red-500/10 p-4 text-red-200">
                 > {{ errorMessage }}
             </div>
@@ -1298,8 +1330,9 @@ watchEffect(() => {
                         <div
                             v-for="item in items"
                             :key="item.id"
-                            class="cursor-pointer rounded-xl border border-sky-500/15 bg-black/30 p-4 transition hover:border-sky-400/25 hover:bg-black/35"
-                            @click="goToDetail(item.id)"
+                            class="rounded-xl border border-sky-500/15 bg-black/30 p-4 transition"
+                            :class="item.data_source === 'lokal' ? 'border-green-500/25' : 'cursor-pointer hover:border-sky-400/25 hover:bg-black/35'"
+                            @click="item.data_source === 'lokal' ? null : goToDetail(item.id)"
                         >
                             <div class="flex flex-col gap-2">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1312,6 +1345,13 @@ watchEffect(() => {
                                         </div>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-2">
+                                        <Badge
+                                            :class="item.data_source === 'lokal'
+                                                ? 'border-green-500/35 bg-green-500/10 text-green-300'
+                                                : 'border-blue-500/25 bg-blue-500/10 text-blue-200'"
+                                        >
+                                            {{ item.data_source === 'lokal' ? 'LOKAL' : 'API' }}
+                                        </Badge>
                                         <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
                                             {{ severityLabel(item.severity_level) }}
                                         </Badge>
@@ -1340,6 +1380,24 @@ watchEffect(() => {
                                     <div v-if="typeof item.jumlah_terdampak === 'number'">
                                         > terdampak: {{ item.jumlah_terdampak }}
                                     </div>
+                                </div>
+
+                                <!-- Action buttons for local data -->
+                                <div v-if="item.data_source === 'lokal' && canManage" class="flex items-center gap-2 pt-1">
+                                    <a
+                                        :href="`/ipoleksosbudkam-local/${item._local_id}/edit`"
+                                        class="inline-flex items-center justify-center rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-xs tracking-widest text-amber-200 hover:bg-amber-500/20"
+                                        @click.stop
+                                    >
+                                        > EDIT
+                                    </a>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs tracking-widest text-red-200 hover:bg-red-500/20"
+                                        @click.stop="handleDelete(item)"
+                                    >
+                                        > {{ deleteConfirmId === item.id ? 'KONFIRMASI?' : 'HAPUS' }}
+                                    </button>
                                 </div>
                             </div>
                         </div>

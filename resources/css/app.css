@@ -317,16 +317,14 @@
 }
 
 .dark .bg-sidebar {
-    background-color: rgba(95, 123, 147, 0.3);
+    background-color: #49abffc9;
     border-radius: 10px;
 }
 
-.dark [data-slot='sidebar-wrapper'] {
-    background-color: color-mix(
-        in oklab,
-        var(--sidebar-background) 40%,
-        transparent
-    ) !important;
+@supports (color: color-mix(in lab, red, red)) {
+    .dark [data-slot='sidebar-wrapper'] {
+        background-color: rgb(61 129 255 / 30%) !important;
+    }
 }
 
 .dark #app {
