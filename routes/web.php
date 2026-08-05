@@ -160,6 +160,7 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
                 'jumlah_terdampak' => $item->jumlah_terdampak,
                 'source' => $item->source,
                 'sumber_berita' => $item->sumber_berita,
+                'gallery' => $item->gallery,
                 'data_source' => 'lokal',
             ];
         })

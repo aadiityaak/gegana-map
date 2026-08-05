@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\IpoleksosbudkamItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -52,6 +53,7 @@ class IpoleksosbudkamController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePayload($request);
+        $validated['gallery'] = $this->uploadGallery($request);
 
         IpoleksosbudkamItem::create($validated);
 
@@ -80,6 +82,7 @@ class IpoleksosbudkamController extends Controller
     public function update(Request $request, IpoleksosbudkamItem $item)
     {
         $validated = $this->validatePayload($request);
+        $validated['gallery'] = $this->uploadGallery($request, $item);
 
         $item->update($validated);
 
@@ -111,6 +114,50 @@ class IpoleksosbudkamController extends Controller
             'jumlah_terdampak' => ['nullable', 'integer', 'min:0'],
             'source' => ['nullable', 'string', 'max:255'],
             'sumber_berita' => ['nullable', 'string', 'max:2048'],
+            'gallery_files' => ['nullable', 'array', 'max:10'],
+            'gallery_files.*' => ['image', 'max:5120'],
+            'keep_gallery' => ['nullable', 'array'],
         ]);
+    }
+
+    private function uploadGallery(Request $request, ?IpoleksosbudkamItem $item = null): ?array
+    {
+        // Keep existing images that weren't removed (edit mode)
+        $keepPaths = $request->input('keep_gallery', []);
+        if (! is_array($keepPaths)) {
+            $keepPaths = [];
+        }
+
+        $existing = [];
+        if ($item && $item->gallery) {
+            foreach ($item->gallery as $img) {
+                $p = is_array($img) ? ($img['path'] ?? '') : '';
+                if ($p !== '' && in_array($p, $keepPaths, true)) {
+                    $existing[] = $img;
+                } else {
+                    // Delete removed images from storage
+                    Storage::disk('public')->delete($p);
+                }
+            }
+        }
+
+        // Upload new files
+        $files = $request->file('gallery_files', []);
+        if (! is_array($files)) {
+            $files = [];
+        }
+
+        $uploaded = [];
+        foreach ($files as $file) {
+            if (! $file) continue;
+            $path = $file->store('ipoleksosbudkam', 'public');
+            $uploaded[] = [
+                'path' => $path,
+                'url' => Storage::disk('public')->url($path),
+            ];
+        }
+
+        $result = array_merge($existing, $uploaded);
+        return $result !== [] ? $result : null;
     }
 }

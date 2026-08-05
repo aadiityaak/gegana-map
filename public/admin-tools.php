@@ -476,6 +476,13 @@ $toolGroups = [
                 'variant' => 'success',
                 'custom' => 'handleSeedWilayahSimple',
             ],
+            'reset_wilayah' => [
+                'label' => 'Reset Data Wilayah',
+                'description' => 'Hapus semua data provinsi, kota, kecamatan, desa lalu seed ulang',
+                'variant' => 'destructive',
+                'custom' => 'handleSeedWilayahSimple',
+                'confirm' => 'Ini akan menghapus SEMUA data provinsi, kabupaten/kota, kecamatan, dan desa lalu seed ulang. Lanjutkan?',
+            ],
             'migrate_fresh' => [
                 'label' => 'Fresh Migration',
                 'description' => 'Drop all tables and re-migrate',

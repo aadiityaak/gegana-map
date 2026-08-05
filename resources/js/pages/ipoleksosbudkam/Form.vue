@@ -3,6 +3,8 @@ import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, nextTick, watch } from 'vue';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
@@ -23,6 +25,7 @@ const props = defineProps<{
         id: number;
         title: string;
         description: string | null;
+        gallery?: Array<{ path: string; url: string }> | null;
         incident_date: string | null;
         severity_level: string;
         status: string;
@@ -57,6 +60,12 @@ const statusOptions = [
     { value: 'active', label: 'Aktif' },
     { value: 'monitoring', label: 'Monitoring' },
     { value: 'resolved', label: 'Selesai' },
+];
+
+const sourceOptions = [
+    { value: 'Offline', label: 'Offline' },
+    { value: 'Online', label: 'Online' },
+    { value: 'Ai Agent', label: 'Ai Agent' },
 ];
 
 const categoryOptions = [
@@ -127,6 +136,37 @@ const form = useForm({
     source: props.item?.source ?? '',
     sumber_berita: props.item?.sumber_berita ?? '',
 });
+
+// Gallery
+const galleryFiles = ref<File[]>([]);
+const existingGallery = ref<Array<{ path: string; url: string }>>(
+    (props.item?.gallery && Array.isArray(props.item.gallery))
+        ? [...props.item.gallery]
+        : [],
+);
+const keepGalleryPaths = ref<string[]>(existingGallery.value.map((g) => g.path));
+
+function onGalleryFilesChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (!input.files) return;
+    for (let i = 0; i < input.files.length; i++) {
+        galleryFiles.value.push(input.files[i]);
+    }
+    input.value = ''; // reset so same file can be re-selected
+}
+
+function removeNewFile(index: number) {
+    galleryFiles.value.splice(index, 1);
+}
+
+function removeExisting(index: number) {
+    existingGallery.value.splice(index, 1);
+    keepGalleryPaths.value = existingGallery.value.map((g) => g.path);
+}
+
+function previewUrl(file: File): string {
+    return URL.createObjectURL(file);
+}
 
 // Local refs for category/sub_category to avoid useForm reactivity issues with shadcn Select
 const localCategory = ref(props.item?.category ?? '');
@@ -243,11 +283,15 @@ onMounted(async () => {
 });
 
 const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+        StarterKit,
+        Underline,
+        Link.configure({ openOnClick: false }),
+    ],
     content: String(form.description ?? ''),
     editorProps: {
         attributes: {
-            class: 'min-h-[140px] px-3 py-2 text-sm text-sky-200/85 outline-none prose prose-invert prose-sm max-w-none',
+            class: 'min-h-[500px] px-3 py-2 text-sm text-sky-200/85 outline-none prose prose-invert prose-sm max-w-none',
         },
     },
     editable: !isView.value,
@@ -255,6 +299,19 @@ const editor = useEditor({
         form.description = ed.getHTML();
     },
 });
+
+// Toolbar helpers
+function setLink() {
+    if (!editor.value) return;
+    const prev = editor.value.getAttributes('link').href;
+    const url = window.prompt('URL:', prev ?? 'https://');
+    if (url === null) return;
+    if (url === '') {
+        editor.value.chain().focus().extendMarkRange('link').unsetLink().run();
+    } else {
+        editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    }
+}
 
 const filteredSubCategories = computed(() => {
     const cat = localCategory.value;
@@ -278,12 +335,24 @@ const submit = () => {
     form.category = localCategory.value || null;
     form.sub_category = localSubCategory.value || null;
 
+    // Transform form data for Inertia - file uploads need FormData
+    const payload: Record<string, any> = {
+        ...form.data(),
+    };
+
+    if (galleryFiles.value.length > 0) {
+        payload.gallery_files = galleryFiles.value;
+    }
+    if (isEdit.value) {
+        payload.keep_gallery = keepGalleryPaths.value;
+    }
+
     if (isEdit.value && props.item) {
-        form.put(`/ipoleksosbudkam-local/${props.item.id}`, {
+        form.transform(() => payload).put(`/ipoleksosbudkam-local/${props.item.id}`, {
             preserveScroll: true,
         });
     } else {
-        form.post('/ipoleksosbudkam-local', {
+        form.transform(() => payload).post('/ipoleksosbudkam-local', {
             preserveScroll: true,
         });
     }
@@ -323,10 +392,88 @@ const submit = () => {
                 <!-- Description -->
                 <div>
                     <Label class="text-sky-200">Deskripsi</Label>
-                    <div v-if="editor" class="mt-1 rounded-md border border-sky-500/25 bg-black/40">
+                    <div v-if="editor" class="mt-1 rounded-md border border-sky-500/25 bg-black/40 overflow-hidden">
+                        <!-- Toolbar -->
+                        <div class="flex flex-wrap items-center gap-0.5 border-b border-sky-500/20 px-2 py-1.5 bg-black/30">
+                            <button type="button" @click="editor.chain().focus().toggleBold().run()" :class="editor.isActive('bold') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs font-bold transition" title="Bold">B</button>
+                            <button type="button" @click="editor.chain().focus().toggleItalic().run()" :class="editor.isActive('italic') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs italic transition" title="Italic">I</button>
+                            <button type="button" @click="editor.chain().focus().toggleUnderline().run()" :class="editor.isActive('underline') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs underline transition" title="Underline">U</button>
+                            <button type="button" @click="editor.chain().focus().toggleStrike().run()" :class="editor.isActive('strike') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs line-through transition" title="Strikethrough">S</button>
+                            <span class="mx-1 text-sky-500/30">|</span>
+                            <button type="button" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="editor.isActive('heading', { level: 1 }) ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs font-bold transition" title="Heading 1">H1</button>
+                            <button type="button" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="editor.isActive('heading', { level: 2 }) ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs font-bold transition" title="Heading 2">H2</button>
+                            <span class="mx-1 text-sky-500/30">|</span>
+                            <button type="button" @click="editor.chain().focus().toggleBulletList().run()" :class="editor.isActive('bulletList') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs transition" title="Bullet List">•</button>
+                            <button type="button" @click="editor.chain().focus().toggleOrderedList().run()" :class="editor.isActive('orderedList') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs transition" title="Ordered List">1.</button>
+                            <button type="button" @click="editor.chain().focus().toggleBlockquote().run()" :class="editor.isActive('blockquote') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs transition" title="Blockquote">"</button>
+                            <span class="mx-1 text-sky-500/30">|</span>
+                            <button type="button" @click="setLink" :class="editor.isActive('link') ? 'bg-sky-500/30 text-sky-100' : 'text-sky-400 hover:text-sky-200 hover:bg-sky-500/15'" class="rounded px-1.5 py-0.5 text-xs transition" title="Link">🔗</button>
+                            <button type="button" @click="editor.chain().focus().unsetLink().run()" :disabled="!editor.isActive('link')" class="rounded px-1.5 py-0.5 text-xs text-sky-500/40 transition disabled:opacity-30 hover:text-sky-300" title="Remove Link">✕</button>
+                        </div>
                         <EditorContent :editor="editor" />
                     </div>
                     <InputError :message="form.errors.description" />
+                </div>
+
+                <!-- Gallery -->
+                <div>
+                    <Label class="text-sky-200">Galeri</Label>
+                    <div class="mt-1 space-y-2">
+                        <!-- Existing images (edit mode) -->
+                        <div v-if="existingGallery.length" class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                            <div
+                                v-for="(img, i) in existingGallery"
+                                :key="img.path"
+                                class="group relative overflow-hidden rounded-md border border-sky-500/20 bg-black/30"
+                            >
+                                <img
+                                    :src="img.url"
+                                    class="aspect-square w-full object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    @click="removeExisting(i)"
+                                    class="absolute right-1 top-1 rounded-full bg-red-600/80 p-0.5 text-white opacity-0 transition group-hover:opacity-100"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- New file previews -->
+                        <div v-if="galleryFiles.length" class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                            <div
+                                v-for="(file, i) in galleryFiles"
+                                :key="i"
+                                class="group relative overflow-hidden rounded-md border border-sky-500/20 bg-black/30"
+                            >
+                                <img
+                                    :src="previewUrl(file)"
+                                    class="aspect-square w-full object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    @click="removeNewFile(i)"
+                                    class="absolute right-1 top-1 rounded-full bg-red-600/80 p-0.5 text-white opacity-0 transition group-hover:opacity-100"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Upload button -->
+                        <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-sky-500/30 px-3 py-2 text-sm text-sky-400 transition hover:border-sky-400/50 hover:text-sky-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            Tambah Gambar
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                class="hidden"
+                                @change="onGalleryFilesChange"
+                            />
+                        </label>
+                    </div>
+                    <InputError :message="form.errors.gallery_files" />
+                    <InputError :message="form.errors['gallery_files.0']" />
                 </div>
 
                 <!-- Row: date + terdampak -->
@@ -476,12 +623,16 @@ const submit = () => {
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <Label class="text-sky-200">Source</Label>
-                        <input
-                            v-model="form.source"
-                            type="text"
-                            class="mt-1 w-full rounded-md border border-sky-500/25 bg-black/40 px-3 py-2 text-sm text-sky-100 placeholder:text-sky-500/50"
-                            placeholder="Source..."
-                        />
+                        <Select v-model="form.source">
+                            <SelectTrigger class="mt-1 w-full border-sky-500/25 bg-black/40 text-sky-100">
+                                <SelectValue placeholder="Pilih source..." />
+                            </SelectTrigger>
+                            <SelectContent class="border-sky-500/25 bg-black/90 text-sky-100">
+                                <SelectItem v-for="s in sourceOptions" :key="s.value" :value="s.value">
+                                    {{ s.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label class="text-sky-200">Sumber Berita</Label>
@@ -514,7 +665,27 @@ const submit = () => {
             <!-- View Mode -->
             <div v-else-if="isView && item" class="space-y-3 text-sm text-sky-200">
                 <div class="text-base font-semibold text-sky-100">> {{ item.title }}</div>
-                <div v-if="item.description" class="text-sky-300/80 whitespace-pre-wrap">{{ item.description }}</div>
+                <div v-if="item.description" class="text-sky-300/80 prose prose-invert prose-sm max-w-none" v-html="item.description" />
+
+                <!-- Gallery view mode -->
+                <div v-if="item.gallery?.length" class="space-y-2">
+                    <div class="text-sm tracking-widest text-sky-300">GALLERY</div>
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                        <div
+                            v-for="img in item.gallery"
+                            :key="img.path"
+                            class="overflow-hidden rounded-md border border-sky-500/15 bg-black/20"
+                        >
+                            <div class="relative w-full overflow-hidden bg-black/35 [aspect-ratio:4/3]">
+                                <img
+                                    :src="img.url"
+                                    :alt="img.path"
+                                    class="absolute inset-0 h-full w-full object-contain p-2 opacity-95"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="grid gap-2 rounded-lg border border-sky-500/15 bg-black/20 p-3 text-sky-300 md:grid-cols-2">
                     <div v-if="item.incident_date">> tanggal: {{ item.incident_date }}</div>

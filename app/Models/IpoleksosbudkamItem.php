@@ -9,6 +9,7 @@ class IpoleksosbudkamItem extends Model
     protected $fillable = [
         'title',
         'description',
+        'gallery',
         'incident_date',
         'severity_level',
         'status',
@@ -22,5 +23,12 @@ class IpoleksosbudkamItem extends Model
         'jumlah_terdampak',
         'source',
         'sumber_berita',
+    ];
+
+    protected $casts = [
+        'gallery' => 'array',
+        'incident_date' => 'date',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 }
