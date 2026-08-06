@@ -331,6 +331,13 @@ const title = computed(() => {
     return 'IPOLEKSOSBUDKAM / local';
 });
 
+// Mencegah Enter di input teks memicu implicit form submit (submit tak sengaja)
+function onFormKeydown(e: KeyboardEvent) {
+    if (e.key !== 'Enter') return;
+    const tag = (e.target as HTMLElement)?.tagName;
+    if (tag === 'INPUT') e.preventDefault();
+}
+
 const submit = () => {
     form.category = localCategory.value || null;
     form.sub_category = localSubCategory.value || null;
@@ -376,7 +383,7 @@ const submit = () => {
         </div>
 
         <div class="rounded-xl border border-sky-500/15 bg-black/30 p-6">
-            <form v-if="!isView" @submit.prevent="submit" class="space-y-4">
+            <form v-if="!isView" @submit.prevent="submit" @keydown="onFormKeydown" class="space-y-4">
                 <!-- Title -->
                 <div>
                     <Label class="text-sky-200">Judul *</Label>
