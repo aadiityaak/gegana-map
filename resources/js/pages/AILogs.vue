@@ -3,6 +3,8 @@ import { Head } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
+import AiAnalysisChart from '@/components/AiAnalysisChart.vue';
+import HermesLogs from './hermes/Logs.vue';
 
 type Tab = 'history' | 'hermes';
 
@@ -88,8 +90,46 @@ const moduleLabel = (module: string) => {
     return map[module] ?? module;
 };
 
+// Reactive data untuk chart tiap history item
+const chartData = ref<Record<number, { labels: string[]; values: number[] }>>({});
+
+// Parse statistik dari hasil AI: mencari provinsi dan angka
+const parseProvinceStats = (result: string) => {
+    const labels: string[] = [];
+    const values: number[] = [];
+
+    // Cari bagian "Distribusi Geografis", "Area Rawan", atau "Provinsi"
+    const sectionMatch = result.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\s*-\s|\n\n|$)/i);
+    const sectionText = sectionMatch ? sectionMatch[1] : result;
+
+    // Ekstrak pola "- Nama Provinsi (angka)"
+    const lines = sectionText.split('\n');
+    for (const line of lines) {
+        const match = line.match(/-\s*([^(-\n]+?)\s*\(([\d.,]+)\)/);
+        if (match) {
+            const name = match[1].trim();
+            const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
+            if (!isNaN(value)) {
+                labels.push(name);
+                values.push(value);
+            }
+        }
+        if (labels.length >= 8) break;
+    }
+
+    return { labels, values };
+};
+
+// Get chart data untuk item tertentu
+const getChartData = (item: HistoryEntry) => {
+    if (!chartData.value[item.id]) {
+        chartData.value[item.id] = parseProvinceStats(item.result);
+    }
+    return chartData.value[item.id];
+};
+
 // Import Hermes logs component
-import HermesLogs from './hermes/Logs.vue';
+// (imported at top)
 
 onMounted(fetchHistory);
 </script>
@@ -108,7 +148,7 @@ onMounted(fetchHistory);
             <button
                 v-for="tab in [
                     { key: 'history', label: 'Riwayat Analisa' },
-                    { key: 'hermes', label: 'Log Hermes' },
+                    { key: 'hermes', label: 'Sistem Agent' },
                 ]"
                 :key="tab.key"
                 @click="activeTab = tab.key as Tab"
@@ -188,6 +228,22 @@ onMounted(fetchHistory);
 
                     <div class="mt-2 max-h-48 overflow-y-auto text-xs text-sky-300/80">
                         {{ item.result }}
+                    </div>
+
+                    <!-- Chart: Distribusi Geografis -->
+                    <div
+                        v-if="getChartData(item).labels.length > 0"
+                        class="mt-3 rounded-lg border border-sky-500/10 bg-black/20 p-3"
+                    >
+                        <div class="mb-2 text-[11px] text-sky-300">Distribusi Geografis</div>
+                        <div style="max-height: 200px;">
+                            <AiAnalysisChart
+                                chart-type="bar"
+                                :labels="getChartData(item).labels"
+                                :values="getChartData(item).values"
+                                title="Provinsi"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -115,15 +115,20 @@ const parseStats = (text: string) => {
     const labels: string[] = [];
     const values: number[] = [];
 
-    // Cari section "Area Rawan" dan ekstrak items
-    const rawanMatch = text.match(/Area Rawan\s*\n([\s\S]*?)(?=\n\n|\n\*\*|$)/i);
-    if (rawanMatch) {
-        const lines = rawanMatch[1].split('\n');
-        for (const line of lines) {
-            const match = line.match(/-?\s*([^(-]+)\s*\((\d+)\)/);
-            if (match) {
-                labels.push(match[1].trim());
-                values.push(parseInt(match[2], 10));
+    // Cari section "Area Rawan", "Distribusi Geografis", or "Provinsi Terbanyak"
+    const sectionMatch = text.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
+    const sectionText = sectionMatch ? sectionMatch[1] : text;
+
+    // Ekstrak pola "- Nama (angka)" atau "- Nama (angka)"
+    const lines = sectionText.split('\n');
+    for (const line of lines) {
+        const match = line.match(/-?\s*([^(-\n]+?)\s*\(([0-9.,]+)\)/);
+        if (match) {
+            const name = match[1].trim();
+            const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
+            if (!isNaN(value)) {
+                labels.push(name);
+                values.push(value);
             }
         }
     }
