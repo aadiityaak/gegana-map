@@ -201,6 +201,15 @@ class AiAnalysisController extends Controller
         return response()->json(['data' => $rows]);
     }
 
+    public function allHistory(): JsonResponse
+    {
+        $rows = AiAnalysisHistory::orderByDesc('created_at')
+            ->limit(100)
+            ->get(['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at']);
+
+        return response()->json(['data' => $rows]);
+    }
+
     public function destroy(string $id): JsonResponse
     {
         $history = AiAnalysisHistory::find($id);

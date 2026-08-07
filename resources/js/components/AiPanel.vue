@@ -1,5 +1,5 @@
     <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -8,6 +8,7 @@ import {
     DialogTitle,
     DialogClose,
 } from '@/components/ui/dialog';
+import AiAnalysisChart from './AiAnalysisChart.vue';
 
 const props = defineProps<{
     module: string;
@@ -22,6 +23,10 @@ const loading = ref(false);
 const result = ref<string | null>(null);
 const error = ref<string | null>(null);
 const totalData = ref<number | null>(null);
+
+// chart data
+const chartLabels = ref<string[]>([]);
+const chartValues = ref<number[]>([]);
 
 // riwayat
 const history = ref<any[]>([]);
@@ -105,6 +110,28 @@ const deleteHistory = async (item: any) => {
     }
 };
 
+// Parse statistik dari hasil AI (misal "Jawa Barat (19)" → label + value)
+const parseStats = (text: string) => {
+    const labels: string[] = [];
+    const values: number[] = [];
+
+    // Cari section "Area Rawan" dan ekstrak items
+    const rawanMatch = text.match(/Area Rawan\s*\n([\s\S]*?)(?=\n\n|\n\*\*|$)/i);
+    if (rawanMatch) {
+        const lines = rawanMatch[1].split('\n');
+        for (const line of lines) {
+            const match = line.match(/-?\s*([^(-]+)\s*\((\d+)\)/);
+            if (match) {
+                labels.push(match[1].trim());
+                values.push(parseInt(match[2], 10));
+            }
+        }
+    }
+
+    chartLabels.value = labels;
+    chartValues.value = values;
+};
+
 const run = async () => {
     loading.value = true;
     result.value = null;
@@ -121,6 +148,7 @@ const run = async () => {
         } else {
             result.value = json.result;
             totalData.value = json.total_data;
+            parseStats(json.result);
             await fetchHistory();
         }
     } catch (e: any) {
@@ -264,6 +292,22 @@ const run = async () => {
             class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4 text-sm text-sky-100/90 leading-relaxed whitespace-pre-wrap"
         >
             {{ result }}
+        </div>
+
+        <!-- chart -->
+        <div
+            v-if="chartLabels.length > 0 && !loading"
+            class="mt-3 rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4"
+        >
+            <div class="mb-2 text-xs text-sky-300">Grafik Area Rawan</div>
+            <div style="max-height: 240px;">
+                <AiAnalysisChart
+                    chart-type="bar"
+                    :labels="chartLabels"
+                    :values="chartValues"
+                    title="Area Rawan"
+                />
+            </div>
         </div>
     </div>
 
