@@ -1,6 +1,6 @@
     <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,44 @@ const save = () => {
     })).post('/settings/ai', {
         preserveScroll: true,
     });
+};
+
+const testing = ref(false);
+const testResult = ref<{ status: 'ok' | 'failed'; model?: string; response?: string; message?: string } | null>(null);
+
+const testConnection = async () => {
+    // Save dulu untuk pastikan konfigurasi terbaru tersimpan
+    await form.transform((data) => ({
+        ...data,
+        _method: 'patch',
+    })).post('/settings/ai', { preserveScroll: true });
+
+    testing.value = true;
+    testResult.value = null;
+    try {
+        const res = await fetch('/api/ai/test', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+        const data = await res.json();
+        testResult.value = {
+            status: data.status ?? (res.ok ? 'ok' : 'failed'),
+            model: data.model,
+            response: data.response ?? data.result,
+            message: data.message,
+        };
+    } catch (e: any) {
+        testResult.value = {
+            status: 'failed',
+            message: e?.message ?? 'Gagal menghubungi server',
+        };
+    } finally {
+        testing.value = false;
+    }
 };
 </script>
 
@@ -93,6 +131,26 @@ const save = () => {
                 <Button type="button" :disabled="form.processing" @click="save">
                     {{ form.processing ? 'Saving...' : 'Save' }}
                 </Button>
+                <Button type="button" variant="outline" :disabled="testing || form.processing" @click="testConnection">
+                    {{ testing ? 'Testing...' : 'Test AI' }}
+                </Button>
+            </div>
+
+            <div v-if="testResult" class="rounded-md border border-sidebar-border/70 bg-muted p-3 text-sm">
+                <div class="mb-1 flex items-center justify-between gap-2">
+                    <span class="font-medium" :class="testResult.status === 'ok' ? 'text-green-600' : 'text-red-600'">
+                        {{ testResult.status === 'ok' ? '✅ Terhubung' : '❌ Gagal' }}
+                    </span>
+                    <span v-if="testResult.model" class="text-muted-foreground">
+                        Model: {{ testResult.model }}
+                    </span>
+                </div>
+                <div v-if="testResult.response" class="whitespace-pre-wrap text-foreground">
+                    {{ testResult.response }}
+                </div>
+                <div v-else-if="testResult.message" class="text-muted-foreground">
+                    {{ testResult.message }}
+                </div>
             </div>
         </div>
     </div>

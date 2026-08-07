@@ -138,6 +138,54 @@ class AiAnalysisController extends Controller
         }
     }
 
+    public function testConnection(Request $request, AiSettings $aiSettings): JsonResponse
+    {
+        $settings = $aiSettings->shared();
+        if (empty($settings['endpoint']) || empty($settings['api_key']) || empty($settings['model'])) {
+            return response()->json(['message' => 'AI not configured. Go to Settings > AI first.'], 400);
+        }
+
+        $prompt = 'Ucapkan "pong" dan jelaskan singkat apa kegunaanmu.';
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $settings['api_key'],
+                'Content-Type' => 'application/json',
+            ])->timeout(30)->post($settings['endpoint'], [
+                'model' => $settings['model'],
+                'messages' => [
+                    ['role' => 'system', 'content' => 'Anda adalah asisten analis keamanan.'],
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'max_tokens' => 100,
+                'temperature' => 0.3,
+            ]);
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'status' => 'failed',
+                    'message' => 'HTTP ' . $response->status(),
+                    'body' => $response->body(),
+                ], 502);
+            }
+
+            $body = $response->json();
+            $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? 'No response from AI.');
+
+            return response()->json([
+                'status' => 'ok',
+                'model' => $settings['model'],
+                'response' => $content,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('AI test failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Failed to call AI: ' . $e->getMessage(),
+            ], 502);
+        }
+    }
+
     public function history(Request $request, string $module): JsonResponse
     {
         if (!isset(self::MODULES[$module])) {

@@ -262,7 +262,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: Globe,
     },
     {
-        title: 'Analisa Sistem',
+        title: 'ANALISA SISTEM',
         href: '/hermes-logs',
         icon: Brain,
     },

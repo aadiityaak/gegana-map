@@ -81,10 +81,17 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
         $base = crimeMapBaseUrl($endpoint);
 
         $allowedQueryKeys = [
-            'page', 'per_page', 'sort_by', 'sort_dir',
-            'search', 'status', 'level',
-            'start_date', 'end_date',
-            'category', 'subcategory',
+            'page',
+            'per_page',
+            'sort_by',
+            'sort_dir',
+            'search',
+            'status',
+            'level',
+            'start_date',
+            'end_date',
+            'category',
+            'subcategory',
         ];
 
         $query = array_filter(
@@ -134,7 +141,7 @@ Route::middleware(['auth', 'verified'])->get('/api/ipoleksosbudkam/monitoring-da
     if (is_string($search) && $search !== '') {
         $localQuery->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%");
         });
     }
 
@@ -669,6 +676,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('api/ai/analyze/{module}', [AiAnalysisController::class, 'analyze'])->name('api.ai.analyze');
     Route::get('api/ai/history/{module}', [AiAnalysisController::class, 'history'])->name('api.ai.history');
+    Route::post('api/ai/test', [AiAnalysisController::class, 'testConnection'])->name('api.ai.test');
 
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {
         Route::inertia('hermes-logs', 'hermes/Logs')->name('hermes.logs');
