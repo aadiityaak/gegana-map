@@ -80,6 +80,31 @@ const viewHistory = (item: any) => {
     modalOpen.value = true;
 };
 
+const deleteHistory = async (item: any) => {
+    if (!confirm('Hapus riwayat ini?')) return;
+
+    try {
+        const res = await fetch(`/api/ai/history/${item.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+            },
+        });
+        const json = await res.json();
+        if (res.ok) {
+            history.value = history.value.filter(h => h.id !== item.id);
+            if (modalItem.value?.id === item.id) {
+                modalOpen.value = false;
+            }
+        } else {
+            alert(json.message ?? 'Gagal menghapus.');
+        }
+    } catch (e: any) {
+        alert(e.message ?? 'Network error.');
+    }
+};
+
 const run = async () => {
     loading.value = true;
     result.value = null;
@@ -187,7 +212,16 @@ const run = async () => {
                         [{{ actionLabelMap[item.action] ?? item.action }}]
                         {{ periodLabelMap[item.period] ?? item.period }}
                     </span>
-                    <span class="shrink-0 text-[10px] opacity-60">{{ item.total_data }} data</span>
+                    <div class="flex items-center gap-2">
+                        <span class="shrink-0 text-[10px] opacity-60">{{ item.total_data }} data</span>
+                        <button
+                            @click.stop="deleteHistory(item)"
+                            class="shrink-0 rounded p-0.5 text-[10px] text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
+                            title="Hapus riwayat"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a3 3 0 0 1 6 0v2"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="text-[10px] opacity-50">
                     {{ new Date(item.created_at).toLocaleString('id-ID') }}

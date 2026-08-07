@@ -676,6 +676,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('api/ai/analyze/{module}', [AiAnalysisController::class, 'analyze'])->name('api.ai.analyze');
     Route::get('api/ai/history/{module}', [AiAnalysisController::class, 'history'])->name('api.ai.history');
+    Route::delete('api/ai/history/{id}', [AiAnalysisController::class, 'destroy'])->name('api.ai.history.destroy');
     Route::post('api/ai/test', [AiAnalysisController::class, 'testConnection'])->name('api.ai.test');
 
     Route::middleware(['role:superadmin,admin,adminvip'])->group(function () {

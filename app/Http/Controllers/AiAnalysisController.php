@@ -61,7 +61,7 @@ class AiAnalysisController extends Controller
                 't.created_at',
             ])
             ->orderByDesc('t.created_at')
-            ->limit(500)
+            ->limit(300)
             ->get()
             ->map(function ($row) {
                 $row->photos = null;
@@ -201,6 +201,18 @@ class AiAnalysisController extends Controller
         return response()->json(['data' => $rows]);
     }
 
+    public function destroy(string $id): JsonResponse
+    {
+        $history = AiAnalysisHistory::find($id);
+        if (!$history) {
+            return response()->json(['message' => 'Riwayat tidak ditemukan.'], 404);
+        }
+
+        $history->delete();
+
+        return response()->json(['message' => 'Riwayat berhasil dihapus.']);
+    }
+
     private function extractJsonBody($response): array
     {
         $body = $response->json();
@@ -228,13 +240,7 @@ class AiAnalysisController extends Controller
             '1year' => '1 tahun terakhir',
         };
 
-        $summary = "Data {$label} ({$periodLabel}): total {$totalCount} kejadian.\n\n";
-        if ($totalCount > 0) {
-            $summary .= "Contoh data:\n";
-            foreach (array_slice($data, 0, 20) as $row) {
-                $summary .= "- ID:{$row->id} type:{$row->incident_type} lokasi:{$row->province_name} tgl:{$row->created_at}\n";
-            }
-        }
+        $summary = $this->buildSummary($data, $label, $periodLabel);
 
         $instruction = match ($action) {
             'analisa' => "Lakukan analisis terhadap data {$label} {$periodLabel}. Berikan insight tentang pola, tren, distribusi geografis, dan temuan penting.",
@@ -244,5 +250,61 @@ class AiAnalysisController extends Controller
         };
 
         return "{$instruction}\n\n{$summary}";
+    }
+
+    private function buildSummary(array $data, string $label, string $periodLabel): string
+    {
+        $total = count($data);
+
+        if ($total === 0) {
+            return "Data {$label} ({$periodLabel}): tidak ada kejadian.\n";
+        }
+
+        $summary = "Data {$label} ({$periodLabel}):\n";
+        $summary .= "Total kejadian: {$total}\n\n";
+
+        // Provinsi terbanyak (top 5)
+        $provinceCount = collect($data)
+            ->groupBy('province_name')
+            ->map->count()
+            ->sortDesc()
+            ->take(5);
+        $summary .= "Provinsi terbanyak:\n";
+        foreach ($provinceCount as $name => $count) {
+            $summary .= "- {$name}: {$count}\n";
+        }
+
+        // Tipe kejadian terbanyak (top 3)
+        $typeCount = collect($data)
+            ->groupBy('incident_type')
+            ->map->count()
+            ->sortDesc()
+            ->take(3);
+        $summary .= "\nTipe kejadian terbanyak:\n";
+        foreach ($typeCount as $type => $count) {
+            $summary .= "- {$type}: {$count}\n";
+        }
+
+        // Tren per bulan
+        $monthly = collect($data)
+            ->map(function ($row) {
+                return \Carbon\Carbon::parse($row->created_at)->format('M Y');
+            })
+            ->groupBy(fn($m) => $m)
+            ->map->count()
+            ->sortKeys();
+        $summary .= "\nTren bulanan:\n";
+        foreach ($monthly as $month => $count) {
+            $summary .= "- {$month}: {$count}\n";
+        }
+
+        // Sampling acak representatif (30 data)
+        $summary .= "\nContoh data acak:\n";
+        $sample = collect($data)->shuffle()->take(min(30, $total))->all();
+        foreach ($sample as $row) {
+            $summary .= "- ID:{$row->id} type:{$row->incident_type} lokasi:{$row->province_name} tgl:{$row->created_at}\n";
+        }
+
+        return $summary;
     }
 }
