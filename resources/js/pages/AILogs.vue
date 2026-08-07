@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -33,16 +34,23 @@ type HistoryEntry = {
 
 const history = ref<HistoryEntry[]>([]);
 const loadingHistory = ref(false);
+const currentPage = ref(1);
+const lastPage = ref(1);
+const totalHistory = ref(0);
 
-const fetchHistory = async () => {
+const fetchHistory = async (page = 1) => {
     loadingHistory.value = true;
     try {
-        const res = await fetch('/api/ai/all-history', {
+        const params = new URLSearchParams({ view: 'ai', per_page: '50', page: String(page) });
+        const res = await fetch(`/api/ai/all-history?${params}`, {
             headers: { Accept: 'application/json' },
         });
         const data = await res.json();
         if (res.ok) {
             history.value = data.data ?? [];
+            currentPage.value = data.meta?.current_page ?? 1;
+            lastPage.value = data.meta?.last_page ?? 1;
+            totalHistory.value = data.meta?.total ?? 0;
         }
     } catch {
         // swallow
@@ -64,7 +72,12 @@ const deleteHistoryItem = async (id: number) => {
         });
         const data = await res.json();
         if (res.ok) {
-            history.value = history.value.filter(h => h.id !== id);
+            // re-fetch current page (may go back one page if last item on page)
+            await fetchHistory(currentPage.value);
+            // if page is now empty and not the first page, go back one
+            if (history.value.length === 0 && currentPage.value > 1) {
+                await fetchHistory(currentPage.value - 1);
+            }
         } else {
             alert(data.message ?? 'Gagal menghapus.');
         }
@@ -162,21 +175,21 @@ onMounted(fetchHistory);
         />
 
         <!-- Tabs -->
-        <div class="flex gap-2 border-b border-sky-500/20">
-            <button
-                v-for="tab in [
-                    { key: 'history', label: 'Riwayat Analisa' },
-                    { key: 'hermes', label: 'Sistem Agent' },
-                ]"
-                :key="tab.key"
-                @click="activeTab = tab.key as Tab"
-                :class="activeTab === tab.key
-                    ? 'border-rose-500/25 bg-rose-500/10 text-rose-200'
-                    : 'border-transparent text-sky-300 hover:bg-sky-500/5'"
-                class="border-b-2 px-4 py-2 text-sm transition-all"
+        <div class="flex gap-2 border-b border-sky-500/20 pb-3">
+            <Button
+                variant="secondary"
+                :class="activeTab === 'history' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
+                @click="activeTab = 'history'"
             >
-                {{ tab.label }}
-            </button>
+                Riwayat Analisa
+            </Button>
+            <Button
+                variant="secondary"
+                :class="activeTab === 'hermes' ? 'border-rose-500/25 bg-rose-500/40 text-rose-200' : ''"
+                @click="activeTab = 'hermes'"
+            >
+                Sistem Agent
+            </Button>
         </div>
 
         <!-- Tab: Riwayat Analisa -->
@@ -240,6 +253,29 @@ onMounted(fetchHistory);
                                 <path d="M14 11v6" />
                                 <path d="M9 6V4a3 3 0 0 1 6 0v2" />
                             </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="lastPage > 1" class="flex items-center justify-between pt-2">
+                    <span class="text-xs text-sky-300/50">
+                        {{ totalHistory }} data &middot; Halaman {{ currentPage }} / {{ lastPage }}
+                    </span>
+                    <div class="flex gap-1">
+                        <button
+                            :disabled="currentPage <= 1"
+                            @click="fetchHistory(currentPage - 1)"
+                            class="rounded px-3 py-1 text-xs text-sky-300 border border-sky-500/20 hover:bg-sky-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            Sebelumnya
+                        </button>
+                        <button
+                            :disabled="currentPage >= lastPage"
+                            @click="fetchHistory(currentPage + 1)"
+                            class="rounded px-3 py-1 text-xs text-sky-300 border border-sky-500/20 hover:bg-sky-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            Selanjutnya
                         </button>
                     </div>
                 </div>

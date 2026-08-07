@@ -193,21 +193,46 @@ class AiAnalysisController extends Controller
             return response()->json(['message' => 'Module not found.'], 404);
         }
 
-        $rows = AiAnalysisHistory::where('module', $module)
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get(['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at']);
+        $perPage = min((int) $request->query('per_page', 50), 100);
+        $page = (int) $request->query('page', 1);
 
-        return response()->json(['data' => $rows]);
+        $paginator = AiAnalysisHistory::where('module', $module)
+            ->orderByDesc('created_at')
+            ->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at'], 'page', $page);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 
-    public function allHistory(): JsonResponse
+    public function allHistory(Request $request): JsonResponse
     {
-        $rows = AiAnalysisHistory::orderByDesc('created_at')
-            ->limit(100)
-            ->get(['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at']);
+        $perPage = min((int) $request->query('per_page', 50), 100);
+        $page = (int) $request->query('page', 1);
 
-        return response()->json(['data' => $rows]);
+        $query = AiAnalysisHistory::orderByDesc('created_at');
+
+        if ($request->query('view') === 'ai') {
+            $query->where('action', 'analisa');
+        }
+
+        $paginator = $query->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at'], 'page', $page);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 
     public function destroy(string $id): JsonResponse
