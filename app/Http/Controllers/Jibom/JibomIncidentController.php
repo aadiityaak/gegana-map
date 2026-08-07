@@ -73,6 +73,7 @@ class JibomIncidentController extends Controller
             'filters' => [
                 'type' => $type,
                 'province_id' => $provinceId,
+                'view' => $request->query('view', 'data'),
             ],
         ]);
     }

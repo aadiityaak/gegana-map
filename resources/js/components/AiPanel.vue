@@ -31,11 +31,10 @@ const chartValues = ref<number[]>([]);
 // riwayat
 const history = ref<any[]>([]);
 const loadingHistory = ref(false);
-const showHistory = ref(false);
-
-// modal
 const modalOpen = ref(false);
 const modalItem = ref<any>(null);
+const modalChartLabels = ref<string[]>([]);
+const modalChartValues = ref<number[]>([]);
 
 const actionLabels: Record<Action, string> = {
     analisa: 'Analisa',
@@ -82,6 +81,22 @@ onMounted(fetchHistory);
 
 const viewHistory = (item: any) => {
     modalItem.value = item;
+    modalChartLabels.value = [];
+    modalChartValues.value = [];
+
+    // Parse chart dari hasil riwayat
+    const sectionMatch = item.result?.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
+    const sectionText = sectionMatch ? sectionMatch[1] : (item.result ?? '');
+    const lines = sectionText.split('\n');
+    for (const line of lines) {
+        const m = line.match(/-\s*([^\n()]+?)\s*\(([\d.,]+)\)/);
+        if (m) {
+            modalChartLabels.value.push(m[1].trim());
+            modalChartValues.value.push(parseInt(m[2].replace(/[^\d]/g, ''), 10));
+        }
+        if (modalChartLabels.value.length >= 8) break;
+    }
+
     modalOpen.value = true;
 };
 
@@ -122,7 +137,7 @@ const parseStats = (text: string) => {
     // Ekstrak pola "- Nama (angka)" atau "- Nama (angka)"
     const lines = sectionText.split('\n');
     for (const line of lines) {
-        const match = line.match(/-?\s*([^(-\n]+?)\s*\(([0-9.,]+)\)/);
+        const match = line.match(/-?\s*([^\n()]+?)\s*\(([0-9.,]+)\)/);
         if (match) {
             const name = match[1].trim();
             const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
@@ -209,16 +224,6 @@ const run = async () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play me-1"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
                 {{ loading ? 'Memproses...' : 'Jalankan' }}
             </Button>
-
-            <Button
-                size="sm"
-                variant="secondary"
-                :class="showHistory ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
-                @click="showHistory = !showHistory"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-clock-icon lucide-rotate-ccw-clock me-1"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                Riwayat ({{ history.length }})
-            </Button>
         </div>
 
         <div
@@ -230,7 +235,6 @@ const run = async () => {
 
         <!-- daftar riwayat -->
         <div
-            v-if="showHistory"
             class="mb-3 max-h-48 overflow-y-auto rounded border border-sky-500/15 bg-black/30 p-2 space-y-1"
         >
             <div
@@ -333,6 +337,20 @@ const run = async () => {
                 class="text-base leading-relaxed whitespace-pre-wrap text-foreground/90"
             >
                 {{ modalItem.result }}
+            </div>
+            <div
+                v-if="modalChartLabels.length > 0"
+                class="mt-4 rounded-lg border border-sky-500/10 bg-black/20 p-3"
+            >
+                <div class="mb-2 text-xs text-sky-300">Distribusi Geografis</div>
+                <div style="max-height: 200px;">
+                    <AiAnalysisChart
+                        chart-type="bar"
+                        :labels="modalChartLabels"
+                        :values="modalChartValues"
+                        title="Provinsi"
+                    />
+                </div>
             </div>
         </DialogContent>
     </Dialog>

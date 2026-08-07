@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
         $this->call(JibomIncidentsSeeder::class);
         $this->call(KBRNIncidentsSeeder::class);
         $this->call(WanTerorIncidentsSeeder::class);
+        $this->call(AiAndHermesSeeder::class);
     }
 }

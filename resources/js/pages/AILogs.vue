@@ -3,12 +3,22 @@ import { Head } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import AiAnalysisChart from '@/components/AiAnalysisChart.vue';
 import HermesLogs from './hermes/Logs.vue';
 
 type Tab = 'history' | 'hermes';
 
 const activeTab = ref<Tab>('history');
+
+// Modal
+const modalOpen = ref(false);
+const selectedItem = ref<HistoryEntry | null>(null);
 
 // Riwayat analisa
 type HistoryEntry = {
@@ -90,6 +100,14 @@ const moduleLabel = (module: string) => {
     return map[module] ?? module;
 };
 
+const viewItem = (item: HistoryEntry) => {
+    selectedItem.value = item;
+    if (!chartData.value[item.id]) {
+        chartData.value[item.id] = parseProvinceStats(item.result);
+    }
+    modalOpen.value = true;
+};
+
 // Reactive data untuk chart tiap history item
 const chartData = ref<Record<number, { labels: string[]; values: number[] }>>({});
 
@@ -105,7 +123,7 @@ const parseProvinceStats = (result: string) => {
     // Ekstrak pola "- Nama Provinsi (angka)"
     const lines = sectionText.split('\n');
     for (const line of lines) {
-        const match = line.match(/-\s*([^(-\n]+?)\s*\(([\d.,]+)\)/);
+        const match = line.match(/-\s*([^\n()]+?)\s*\(([\d.,]+)\)/);
         if (match) {
             const name = match[1].trim();
             const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
@@ -178,72 +196,51 @@ onMounted(fetchHistory);
                 <div
                     v-for="item in history"
                     :key="item.id"
-                    class="rounded-xl border border-sky-500/15 bg-sky-500/[0.03] p-4"
+                    class="flex cursor-pointer items-center justify-between rounded-xl border border-sky-500/15 bg-sky-500/[0.03] p-3 transition-all hover:border-sky-500/30 hover:bg-sky-500/[0.06]"
+                    @click="viewItem(item)"
                 >
-                    <div class="flex items-center justify-between">
-                        <div class="flex flex-wrap items-center gap-2 text-sm">
-                            <Badge variant="outline" class="text-xs">
-                                {{ actionLabel(item.action) }}
-                            </Badge>
-                            <Badge variant="outline" class="text-xs">
-                                {{ moduleLabel(item.module) }}
-                            </Badge>
-                            <span class="text-xs text-sky-300/70">
-                                {{ periodLabel(item.period) }}
-                            </span>
-                            <span class="text-xs text-sky-300/50">
-                                {{ item.total_data }} data
-                            </span>
-                        </div>
+                    <div class="flex flex-wrap items-center gap-2 text-sm">
+                        <Badge variant="outline" class="text-xs">
+                            {{ actionLabel(item.action) }}
+                        </Badge>
+                        <Badge variant="outline" class="text-xs">
+                            {{ moduleLabel(item.module) }}
+                        </Badge>
+                        <span class="text-xs text-sky-300/70">
+                            {{ periodLabel(item.period) }}
+                        </span>
+                        <span class="text-xs text-sky-300/50">
+                            {{ item.total_data }} data
+                        </span>
+                    </div>
 
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] text-sky-300/50">
-                                {{ new Date(item.created_at).toLocaleString('id-ID') }}
-                            </span>
-                            <button
-                                @click="deleteHistoryItem(item.id)"
-                                class="rounded p-1 text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
-                                title="Hapus"
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-sky-300/50">
+                            {{ new Date(item.created_at).toLocaleString('id-ID') }}
+                        </span>
+                        <button
+                            @click.stop="deleteHistoryItem(item.id)"
+                            class="rounded p-1 text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
+                            title="Hapus"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path d="M3 6h18" />
-                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                    <path d="M10 11v6" />
-                                    <path d="M14 11v6" />
-                                    <path d="M9 6V4a3 3 0 0 1 6 0v2" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mt-2 max-h-48 overflow-y-auto text-xs text-sky-300/80">
-                        {{ item.result }}
-                    </div>
-
-                    <!-- Chart: Distribusi Geografis -->
-                    <div
-                        v-if="getChartData(item).labels.length > 0"
-                        class="mt-3 rounded-lg border border-sky-500/10 bg-black/20 p-3"
-                    >
-                        <div class="mb-2 text-[11px] text-sky-300">Distribusi Geografis</div>
-                        <div style="max-height: 200px;">
-                            <AiAnalysisChart
-                                chart-type="bar"
-                                :labels="getChartData(item).labels"
-                                :values="getChartData(item).values"
-                                title="Provinsi"
-                            />
-                        </div>
+                                <path d="M3 6h18" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                                <path d="M9 6V4a3 3 0 0 1 6 0v2" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -254,4 +251,51 @@ onMounted(fetchHistory);
             <HermesLogs />
         </div>
     </div>
+
+    <!-- Modal Detail -->
+    <Dialog :open="modalOpen" @update:open="modalOpen = $event">
+        <DialogContent class="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle>
+                    <template v-if="selectedItem">
+                        <span class="inline-flex items-center gap-2">
+                            <Badge variant="outline" class="text-xs">
+                                {{ actionLabel(selectedItem.action) }}
+                            </Badge>
+                            <Badge variant="outline" class="text-xs">
+                                {{ moduleLabel(selectedItem.module) }}
+                            </Badge>
+                            <span class="text-xs text-muted-foreground">
+                                {{ periodLabel(selectedItem.period) }}
+                            </span>
+                        </span>
+                    </template>
+                </DialogTitle>
+            </DialogHeader>
+            <div v-if="selectedItem" class="space-y-4">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{{ selectedItem.total_data }} data</span>
+                    <span>-</span>
+                    <span>{{ new Date(selectedItem.created_at).toLocaleString('id-ID') }}</span>
+                </div>
+                <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                    {{ selectedItem.result }}
+                </div>
+                <div
+                    v-if="selectedItem && getChartData(selectedItem).labels.length > 0"
+                    class="rounded-lg border border-sky-500/10 bg-black/20 p-3"
+                >
+                    <div class="mb-2 text-xs text-sky-300">Distribusi Geografis</div>
+                    <div style="max-height: 200px;">
+                        <AiAnalysisChart
+                            chart-type="bar"
+                            :labels="getChartData(selectedItem).labels"
+                            :values="getChartData(selectedItem).values"
+                            title="Provinsi"
+                        />
+                    </div>
+                </div>
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>

@@ -98,6 +98,7 @@ class KBRNIncidentController extends Controller
                 'type' => $type,
                 'finding_type' => $findingType,
                 'province_id' => $provinceId,
+                'view' => $request->query('view', 'data'),
             ],
         ]);
     }

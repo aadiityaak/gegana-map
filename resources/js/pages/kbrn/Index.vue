@@ -42,7 +42,7 @@ type Paginated<T> = {
 
 const props = defineProps<{
     items: Paginated<KBRNItem>;
-    filters: { type: string | null; finding_type: string | null; province_id: string | null };
+    filters: { type: string | null; finding_type: string | null; province_id: string | null; view?: string };
 }>();
 
 const typeLabel = (value: string) =>
@@ -80,6 +80,18 @@ const newsSourceLabel = (value: string | null | undefined) => {
 const currentType = computed(() => props.filters.type);
 const currentFindingType = computed(() => props.filters.finding_type);
 const currentProvinceId = computed(() => props.filters.province_id);
+
+const activeTab = computed(() => props.filters.view === 'ai' ? 'ai' : 'data');
+
+const tabHref = (view: string) => {
+    const qs = new URLSearchParams();
+    if (currentType.value) qs.set('type', currentType.value);
+    if (currentFindingType.value) qs.set('finding_type', currentFindingType.value);
+    if (currentProvinceId.value) qs.set('province_id', currentProvinceId.value);
+    qs.set('view', view);
+    const s = qs.toString();
+    return `/kbrn?${s}`;
+};
 
 const createHref = computed(() => {
     if (!currentType.value) return '/kbrn/create';
@@ -355,34 +367,54 @@ onMounted(async () => {
         </div>
 
         <div class="mb-4 flex flex-wrap items-center gap-2">
+            <!-- Tab: Data / AI -->
             <Button
                 variant="secondary"
-                :class="currentType ? '' : 'border-sky-500/50 bg-sky-500/25 text-sky-100'"
-                as-child
+                :class="activeTab === 'data' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
+                @click="router.visit(tabHref('data'))"
             >
-                <Link :href="listHref(null, null)">Semua</Link>
+                Data
             </Button>
             <Button
                 variant="secondary"
-                :class="currentType === 'ancaman' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
-                as-child
+                :class="activeTab === 'ai' ? 'border-rose-500/25 bg-rose-500/40 text-rose-200' : ''"
+                @click="router.visit(tabHref('ai'))"
             >
-                <Link :href="listHref('ancaman', null)">Ancaman</Link>
+                AI Analisis
             </Button>
-            <Button
-                variant="secondary"
-                :class="currentType === 'temuan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
-                as-child
-            >
-                <Link :href="listHref('temuan', null)">Temuan</Link>
-            </Button>
-            <Button
-                variant="secondary"
-                :class="currentType === 'ledakan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
-                as-child
-            >
-                <Link :href="listHref('ledakan', null)">Ledakan</Link>
-            </Button>
+
+            <span v-if="activeTab === 'data'" class="mx-1 h-5 w-px bg-sky-500/20"></span>
+
+            <template v-if="activeTab === 'data'">
+                <Button
+                    variant="secondary"
+                    :class="currentType ? '' : 'border-sky-500/50 bg-sky-500/25 text-sky-100'"
+                    as-child
+                >
+                    <Link :href="listHref(null, null)">Semua</Link>
+                </Button>
+                <Button
+                    variant="secondary"
+                    :class="currentType === 'ancaman' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
+                    as-child
+                >
+                    <Link :href="listHref('ancaman', null)">Ancaman</Link>
+                </Button>
+                <Button
+                    variant="secondary"
+                    :class="currentType === 'temuan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
+                    as-child
+                >
+                    <Link :href="listHref('temuan', null)">Temuan</Link>
+                </Button>
+                <Button
+                    variant="secondary"
+                    :class="currentType === 'ledakan' ? 'border-sky-500/50 bg-sky-500/25 text-sky-100' : ''"
+                    as-child
+                >
+                    <Link :href="listHref('ledakan', null)">Ledakan</Link>
+                </Button>
+            </template>
         </div>
 
         <div v-if="currentType === 'temuan'" class="mb-4">
@@ -504,10 +536,11 @@ onMounted(async () => {
             </div>
         </div>
 
-        <div class="mb-4">
-            <AiPanel module="kbrn" />
+        <div v-if="activeTab === 'ai'" class="mb-4">
+            <AiPanel module="kbrn" :show-history-by-default="true" />
         </div>
 
+        <template v-if="activeTab === 'data'">
         <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
             <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                 <span>> MAP INDONESIA</span>
@@ -593,6 +626,7 @@ onMounted(async () => {
                 <span v-else v-html="link.label" />
             </Button>
         </div>
+        </template>
     </div>
 </template>
 
