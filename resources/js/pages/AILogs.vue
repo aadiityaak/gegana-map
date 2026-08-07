@@ -215,18 +215,18 @@ onMounted(fetchHistory);
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] text-sky-300/50">
+                        <span class="text-xs text-sky-300/50">
                             {{ new Date(item.created_at).toLocaleString('id-ID') }}
                         </span>
                         <button
                             @click.stop="deleteHistoryItem(item.id)"
-                            class="rounded p-1 text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
+                            class="rounded p-1.5 text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
                             title="Hapus"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
+                                width="16"
+                                height="16"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"

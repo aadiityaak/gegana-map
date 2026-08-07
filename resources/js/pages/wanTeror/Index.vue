@@ -412,7 +412,7 @@ onMounted(async () => {
         </div>
 
         <div v-if="activeTab === 'ai'" class="mb-4">
-            <AiPanel module="wan-teror" :show-history-by-default="true" />
+            <AiPanel module="wan-teror" />
         </div>
 
          <template v-if="activeTab === 'data'">
