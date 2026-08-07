@@ -350,7 +350,7 @@ const ensureMap = async () => {
     );
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '� OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
     map.on('click', async (e: any) => {
@@ -525,7 +525,7 @@ const title = computed(() => {
                     > {{ viewTypeLabel }}
                 </div>
                 <div class="mt-2 text-sm text-sky-300">
-                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} � {{ viewLocationLabel }}
+                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} | {{ viewLocationLabel }}
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
                     <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">

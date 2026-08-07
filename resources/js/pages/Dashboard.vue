@@ -292,7 +292,7 @@ const ensureProvinceMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '� CartoDB',
+        attribution: '© CartoDB',
         maxZoom: 19,
     }).addTo(provinceMap);
 
@@ -394,7 +394,7 @@ const ensureMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '� CartoDB',
+        attribution: '© CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -439,7 +439,7 @@ const updateMapMarkers = async () => {
         popupEl.appendChild(titleEl);
 
         const metaEl = document.createElement('div');
-        metaEl.textContent = `${formatDateTime(item.incident_date)} � ${locationLabel(item)}`;
+        metaEl.textContent = `${formatDateTime(item.incident_date)} | ${locationLabel(item)}`;
         metaEl.style.cssText = 'font-size: 12px; opacity: 0.75; margin-bottom: 10px;';
         popupEl.appendChild(metaEl);
 

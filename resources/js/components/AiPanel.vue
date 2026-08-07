@@ -1,17 +1,14 @@
-    <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogClose,
-} from '@/components/ui/dialog';
 import AiAnalysisChart from './AiAnalysisChart.vue';
 
 const props = defineProps<{
     module: string;
+}>();
+
+const emit = defineEmits<{
+    (e: 'analyzed'): void;
 }>();
 
 type Action = 'analisa' | 'prediksi' | 'antisipasi';
@@ -28,14 +25,6 @@ const totalData = ref<number | null>(null);
 const chartLabels = ref<string[]>([]);
 const chartValues = ref<number[]>([]);
 
-// riwayat
-const history = ref<any[]>([]);
-const loadingHistory = ref(false);
-const modalOpen = ref(false);
-const modalItem = ref<any>(null);
-const modalChartLabels = ref<string[]>([]);
-const modalChartValues = ref<number[]>([]);
-
 const actionLabels: Record<Action, string> = {
     analisa: 'Analisa',
     prediksi: 'Prediksi',
@@ -48,93 +37,13 @@ const periodLabels: Record<Period, string> = {
     '1year': '1 Tahun',
 };
 
-const actionLabelMap: Record<string, string> = {
-    analisa: 'Analisa',
-    prediksi: 'Prediksi',
-    antisipasi: 'Antisipasi',
-};
-
-const periodLabelMap: Record<string, string> = {
-    '1month': '1 Bulan',
-    '6months': '6 Bulan',
-    '1year': '1 Tahun',
-};
-
-const fetchHistory = async () => {
-    loadingHistory.value = true;
-    try {
-        const res = await fetch(`/api/ai/history/${props.module}`, {
-            headers: { Accept: 'application/json' },
-        });
-        const json = await res.json();
-        if (res.ok) {
-            history.value = json.data ?? [];
-        }
-    } catch {
-        // silent
-    } finally {
-        loadingHistory.value = false;
-    }
-};
-
-onMounted(fetchHistory);
-
-const viewHistory = (item: any) => {
-    modalItem.value = item;
-    modalChartLabels.value = [];
-    modalChartValues.value = [];
-
-    // Parse chart dari hasil riwayat
-    const sectionMatch = item.result?.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
-    const sectionText = sectionMatch ? sectionMatch[1] : (item.result ?? '');
-    const lines = sectionText.split('\n');
-    for (const line of lines) {
-        const m = line.match(/-\s*([^\n()]+?)\s*\(([\d.,]+)\)/);
-        if (m) {
-            modalChartLabels.value.push(m[1].trim());
-            modalChartValues.value.push(parseInt(m[2].replace(/[^\d]/g, ''), 10));
-        }
-        if (modalChartLabels.value.length >= 8) break;
-    }
-
-    modalOpen.value = true;
-};
-
-const deleteHistory = async (item: any) => {
-    if (!confirm('Hapus riwayat ini?')) return;
-
-    try {
-        const res = await fetch(`/api/ai/history/${item.id}`, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-            },
-        });
-        const json = await res.json();
-        if (res.ok) {
-            history.value = history.value.filter(h => h.id !== item.id);
-            if (modalItem.value?.id === item.id) {
-                modalOpen.value = false;
-            }
-        } else {
-            alert(json.message ?? 'Gagal menghapus.');
-        }
-    } catch (e: any) {
-        alert(e.message ?? 'Network error.');
-    }
-};
-
-// Parse statistik dari hasil AI (misal "Jawa Barat (19)" → label + value)
 const parseStats = (text: string) => {
     const labels: string[] = [];
     const values: number[] = [];
 
-    // Cari section "Area Rawan", "Distribusi Geografis", or "Provinsi Terbanyak"
     const sectionMatch = text.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
     const sectionText = sectionMatch ? sectionMatch[1] : text;
 
-    // Ekstrak pola "- Nama (angka)" atau "- Nama (angka)"
     const lines = sectionText.split('\n');
     for (const line of lines) {
         const match = line.match(/-?\s*([^\n()]+?)\s*\(([0-9.,]+)\)/);
@@ -169,7 +78,7 @@ const run = async () => {
             result.value = json.result;
             totalData.value = json.total_data;
             parseStats(json.result);
-            await fetchHistory();
+            emit('analyzed');
         }
     } catch (e: any) {
         error.value = e.message ?? 'Network error.';
@@ -233,51 +142,6 @@ const run = async () => {
             &gt; Data tersedia: {{ totalData }} kejadian
         </div>
 
-        <!-- daftar riwayat -->
-        <div
-            class="mb-3 max-h-48 overflow-y-auto rounded border border-sky-500/15 bg-black/30 p-2 space-y-1"
-        >
-            <div
-                v-for="item in history"
-                :key="item.id"
-                class="cursor-pointer rounded px-2 py-1.5 text-xs transition-colors bg-sky-500/5"
-                :class="modalItem?.id === item.id && modalOpen ? 'bg-sky-500/15 text-sky-200' : 'hover:bg-sky-500/10 hover:text-sky-300'"
-                @click="viewHistory(item)"
-            >
-                <div class="flex items-center justify-between gap-2">
-                    <span>
-                        [{{ actionLabelMap[item.action] ?? item.action }}]
-                        {{ periodLabelMap[item.period] ?? item.period }}
-                    </span>
-                    <div class="flex items-center gap-2">
-                        <span class="shrink-0 text-[10px] opacity-60">{{ item.total_data }} data</span>
-                        <button
-                            @click.stop="deleteHistory(item)"
-                            class="shrink-0 rounded p-0.5 text-[10px] text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
-                            title="Hapus riwayat"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a3 3 0 0 1 6 0v2"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="text-[10px] opacity-50">
-                    {{ new Date(item.created_at).toLocaleString('id-ID') }}
-                </div>
-            </div>
-            <div
-                v-if="!loadingHistory && history.length === 0"
-                class="py-2 text-center text-[11px] text-sky-300/50"
-            >
-                Belum ada riwayat
-            </div>
-            <div
-                v-if="loadingHistory"
-                class="py-2 text-center text-[11px] text-sky-300/50"
-            >
-                Memuat...
-            </div>
-        </div>
-
         <!-- loading -->
         <div
             v-if="loading"
@@ -319,39 +183,4 @@ const run = async () => {
             </div>
         </div>
     </div>
-
-    <!-- modal riwayat -->
-    <Dialog :open="modalOpen" @update:open="modalOpen = $event">
-        <DialogContent class="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle>
-                    <template v-if="modalItem">
-                        [{{ actionLabelMap[modalItem.action] ?? modalItem.action }}]
-                        {{ periodLabelMap[modalItem.period] ?? modalItem.period }}
-                        — {{ modalItem.total_data }} data
-                    </template>
-                </DialogTitle>
-            </DialogHeader>
-            <div
-                v-if="modalItem"
-                class="text-base leading-relaxed whitespace-pre-wrap text-foreground/90"
-            >
-                {{ modalItem.result }}
-            </div>
-            <div
-                v-if="modalChartLabels.length > 0"
-                class="mt-4 rounded-lg border border-sky-500/10 bg-black/20 p-3"
-            >
-                <div class="mb-2 text-xs text-sky-300">Distribusi Geografis</div>
-                <div style="max-height: 200px;">
-                    <AiAnalysisChart
-                        chart-type="bar"
-                        :labels="modalChartLabels"
-                        :values="modalChartValues"
-                        title="Provinsi"
-                    />
-                </div>
-            </div>
-        </DialogContent>
-    </Dialog>
 </template>

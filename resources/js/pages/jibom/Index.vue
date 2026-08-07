@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AiPanel from '@/components/AiPanel.vue';
+import AiHistoryList from '@/components/AiHistoryList.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -73,6 +74,9 @@ const currentType = computed(() => props.filters.type);
 const currentProvinceId = computed(() => props.filters.province_id);
 
 const activeTab = computed(() => props.filters.view === 'ai' ? 'ai' : 'data');
+
+const historyListRef = ref<InstanceType<typeof AiHistoryList> | null>(null);
+const onAnalyzed = () => historyListRef.value?.refresh();
 
 const tabHref = (view: string) => {
     const qs = new URLSearchParams();
@@ -294,7 +298,7 @@ const ensureMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '� CartoDB',
+        attribution: '© CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -408,8 +412,9 @@ onMounted(async () => {
             </template>
         </div>
 
-        <div v-if="activeTab === 'ai'" class="mb-4">
-            <AiPanel module="jibom" />
+        <div v-if="activeTab === 'ai'" class="space-y-4">
+            <AiPanel module="jibom" @analyzed="onAnalyzed" />
+            <AiHistoryList ref="historyListRef" module="jibom" />
         </div>
 
         <template v-if="activeTab === 'data'">

@@ -330,7 +330,7 @@ const ensureMap = async () => {
     );
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '� CartoDB',
+        attribution: '© CartoDB',
         maxZoom: 19,
     }).addTo(map);
 
@@ -525,7 +525,7 @@ const title = computed(() => {
                     > {{ viewTypeLabel }}
                 </div>
                 <div class="mt-2 text-sm text-sky-300">
-                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} � {{ viewLocationLabel }}
+                    {{ formatDateTime(String(props.item?.created_at ?? '')) }} | {{ viewLocationLabel }}
                 </div>
                 <div class="mt-3 flex flex-wrap gap-2">
                     <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">

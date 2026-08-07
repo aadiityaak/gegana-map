@@ -677,7 +677,7 @@ const ensureDetailMap = async () => {
 
     detailMap = L.map(detailMapContainer.value, { zoomControl: true }).setView([-2.5489, 118.0149], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '� OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors',
     }).addTo(detailMap);
 
     setTimeout(() => {
@@ -757,7 +757,7 @@ const updateMapMarkers = async () => {
         popupEl.appendChild(titleEl);
 
         const metaEl = document.createElement('div');
-        metaEl.textContent = `${formatDateTime(item.incident_date)} � ${locationLabel(item)}`;
+        metaEl.textContent = `${formatDateTime(item.incident_date)} | ${locationLabel(item)}`;
         metaEl.style.cssText = 'font-size: 12px; opacity: 0.75; margin-bottom: 10px;';
         popupEl.appendChild(metaEl);
 
@@ -1020,7 +1020,7 @@ const ensureListMap = async () => {
     }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '� OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
     markerLayer = L.featureGroup().addTo(map);
@@ -1149,7 +1149,7 @@ watchEffect(() => {
                         > {{ detailItem.title }}
                     </div>
                     <div class="mt-2 text-sm text-sky-300">
-                        {{ formatDateTime(detailItem.incident_date) }} � {{ locationLabel(detailItem) }}
+                        {{ formatDateTime(detailItem.incident_date) }} | {{ locationLabel(detailItem) }}
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <Badge class="border border-sky-500/25 bg-black/35 text-sky-200">
@@ -1282,7 +1282,7 @@ watchEffect(() => {
                 <div class="text-sm tracking-wide text-sky-300">
                     <span v-if="meta">
                         total: {{ meta.total }}
-                        � range: {{ meta.start_date }} ? {{ meta.end_date }}
+                        &mdash; range: {{ meta.start_date }} &mdash; {{ meta.end_date }}
                     </span>
                 </div>
             </div>
@@ -1356,7 +1356,7 @@ watchEffect(() => {
                                             > {{ item.title }}
                                         </div>
                                         <div class="mt-1 text-sm text-sky-300">
-                                            {{ formatDateTime(item.incident_date) }} � {{ locationLabel(item) }}
+                                            {{ formatDateTime(item.incident_date) }} | {{ locationLabel(item) }}
                                         </div>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-2">
@@ -1430,7 +1430,7 @@ watchEffect(() => {
                         >
                             <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-sky-300">
                                 <div>
-                                    > halaman {{ meta.current_page }} / {{ meta.last_page }} � tampil: {{ items.length }} � total: {{ meta.total }}
+                                    > halaman {{ meta.current_page }} / {{ meta.last_page }} | tampil: {{ items.length }} | total: {{ meta.total }}
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button
