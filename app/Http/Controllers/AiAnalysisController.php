@@ -104,7 +104,7 @@ class AiAnalysisController extends Controller
                 return response()->json(['message' => $reason], 502);
             }
 
-            $body = $response->json();
+            $body = $this->extractJsonBody($response);
             $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? 'No response from AI.');
 
             // Simpan riwayat
@@ -169,14 +169,15 @@ class AiAnalysisController extends Controller
                 ], 502);
             }
 
-            $body = $response->json();
+            $body = $this->extractJsonBody($response);
             $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? 'No response from AI.');
 
             return response()->json([
                 'status' => 'ok',
                 'model' => $settings['model'],
                 'response' => $content,
-            ]);
+                'raw' => $body,
+            ], 200);
         } catch (\Throwable $e) {
             Log::error('AI test failed', ['error' => $e->getMessage()]);
             return response()->json([
@@ -198,6 +199,25 @@ class AiAnalysisController extends Controller
             ->get(['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at']);
 
         return response()->json(['data' => $rows]);
+    }
+
+    private function extractJsonBody($response): array
+    {
+        $body = $response->json();
+        if (!is_array($body)) {
+            // Try parsing the body, handling SSE-style trailing "data: [DONE]"
+            $raw = trim($response->body());
+            // Extract the first JSON object from the response
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                // Handle SSE format: JSON followed by "data: [DONE]"
+                if (preg_match('/^{.+}/s', $raw, $matches)) {
+                    $decoded = json_decode($matches[0], true);
+                }
+            }
+            $body = is_array($decoded) ? $decoded : [];
+        }
+        return $body;
     }
 
     private function buildPrompt(string $action, string $label, int $totalCount, array $data, string $period): string
