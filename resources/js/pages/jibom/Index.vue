@@ -297,9 +297,10 @@ const ensureMap = async () => {
         attributionControl: false,
     }).setView([-2.5489, 118.0149], 5);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© CartoDB',
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © Esri',
         maxZoom: 19,
+        maxNativeZoom: 16,
     }).addTo(map);
 
     L.control.attribution({ prefix: false }).addTo(map);
@@ -421,7 +422,7 @@ onMounted(async () => {
         <div class="mb-4 rounded-xl border border-sky-500/15 bg-black/20 p-3">
             <div class="mb-2 flex items-center justify-between text-sm text-sky-300">
                 <span>> MAP INDONESIA</span>
-                <span class="text-[11px]">> leaflet cartodb dark</span>
+                <span class="text-[11px]">> leaflet esri dark gray</span>
             </div>
             <div
                 ref="mapContainer"
