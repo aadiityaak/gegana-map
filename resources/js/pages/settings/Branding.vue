@@ -270,7 +270,7 @@ onBeforeUnmount(() => {
                 <Input
                     id="branding-logo"
                     type="file"
-                    accept="image/png"
+                    accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
                     @change="onLogoChange"
                 />
                 <div
@@ -292,9 +292,10 @@ onBeforeUnmount(() => {
                     {{ form.errors.logo_path }}
                 </div>
                 <div class="text-sm text-muted-foreground">
-                    PNG maks 4 MB. Upload baru disimpan sebagai berkas terpisah, jadi logo
-                    lama tetap bisa dipakai lagi lewat tombol
-                    <span class="font-medium">Pilih dari gambar tersimpan</span>.
+                    PNG, JPG, atau WebP maks 4 MB — JPG/WebP otomatis dikonversi ke PNG,
+                    dan gambar besar diperkecil ke maks 2000 px. Upload baru disimpan
+                    sebagai berkas terpisah, jadi logo lama tetap bisa dipakai lagi lewat
+                    tombol <span class="font-medium">Pilih dari gambar tersimpan</span>.
                 </div>
             </div>
 
@@ -313,7 +314,7 @@ onBeforeUnmount(() => {
                 <Input
                     id="branding-favicon"
                     type="file"
-                    accept="image/png"
+                    accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
                     @change="onFaviconChange"
                 />
                 <div
@@ -335,7 +336,9 @@ onBeforeUnmount(() => {
                     {{ form.errors.favicon_path }}
                 </div>
                 <div class="text-sm text-muted-foreground">
-                    PNG maks 2 MB. Idealnya 32×32 atau 64×64 px agar tab browser ringan.
+                    PNG, JPG, atau WebP maks 2 MB — JPG/WebP otomatis dikonversi ke PNG.
+                    Idealnya 32×32 atau 64×64 px agar tab browser ringan; gambar besar
+                    diperkecil otomatis ke maks 512 px.
                 </div>
             </div>
 

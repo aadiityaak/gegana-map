@@ -23,6 +23,18 @@ class BrandingSettings
   /** Jumlah maksimum berkas riwayat yang disimpan per jenis (yang tertua dibuang). */
   private const MAX_RIWAYAT = 40;
 
+  /** Ekstensi gambar yang diterima / ditampilkan di folder branding (huruf kecil). */
+  private const EKSTENSI_DIIZINKAN = ['png', 'jpg', 'jpeg', 'webp'];
+
+  /**
+   * Batas panjang sisi (piksel) — gambar yang lebih besar diperkecil otomatis.
+   * JPG dari kamera/hp biasanya jauh lebih besar dari yang dibutuhkan.
+   */
+  private const MAKS_DIMENSI = [
+    'logo' => 2000,
+    'favicon' => 512,
+  ];
+
   /**
    * Cari public directory yang benar.
    * Di shared hosting dengan struktur:
@@ -180,7 +192,7 @@ class BrandingSettings
       }
 
       foreach (File::files($folder) as $file) {
-        if (strtolower($file->getExtension()) !== 'png') {
+        if (! in_array(strtolower($file->getExtension()), self::EKSTENSI_DIIZINKAN, true)) {
           continue;
         }
 
@@ -223,7 +235,14 @@ class BrandingSettings
     $nama = sprintf('%s-%s-%s.png', $jenis, date('Ymd-His'), bin2hex(random_bytes(3)));
     $target = $directory . DIRECTORY_SEPARATOR . $nama;
 
-    if (file_put_contents($target, $file->get()) === false) {
+    // Semua upload dinormalkan jadi PNG: JPG/WebP/GIF otomatis dikonversi,
+    // dan gambar yang kebesaran diperkecil (lihat kePng()).
+    $isi = (string) $file->get();
+    $png = function_exists('imagecreatefromstring')
+      ? $this->kePng($isi, $jenis)
+      : $this->pngApaAdanya($isi);
+
+    if (file_put_contents($target, $png) === false) {
       throw new \RuntimeException(sprintf(
         'Tidak dapat menulis ke %s. Periksa permission folder.',
         $target,
@@ -233,6 +252,68 @@ class BrandingSettings
     @chmod($target, 0644);
 
     return $relatif . '/' . $nama;
+  }
+
+  /**
+   * Ubah isi berkas gambar apa pun (PNG/JPG/WebP/GIF/BMP) menjadi PNG.
+   * Dipakai supaya slip upload user tidak ditolak hanya karena formatnya JPG.
+   * Gambar yang lebih besar dari MAKS_DIMENSI diperkecil agar berkas tetap ringan.
+   */
+  private function kePng(string $isi, string $jenis): string
+  {
+    $sumber = @imagecreatefromstring($isi);
+    if ($sumber === false) {
+      throw new \RuntimeException('Berkas gambar tidak bisa dibaca (rusak atau formatnya tidak didukung).');
+    }
+
+    $lebar = imagesx($sumber);
+    $tinggi = imagesy($sumber);
+    $maks = self::MAKS_DIMENSI[$jenis] ?? 2000;
+
+    $gambar = $sumber;
+    $sisiTerpanjang = max($lebar, $tinggi);
+
+    if ($sisiTerpanjang > $maks) {
+      $skala = $maks / $sisiTerpanjang;
+      $kecil = @imagescale(
+        $sumber,
+        (int) max(1, (int) round($lebar * $skala)),
+        (int) max(1, (int) round($tinggi * $skala)),
+        IMG_BICUBIC,
+      );
+
+      if ($kecil !== false) {
+        $gambar = $kecil;
+      }
+    }
+
+    imagealphablending($gambar, false);
+    imagesavealpha($gambar, true);
+
+    ob_start();
+    $sukses = imagepng($gambar);
+    $png = (string) ob_get_clean();
+
+    if ($gambar !== $sumber) {
+      imagedestroy($gambar);
+    }
+    imagedestroy($sumber);
+
+    if (! $sukses || $png === '') {
+      throw new \RuntimeException('Gagal mengubah gambar menjadi PNG.');
+    }
+
+    return $png;
+  }
+
+  /** Cadangan kalau GD tidak tersedia: hanya PNG yang bisa disimpan apa adanya. */
+  private function pngApaAdanya(string $isi): string
+  {
+    if (! str_starts_with($isi, "\x89PNG\r\n\x1a\n")) {
+      throw new \RuntimeException('Server tidak punya ekstensi GD — hanya berkas PNG yang bisa diunggah.');
+    }
+
+    return $isi;
   }
 
   /** Jaga jumlah berkas riwayat tetap wajar — buang yang paling tua (bukan yang aktif). */
@@ -250,7 +331,7 @@ class BrandingSettings
 
     $aktif = $this->aktifPath($jenis);
     $berkas = collect(File::files($folder))
-      ->filter(static fn (\SplFileInfo $file): bool => strtolower($file->getExtension()) === 'png')
+      ->filter(static fn (\SplFileInfo $file): bool => in_array(strtolower($file->getExtension()), self::EKSTENSI_DIIZINKAN, true))
       ->sortByDesc(static fn (\SplFileInfo $file): int => $file->getMTime())
       ->values();
 
@@ -264,7 +345,7 @@ class BrandingSettings
 
   private function bolehDihapus(string $path): bool
   {
-    if (! preg_match('#^branding/library/(logo|favicon)/[A-Za-z0-9._-]+\.png$#', $path)) {
+    if (! preg_match('#^branding/library/(logo|favicon)/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$#i', $path)) {
       return false;
     }
 
@@ -283,7 +364,7 @@ class BrandingSettings
     $bersih = str_replace('\\', '/', trim($path));
     $bersih = ltrim($bersih, '/');
 
-    if (str_contains($bersih, '..') || ! preg_match('#^branding/[A-Za-z0-9._/-]+\.png$#', $bersih)) {
+    if (str_contains($bersih, '..') || ! preg_match('#^branding/[A-Za-z0-9._/-]+\.(png|jpe?g|webp)$#i', $bersih)) {
       throw new \RuntimeException('Path gambar tidak valid.');
     }
 

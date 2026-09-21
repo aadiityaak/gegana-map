@@ -30,8 +30,8 @@ class BrandingController extends Controller
 
         $rules = [
             'name' => ['nullable', 'string', 'max:255'],
-            'logo' => ['nullable', 'image', 'mimes:png', 'max:4096'],
-            'favicon' => ['nullable', 'image', 'mimes:png', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
+            'favicon' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ];
 
         foreach ($jenisPerField as $field => $jenis) {
@@ -41,6 +41,12 @@ class BrandingController extends Controller
         $validated = $request->validate($rules, [
             'logo_path.in' => __('Gambar logo yang dipilih tidak lagi tersedia.'),
             'favicon_path.in' => __('Gambar favicon yang dipilih tidak lagi tersedia.'),
+            'logo.image' => __('Berkas logo harus berupa gambar (PNG, JPG, atau WebP).'),
+            'favicon.image' => __('Berkas favicon harus berupa gambar (PNG, JPG, atau WebP).'),
+            'logo.mimes' => __('Logo harus berformat PNG, JPG, atau WebP.'),
+            'favicon.mimes' => __('Favicon harus berformat PNG, JPG, atau WebP.'),
+            'logo.max' => __('Ukuran logo maksimal 4 MB.'),
+            'favicon.max' => __('Ukuran favicon maksimal 2 MB.'),
         ]);
 
         $logoPath = $validated['logo_path'] ?? null;
