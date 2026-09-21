@@ -39,9 +39,10 @@ const wanTerorUrl = (path?: string) =>
     path ? `/wan-teror${path}` : '/wan-teror';
 const worldMonitoringUrl = computed(() => '/world-monitoring');
 
-// Menu modul insiden disembunyikan sementara (permintaan 21 Sep 2026).
-// Ubah TAMPILKAN_MENU_INSIDEN menjadi true untuk memunculkan kembali menunya.
-const TAMPILKAN_MENU_INSIDEN = false;
+// Toggle menu modul insiden (JIBOM/KBRN/WAN TEROR).
+// false = disembunyikan, true = ditampilkan. 21 Sep 2026: dinyalakan kembali
+// sesuai permintaan, jadi tiga menu itu tampil lagi di sidebar.
+const TAMPILKAN_MENU_INSIDEN = true;
 const MENU_DISEMBUNYIKAN = ['JIBOM', 'KBRN', 'WAN TEROR'];
 
 const mainNavItems = computed<NavItem[]>(() => [
