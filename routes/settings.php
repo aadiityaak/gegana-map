@@ -27,8 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::redirect('settings/appearance', '/settings/profile');
-    Route::inertia('settings/branding', 'settings/Branding')->name('branding.edit');
+    Route::get('settings/branding', [BrandingController::class, 'edit'])->name('branding.edit');
     Route::patch('settings/branding', [BrandingController::class, 'update'])->name('branding.update');
+    Route::delete('settings/branding/media', [BrandingController::class, 'hapusMedia'])->name('branding.media.destroy');
     Route::get('settings/ai', [AiController::class, 'edit'])->name('ai.edit');
     Route::patch('settings/ai', [AiController::class, 'update'])->name('ai.update');
 
