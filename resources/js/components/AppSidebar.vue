@@ -39,6 +39,11 @@ const wanTerorUrl = (path?: string) =>
     path ? `/wan-teror${path}` : '/wan-teror';
 const worldMonitoringUrl = computed(() => '/world-monitoring');
 
+// Menu modul insiden disembunyikan sementara (permintaan 21 Sep 2026).
+// Ubah TAMPILKAN_MENU_INSIDEN menjadi true untuk memunculkan kembali menunya.
+const TAMPILKAN_MENU_INSIDEN = false;
+const MENU_DISEMBUNYIKAN = ['JIBOM', 'KBRN', 'WAN TEROR'];
+
 const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'DASHBOARD',
@@ -266,7 +271,10 @@ const mainNavItems = computed<NavItem[]>(() => [
         href: '/ai-logs',
         icon: Brain,
     },
-]);
+].filter(
+    (item) =>
+        TAMPILKAN_MENU_INSIDEN || !MENU_DISEMBUNYIKAN.includes(item.title),
+));
 
 const footerNavItems: NavItem[] = [
     {
