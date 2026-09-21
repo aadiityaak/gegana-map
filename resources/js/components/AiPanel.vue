@@ -205,14 +205,6 @@ const run = async () => {
             </div>
         </div>
 
-        <!-- Hasil AI -->
-        <div
-            v-if="result && !loading"
-            class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4 text-sm text-sky-100/90 leading-relaxed whitespace-pre-wrap"
-        >
-            {{ result }}
-        </div>
-
         <!-- Visualisasi -->
         <div v-if="stats && !loading" class="mt-3 space-y-3">
             <div class="flex items-center justify-between text-[11px] text-sky-300">
@@ -263,6 +255,19 @@ const run = async () => {
                     />
                 </div>
             </template>
+        </div>
+
+        <!-- Narasi AI (teks analisa) — di bawah grafik -->
+        <div v-if="result && !loading" class="mt-3 space-y-2">
+            <div class="flex items-center justify-between text-[11px] text-sky-300">
+                <span>&gt; NARASI ANALISA AI</span>
+                <span class="text-sky-300/50">teks analisa dari model</span>
+            </div>
+            <div
+                class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4 text-sm text-sky-100/90 leading-relaxed whitespace-pre-wrap"
+            >
+                {{ result }}
+            </div>
         </div>
     </div>
 </template>

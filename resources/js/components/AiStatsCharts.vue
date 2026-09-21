@@ -23,7 +23,7 @@ const nilaiProvinsi = computed(() => provinsi.value.map((b: any) => b.value));
 const labelTipe = computed(() => tipe.value.map((b: any) => b.label));
 const nilaiTipe = computed(() => tipe.value.map((b: any) => b.value));
 
-const tinggiProvinsi = computed(() => Math.max(140, labelProvinsi.value.length * 26 + 50));
+const tinggiProvinsi = computed(() => Math.min(260, Math.max(140, labelProvinsi.value.length * 26 + 50)));
 
 const delta = computed(() => Number(props.stats?.kpi?.delta_persen ?? 0));
 const deltaNaik = computed(() => delta.value > 0);
@@ -89,15 +89,28 @@ watch(
                 </div>
             </div>
 
-            <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
-                <div class="mb-2 text-xs text-sky-300">Tren Kejadian per Bulan</div>
-                <AiAnalysisChart
-                    chart-type="line"
-                    :labels="labelTren"
-                    :values="nilaiTren"
-                    label="Kejadian"
-                    :tinggi="160"
-                />
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
+                    <div class="mb-2 text-xs text-sky-300">Tren Kejadian per Bulan</div>
+                    <AiAnalysisChart
+                        chart-type="line"
+                        :labels="labelTren"
+                        :values="nilaiTren"
+                        label="Kejadian"
+                        :tinggi="165"
+                    />
+                </div>
+
+                <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
+                    <div class="mb-2 text-xs text-sky-300">Distribusi Kategori</div>
+                    <AiAnalysisChart
+                        chart-type="doughnut"
+                        :labels="labelTipe"
+                        :values="nilaiTipe"
+                        label="Kejadian"
+                        :tinggi="165"
+                    />
+                </div>
             </div>
 
             <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
@@ -109,17 +122,6 @@ watch(
                     :values="nilaiProvinsi"
                     label="Kejadian"
                     :tinggi="tinggiProvinsi"
-                />
-            </div>
-
-            <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
-                <div class="mb-2 text-xs text-sky-300">Distribusi Kategori</div>
-                <AiAnalysisChart
-                    chart-type="doughnut"
-                    :labels="labelTipe"
-                    :values="nilaiTipe"
-                    label="Kejadian"
-                    :tinggi="190"
                 />
             </div>
         </template>

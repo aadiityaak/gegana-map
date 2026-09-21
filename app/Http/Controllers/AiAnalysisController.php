@@ -81,10 +81,10 @@ class AiAnalysisController extends Controller
             ])->timeout(60)->post($settings['endpoint'], [
                 'model' => $settings['model'],
                 'messages' => [
-                    ['role' => 'system', 'content' => 'Anda adalah asisten analis keamanan. Berikan analisis dalam bahasa Indonesia yang terstruktur dan ringkas.'],
+                    ['role' => 'system', 'content' => 'Anda adalah asisten analis keamanan. Jawab langsung dengan hasil analisis — jangan menuliskan proses berpikir. Gunakan bahasa Indonesia yang terstruktur dan ringkas.'],
                     ['role' => 'user', 'content' => $prompt],
                 ],
-                'max_tokens' => 2000,
+                'max_tokens' => 8000,
                 'temperature' => 0.3,
             ]);
 
@@ -106,7 +106,25 @@ class AiAnalysisController extends Controller
             }
 
             $body = $this->extractJsonBody($response);
-            $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? 'No response from AI.');
+            $content = $body['choices'][0]['message']['content'] ?? ($body['response'] ?? '');
+            $finish = $body['choices'][0]['finish_reason'] ?? null;
+
+            if (trim((string) $content) === '') {
+                // Model reasoning (mis. deepseek-*-flash) bisa menghabiskan seluruh
+                // max_tokens untuk penalaran internal -> content kosong.
+                $panjangPenalaran = strlen((string) ($body['choices'][0]['message']['reasoning_content'] ?? ''));
+                Log::warning('Jawaban AI kosong', [
+                    'module' => $module,
+                    'finish_reason' => $finish,
+                    'reasoning_chars' => $panjangPenalaran,
+                ]);
+
+                return response()->json([
+                    'message' => 'Model AI tidak mengembalikan jawaban (token habis untuk penalaran internal). Coba jalankan lagi, atau pilih model non-reasoning di Pengaturan AI.',
+                    'finish_reason' => $finish,
+                    'penalaran_karakter' => $panjangPenalaran,
+                ], 502);
+            }
 
             // Simpan riwayat
             $history = AiAnalysisHistory::create([

@@ -94,10 +94,13 @@ class AiAnalysisStatsTest extends TestCase
             'model' => 'model-uji',
         ]));
 
+    }
+
+    /** Palsukan jawaban AI (Http::fake menambah stub, jadi tiap tes memasangnya sendiri). */
+    protected function palsukanJawabanAi(string $isi = 'Analisa uji: ledakan didominasi Jawa Barat.'): void
+    {
         Http::fake([
-            '*' => Http::response([
-                'choices' => [['message' => ['content' => 'Analisa uji: ledakan didominasi Jawa Barat.']]],
-            ], 200),
+            '*' => Http::response(['choices' => [['message' => ['content' => $isi]]]], 200),
         ]);
     }
 
@@ -116,6 +119,8 @@ class AiAnalysisStatsTest extends TestCase
 
     public function test_endpoint_mengembalikan_statistik_untuk_grafik(): void
     {
+        $this->palsukanJawabanAi();
+
         $res = $this->getJson('/api/ai/analyze/jibom?action=analisa&period=6months');
 
         $res->assertOk();
@@ -146,6 +151,8 @@ class AiAnalysisStatsTest extends TestCase
 
     public function test_statistik_tersimpan_dan_tersedia_di_riwayat(): void
     {
+        $this->palsukanJawabanAi();
+
         $this->getJson('/api/ai/analyze/jibom?action=analisa&period=1year')->assertOk();
         $this->getJson('/api/ai/analyze/jibom?action=prediksi&period=1year')->assertOk();
 
@@ -172,8 +179,29 @@ class AiAnalysisStatsTest extends TestCase
         $this->assertSame(11, $semua->json('data.0.stats.kpi.total'));
     }
 
+    public function test_jawaban_ai_kosong_ditolak_dan_tidak_disimpan(): void
+    {
+        // Model reasoning kehabisan token -> content kosong (perilaku deepseek-*-flash)
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [[
+                    'message' => ['role' => 'assistant', 'content' => '', 'reasoning_content' => 'berpikir panjang...'],
+                    'finish_reason' => 'length',
+                ]],
+            ], 200),
+        ]);
+
+        $respons = $this->getJson('/api/ai/analyze/jibom?action=analisa&period=6months');
+
+        $respons->assertStatus(502);
+        $this->assertStringContainsString('tidak mengembalikan jawaban', (string) $respons->json('message'));
+        $this->assertSame(0, \App\Models\AiAnalysisHistory::count(), 'riwayat kosong tidak boleh disimpan');
+    }
+
     public function test_periode_tanpa_data_tetap_mengembalikan_statistik_kosong(): void
     {
+        $this->palsukanJawabanAi();
+
         DB::table('jibom_incidents')->delete();
 
         $res = $this->getJson('/api/ai/analyze/jibom?action=antisipasi&period=1month');

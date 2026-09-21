@@ -172,7 +172,7 @@ defineExpose({ refresh: fetchHistory });
 
     <!-- Modal Detail -->
     <Dialog :open="modalOpen" @update:open="modalOpen = $event">
-        <DialogContent class="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent class="sm:max-w-4xl max-h-[88vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
                     <template v-if="modalItem">
@@ -183,10 +183,15 @@ defineExpose({ refresh: fetchHistory });
                 </DialogTitle>
             </DialogHeader>
             <div v-if="modalItem" class="space-y-4">
-                <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
-                    {{ modalItem.result }}
-                </div>
                 <AiStatsCharts :stats="modalItem.stats" :result="modalItem.result" />
+                <div v-if="modalItem.result" class="space-y-2">
+                    <div class="text-[11px] font-semibold uppercase tracking-wider text-sky-300/70">
+                        Narasi analisa
+                    </div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                        {{ modalItem.result }}
+                    </div>
+                </div>
             </div>
         </DialogContent>
     </Dialog>

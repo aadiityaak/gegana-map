@@ -250,7 +250,7 @@ onMounted(fetchHistory);
 
     <!-- Modal Detail -->
     <Dialog :open="modalOpen" @update:open="modalOpen = $event">
-        <DialogContent class="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent class="sm:max-w-4xl max-h-[88vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>
                     <template v-if="selectedItem">
@@ -274,10 +274,15 @@ onMounted(fetchHistory);
                     <span>-</span>
                     <span>{{ new Date(selectedItem.created_at).toLocaleString('id-ID') }}</span>
                 </div>
-                <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
-                    {{ selectedItem.result }}
-                </div>
                 <AiStatsCharts :stats="selectedItem.stats" :result="selectedItem.result" />
+                <div v-if="selectedItem.result" class="space-y-2">
+                    <div class="text-[11px] font-semibold uppercase tracking-wider text-sky-300/70">
+                        Narasi analisa
+                    </div>
+                    <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                        {{ selectedItem.result }}
+                    </div>
+                </div>
             </div>
         </DialogContent>
     </Dialog>
