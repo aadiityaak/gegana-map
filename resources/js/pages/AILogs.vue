@@ -10,7 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import AiAnalysisChart from '@/components/AiAnalysisChart.vue';
+import AiStatsCharts from '@/components/AiStatsCharts.vue';
 import HermesLogs from './hermes/Logs.vue';
 
 type Tab = 'history' | 'hermes';
@@ -29,6 +29,7 @@ type HistoryEntry = {
     period: string;
     total_data: number;
     result: string;
+    stats?: any | null;
     created_at: string;
 };
 
@@ -115,48 +116,7 @@ const moduleLabel = (module: string) => {
 
 const viewItem = (item: HistoryEntry) => {
     selectedItem.value = item;
-    if (!chartData.value[item.id]) {
-        chartData.value[item.id] = parseProvinceStats(item.result);
-    }
     modalOpen.value = true;
-};
-
-// Reactive data untuk chart tiap history item
-const chartData = ref<Record<number, { labels: string[]; values: number[] }>>({});
-
-// Parse statistik dari hasil AI: mencari provinsi dan angka
-const parseProvinceStats = (result: string) => {
-    const labels: string[] = [];
-    const values: number[] = [];
-
-    // Cari bagian "Distribusi Geografis", "Area Rawan", atau "Provinsi"
-    const sectionMatch = result.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\s*-\s|\n\n|$)/i);
-    const sectionText = sectionMatch ? sectionMatch[1] : result;
-
-    // Ekstrak pola "- Nama Provinsi (angka)"
-    const lines = sectionText.split('\n');
-    for (const line of lines) {
-        const match = line.match(/-\s*([^\n()]+?)\s*\(([\d.,]+)\)/);
-        if (match) {
-            const name = match[1].trim();
-            const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
-            if (!isNaN(value)) {
-                labels.push(name);
-                values.push(value);
-            }
-        }
-        if (labels.length >= 8) break;
-    }
-
-    return { labels, values };
-};
-
-// Get chart data untuk item tertentu
-const getChartData = (item: HistoryEntry) => {
-    if (!chartData.value[item.id]) {
-        chartData.value[item.id] = parseProvinceStats(item.result);
-    }
-    return chartData.value[item.id];
 };
 
 // Import Hermes logs component
@@ -317,20 +277,7 @@ onMounted(fetchHistory);
                 <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                     {{ selectedItem.result }}
                 </div>
-                <div
-                    v-if="selectedItem && getChartData(selectedItem).labels.length > 0"
-                    class="rounded-lg border border-sky-500/10 bg-black/20 p-3"
-                >
-                    <div class="mb-2 text-xs text-sky-300">Distribusi Geografis</div>
-                    <div style="max-height: 200px;">
-                        <AiAnalysisChart
-                            chart-type="bar"
-                            :labels="getChartData(selectedItem).labels"
-                            :values="getChartData(selectedItem).values"
-                            title="Provinsi"
-                        />
-                    </div>
-                </div>
+                <AiStatsCharts :stats="selectedItem.stats" :result="selectedItem.result" />
             </div>
         </DialogContent>
     </Dialog>

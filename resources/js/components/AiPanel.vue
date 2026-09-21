@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import AiAnalysisChart from './AiAnalysisChart.vue';
 
@@ -20,10 +20,7 @@ const loading = ref(false);
 const result = ref<string | null>(null);
 const error = ref<string | null>(null);
 const totalData = ref<number | null>(null);
-
-// chart data
-const chartLabels = ref<string[]>([]);
-const chartValues = ref<number[]>([]);
+const stats = ref<any>(null);
 
 const actionLabels: Record<Action, string> = {
     analisa: 'Analisa',
@@ -37,29 +34,45 @@ const periodLabels: Record<Period, string> = {
     '1year': '1 Tahun',
 };
 
-const parseStats = (text: string) => {
-    const labels: string[] = [];
-    const values: number[] = [];
+const judulGrafik = computed(() => {
+    const peta: Record<Action, { tren: string; area: string; kategori: string }> = {
+        analisa: {
+            tren: 'Tren Kejadian per Bulan',
+            area: 'Area Rawan (Provinsi Terbanyak)',
+            kategori: 'Distribusi Kategori Kejadian',
+        },
+        prediksi: {
+            tren: 'Tren Historis (dasar prediksi)',
+            area: 'Area Prioritas Prediksi',
+            kategori: 'Kategori Risiko Historis',
+        },
+        antisipasi: {
+            tren: 'Tren Historis (dasar antisipasi)',
+            area: 'Area Prioritas Antisipasi',
+            kategori: 'Kategori Sasaran Mitigasi',
+        },
+    };
 
-    const sectionMatch = text.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
-    const sectionText = sectionMatch ? sectionMatch[1] : text;
+    return peta[activeAction.value];
+});
 
-    const lines = sectionText.split('\n');
-    for (const line of lines) {
-        const match = line.match(/-?\s*([^\n()]+?)\s*\(([0-9.,]+)\)/);
-        if (match) {
-            const name = match[1].trim();
-            const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
-            if (!isNaN(value)) {
-                labels.push(name);
-                values.push(value);
-            }
-        }
-    }
+const labelBulanPeriode = computed(() => periodLabels[activePeriod.value]);
 
-    chartLabels.value = labels;
-    chartValues.value = values;
-};
+const adaData = computed(() => (stats.value?.kpi?.total ?? 0) > 0);
+const tren = computed(() => stats.value?.tren ?? []);
+const provinsi = computed(() => stats.value?.provinsi ?? []);
+const tipe = computed(() => stats.value?.tipe ?? []);
+
+const labelTren = computed(() => tren.value.map((b: any) => b.label));
+const nilaiTren = computed(() => tren.value.map((b: any) => b.value));
+const labelProvinsi = computed(() => provinsi.value.map((b: any) => b.label));
+const nilaiProvinsi = computed(() => provinsi.value.map((b: any) => b.value));
+const labelTipe = computed(() => tipe.value.map((b: any) => b.label));
+const nilaiTipe = computed(() => tipe.value.map((b: any) => b.value));
+
+const delta = computed(() => Number(stats.value?.kpi?.delta_persen ?? 0));
+const deltaNaik = computed(() => delta.value > 0);
+const deltaNetral = computed(() => delta.value === 0);
 
 const run = async () => {
     loading.value = true;
@@ -77,7 +90,7 @@ const run = async () => {
         } else {
             result.value = json.result;
             totalData.value = json.total_data;
-            parseStats(json.result);
+            stats.value = json.stats ?? null;
             emit('analyzed');
         }
     } catch (e: any) {
@@ -142,7 +155,7 @@ const run = async () => {
             &gt; Data tersedia: {{ totalData }} kejadian
         </div>
 
-        <!-- loading -->
+        <!-- Loading -->
         <div
             v-if="loading"
             class="rounded border border-sky-500/15 bg-sky-500/5 p-3 text-xs text-sky-300"
@@ -150,7 +163,7 @@ const run = async () => {
             <span class="inline-block animate-pulse">&gt; Menghubungi Sistem...</span>
         </div>
 
-        <!-- error -->
+        <!-- Error -->
         <div
             v-if="error"
             class="rounded border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300"
@@ -159,7 +172,40 @@ const run = async () => {
             {{ error }}
         </div>
 
-        <!-- result -->
+        <!-- Kartu ringkasan -->
+        <div
+            v-if="stats && !loading"
+            class="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4"
+        >
+            <div class="rounded-lg border border-sky-500/20 bg-black/25 p-2.5">
+                <div class="text-[10px] uppercase tracking-wide text-sky-300/70">Total Kejadian</div>
+                <div class="text-lg font-semibold text-sky-100">{{ stats.kpi.total }}</div>
+                <div class="text-[10px] text-sky-300/50">periode {{ labelBulanPeriode.toLowerCase() }}</div>
+            </div>
+            <div class="rounded-lg border border-sky-500/20 bg-black/25 p-2.5">
+                <div class="text-[10px] uppercase tracking-wide text-sky-300/70">Provinsi Terdampak</div>
+                <div class="text-lg font-semibold text-sky-100">{{ stats.kpi.provinsi }}</div>
+                <div class="text-[10px] text-sky-300/50">wilayah berbeda</div>
+            </div>
+            <div class="rounded-lg border border-sky-500/20 bg-black/25 p-2.5">
+                <div class="text-[10px] uppercase tracking-wide text-sky-300/70">Rata-rata / Bulan</div>
+                <div class="text-lg font-semibold text-sky-100">{{ stats.kpi.rata_per_bulan }}</div>
+                <div class="text-[10px] text-sky-300/50">puncak: {{ stats.kpi.puncak_label }} ({{ stats.kpi.puncak_value }})</div>
+            </div>
+            <div class="rounded-lg border border-sky-500/20 bg-black/25 p-2.5">
+                <div class="text-[10px] uppercase tracking-wide text-sky-300/70">vs Periode Sebelumnya</div>
+                <div
+                    class="text-lg font-semibold"
+                    :class="deltaNetral ? 'text-sky-100' : (deltaNaik ? 'text-rose-300' : 'text-emerald-300')"
+                >
+                    {{ deltaNaik ? '▲' : (deltaNetral ? '■' : '▼') }}
+                    {{ deltaNetral ? '0' : (deltaNaik ? delta : -delta) }}%
+                </div>
+                <div class="text-[10px] text-sky-300/50">sebelumnya: {{ stats.kpi.sebelumnya }} kejadian</div>
+            </div>
+        </div>
+
+        <!-- Hasil AI -->
         <div
             v-if="result && !loading"
             class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4 text-sm text-sky-100/90 leading-relaxed whitespace-pre-wrap"
@@ -167,20 +213,56 @@ const run = async () => {
             {{ result }}
         </div>
 
-        <!-- chart -->
-        <div
-            v-if="chartLabels.length > 0 && !loading"
-            class="mt-3 rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-4"
-        >
-            <div class="mb-2 text-xs text-sky-300">Grafik Area Rawan</div>
-            <div style="max-height: 240px;">
-                <AiAnalysisChart
-                    chart-type="bar"
-                    :labels="chartLabels"
-                    :values="chartValues"
-                    title="Area Rawan"
-                />
+        <!-- Visualisasi -->
+        <div v-if="stats && !loading" class="mt-3 space-y-3">
+            <div class="flex items-center justify-between text-[11px] text-sky-300">
+                <span>&gt; VISUALISASI DATA</span>
+                <span class="text-sky-300/50">angka dari database, bukan teks AI</span>
             </div>
+
+            <div
+                v-if="!adaData"
+                class="rounded-lg border border-sky-500/15 bg-sky-500/[0.04] p-3 text-xs text-sky-300/80"
+            >
+                Tidak ada kejadian tercatat pada periode ini — belum ada data untuk digrafikkan.
+            </div>
+
+            <template v-else>
+                <div class="grid gap-3 lg:grid-cols-2">
+                    <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
+                        <div class="mb-2 text-xs text-sky-300">{{ judulGrafik.tren }}</div>
+                        <AiAnalysisChart
+                            chart-type="line"
+                            :labels="labelTren"
+                            :values="nilaiTren"
+                            label="Kejadian"
+                        />
+                    </div>
+
+                    <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
+                        <div class="mb-2 text-xs text-sky-300">{{ judulGrafik.kategori }}</div>
+                        <AiAnalysisChart
+                            chart-type="doughnut"
+                            :labels="labelTipe"
+                            :values="nilaiTipe"
+                            label="Kejadian"
+                            :tinggi="220"
+                        />
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-sky-500/15 bg-black/25 p-3">
+                    <div class="mb-2 text-xs text-sky-300">{{ judulGrafik.area }}</div>
+                    <AiAnalysisChart
+                        chart-type="bar"
+                        horizontal
+                        :labels="labelProvinsi"
+                        :values="nilaiProvinsi"
+                        label="Kejadian"
+                        :tinggi="Math.max(180, labelProvinsi.length * 28 + 60)"
+                    />
+                </div>
+            </template>
         </div>
     </div>
 </template>

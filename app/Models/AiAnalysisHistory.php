@@ -15,5 +15,10 @@ class AiAnalysisHistory extends Model
         'total_data',
         'prompt',
         'result',
+        'stats',
+    ];
+
+    protected $casts = [
+        'stats' => 'array',
     ];
 }

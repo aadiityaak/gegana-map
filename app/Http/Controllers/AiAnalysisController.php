@@ -47,7 +47,7 @@ class AiAnalysisController extends Controller
 
         $config = self::MODULES[$module];
         $months = self::PERIOD_MONTHS[$period];
-        $startDate = now()->subMonths($months);
+        $startDate = now()->startOfMonth()->subMonthsNoOverflow($months - 1);
 
         $table = $config['table'];
         $data = DB::table("{$table} as t")
@@ -70,7 +70,8 @@ class AiAnalysisController extends Controller
             ->values()
             ->toArray();
 
-        $totalCount = count($data);
+        $stats = $this->buildStats($table, $months);
+        $totalCount = $stats['kpi']['total'];
         $prompt = $this->buildPrompt($action, $config['label'], $totalCount, $data, $period);
 
         try {
@@ -115,6 +116,7 @@ class AiAnalysisController extends Controller
                 'total_data' => $totalCount,
                 'prompt' => $prompt,
                 'result' => $content,
+                'stats' => $stats,
             ]);
 
             return response()->json([
@@ -124,6 +126,7 @@ class AiAnalysisController extends Controller
                 'period' => $period,
                 'total_data' => $totalCount,
                 'result' => $content,
+                'stats' => $stats,
                 'created_at' => $history->created_at->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
@@ -198,7 +201,7 @@ class AiAnalysisController extends Controller
 
         $paginator = AiAnalysisHistory::where('module', $module)
             ->orderByDesc('created_at')
-            ->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at'], 'page', $page);
+            ->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'stats', 'created_at'], 'page', $page);
 
         return response()->json([
             'data' => $paginator->items(),
@@ -222,7 +225,7 @@ class AiAnalysisController extends Controller
             $query->where('action', 'analisa');
         }
 
-        $paginator = $query->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'created_at'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['id', 'module', 'action', 'period', 'total_data', 'result', 'stats', 'created_at'], 'page', $page);
 
         return response()->json([
             'data' => $paginator->items(),
@@ -274,7 +277,7 @@ class AiAnalysisController extends Controller
             '1year' => '1 tahun terakhir',
         };
 
-        $summary = $this->buildSummary($data, $label, $periodLabel);
+        $summary = $this->buildSummary($data, $label, $periodLabel, $totalCount);
 
         $instruction = match ($action) {
             'analisa' => "Lakukan analisis terhadap data {$label} {$periodLabel}. Berikan insight tentang pola, tren, distribusi geografis, dan temuan penting.",
@@ -286,7 +289,7 @@ class AiAnalysisController extends Controller
         return "{$instruction}\n\n{$summary}";
     }
 
-    private function buildSummary(array $data, string $label, string $periodLabel): string
+    private function buildSummary(array $data, string $label, string $periodLabel, ?int $totalSebenarnya = null): string
     {
         $total = count($data);
 
@@ -294,8 +297,12 @@ class AiAnalysisController extends Controller
             return "Data {$label} ({$periodLabel}): tidak ada kejadian.\n";
         }
 
+        $infoTotal = ($totalSebenarnya !== null && $totalSebenarnya > $total)
+            ? "{$totalSebenarnya} kejadian (rincian di bawah = {$total} data terbaru)"
+            : (string) $total;
+
         $summary = "Data {$label} ({$periodLabel}):\n";
-        $summary .= "Total kejadian: {$total}\n\n";
+        $summary .= "Total kejadian: {$infoTotal}\n\n";
 
         // Provinsi terbanyak (top 5)
         $provinceCount = collect($data)
@@ -340,5 +347,121 @@ class AiAnalysisController extends Controller
         }
 
         return $summary;
+    }
+
+    /**
+     * Statistik ringkas untuk visualisasi grafik.
+     * Dihitung server (bukan hasil parsing teks AI) supaya angka selalu akurat
+     * dan grafik bisa digambar ulang kapan saja — termasuk dari riwayat analisa.
+     */
+    private function buildStats(string $table, int $months): array
+    {
+        // Jendela statistik memakai bulan kalender penuh (mis. 6 bulan terakhir),
+        // supaya jumlah titik pada grafik tren sama dengan angka pada kartu ringkasan.
+        $awal = now()->startOfMonth()->subMonthsNoOverflow($months - 1);
+
+        $rows = DB::table("{$table} as t")
+            ->leftJoin('reg_provinces as p', 'p.id', '=', 't.province_id')
+            ->where('t.created_at', '>=', $awal)
+            ->select(['t.incident_type', 't.province_id', 'p.name as province_name', 't.created_at'])
+            ->orderBy('t.created_at')
+            ->limit(5000)
+            ->get();
+
+        $namaBulan = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'];
+
+        // Tren per bulan — semua bulan dalam periode tetap muncul (0 kalau tidak ada kejadian).
+        $bulan = [];
+        $posisiBulan = [];
+        $kursor = $awal->copy();
+        $batas = now()->startOfMonth();
+
+        while ($kursor->lessThanOrEqualTo($batas)) {
+            $posisiBulan[$kursor->format('Y-m')] = count($bulan);
+            $bulan[] = [
+                'label' => $namaBulan[(int) $kursor->month] . ' ' . $kursor->format('y'),
+                'value' => 0,
+            ];
+            $kursor = $kursor->addMonthNoOverflow();
+        }
+
+        $hitungProvinsi = [];
+        $hitungTipe = [];
+        $provinsiUnik = [];
+
+        foreach ($rows as $row) {
+            $key = \Carbon\Carbon::parse($row->created_at)->format('Y-m');
+            if (isset($posisiBulan[$key])) {
+                $bulan[$posisiBulan[$key]]['value']++;
+            }
+
+            $namaProvinsi = trim((string) ($row->province_name ?? '')) !== '' ? (string) $row->province_name : 'Belum diketahui';
+            $hitungProvinsi[$namaProvinsi] = ($hitungProvinsi[$namaProvinsi] ?? 0) + 1;
+
+            if (! empty($row->province_id)) {
+                $provinsiUnik[(string) $row->province_id] = true;
+            }
+
+            $namaTipe = $this->labelTipe((string) ($row->incident_type ?? ''));
+            $hitungTipe[$namaTipe] = ($hitungTipe[$namaTipe] ?? 0) + 1;
+        }
+
+        arsort($hitungProvinsi);
+        arsort($hitungTipe);
+
+        $total = $rows->count();
+        $totalSebelumnya = DB::table($table)
+            ->where('created_at', '>=', $awal->copy()->subMonthsNoOverflow($months))
+            ->where('created_at', '<', $awal)
+            ->count();
+
+        $delta = $totalSebelumnya > 0
+            ? round((($total - $totalSebelumnya) / $totalSebelumnya) * 100, 1)
+            : ($total > 0 ? 100.0 : 0.0);
+
+        $puncak = ['label' => '-', 'value' => 0];
+        foreach ($bulan as $b) {
+            if ($b['value'] > $puncak['value']) {
+                $puncak = ['label' => $b['label'], 'value' => $b['value']];
+            }
+        }
+
+        return [
+            'kpi' => [
+                'total' => $total,
+                'provinsi' => count($provinsiUnik),
+                'rata_per_bulan' => $months > 0 ? round($total / $months, 1) : 0.0,
+                'sebelumnya' => $totalSebelumnya,
+                'delta_persen' => $delta,
+                'puncak_label' => $puncak['label'],
+                'puncak_value' => $puncak['value'],
+            ],
+            'tren' => $bulan,
+            'provinsi' => $this->potong($hitungProvinsi, 8),
+            'tipe' => $this->potong($hitungTipe, 6),
+        ];
+    }
+
+    /** Ubah hasil hitungan (nama => jumlah) jadi daftar label/value terurut, maksimal $maks item. */
+    private function potong(array $hitungan, int $maks): array
+    {
+        $hasil = [];
+
+        foreach (array_slice($hitungan, 0, $maks, true) as $nama => $jumlah) {
+            $hasil[] = ['label' => (string) $nama, 'value' => (int) $jumlah];
+        }
+
+        return $hasil;
+    }
+
+    private function labelTipe(string $tipe): string
+    {
+        $tipe = trim($tipe);
+
+        if ($tipe === '') {
+            return 'Belum diketahui';
+        }
+
+        return ucwords(str_replace(['-', '_'], ' ', $tipe));
     }
 }

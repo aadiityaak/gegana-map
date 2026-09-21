@@ -6,7 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import AiAnalysisChart from './AiAnalysisChart.vue';
+import AiStatsCharts from './AiStatsCharts.vue';
 
 const props = defineProps<{
     module: string;
@@ -85,30 +85,6 @@ const deleteHistory = async (item: any) => {
     } catch (e: any) {
         alert(e.message ?? 'Network error.');
     }
-};
-
-// Chart parsing
-const chartData = ref<Record<number, { labels: string[]; values: number[] }>>({});
-const parseProvinceStats = (result: string) => {
-    const labels: string[] = [];
-    const values: number[] = [];
-    const sectionMatch = result.match(/\*\*(?:Distribusi Geografis|Area Rawan|Provinsi Terbanyak)[^*]*\*\*\s*\n([\s\S]*?)(?=\n\*\*|\n\n|$)/i);
-    const sectionText = sectionMatch ? sectionMatch[1] : result;
-    for (const line of sectionText.split('\n')) {
-        const match = line.match(/-\s*([^\n()]+?)\s*\(([\d.,]+)\)/);
-        if (match) {
-            const value = parseInt(match[2].replace(/[^\d]/g, ''), 10);
-            if (!isNaN(value)) { labels.push(match[1].trim()); values.push(value); }
-        }
-        if (labels.length >= 8) break;
-    }
-    return { labels, values };
-};
-const getChartData = (item: any) => {
-    if (!chartData.value[item.id]) {
-        chartData.value[item.id] = parseProvinceStats(item.result);
-    }
-    return chartData.value[item.id];
 };
 
 onMounted(fetchHistory);
@@ -210,20 +186,7 @@ defineExpose({ refresh: fetchHistory });
                 <div class="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                     {{ modalItem.result }}
                 </div>
-                <div
-                    v-if="getChartData(modalItem).labels.length > 0"
-                    class="rounded-lg border border-sky-500/10 bg-black/20 p-3"
-                >
-                    <div class="mb-2 text-xs text-sky-300">Distribusi Geografis</div>
-                    <div style="max-height: 200px;">
-                        <AiAnalysisChart
-                            chart-type="bar"
-                            :labels="getChartData(modalItem).labels"
-                            :values="getChartData(modalItem).values"
-                            title="Provinsi"
-                        />
-                    </div>
-                </div>
+                <AiStatsCharts :stats="modalItem.stats" :result="modalItem.result" />
             </div>
         </DialogContent>
     </Dialog>
